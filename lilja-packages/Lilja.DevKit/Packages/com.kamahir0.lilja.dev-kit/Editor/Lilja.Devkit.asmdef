@@ -1,0 +1,18 @@
+{
+    "name": "Lilja.Devkit",
+    "rootNamespace": "Lilja.Devkit",
+    "references": [
+        "Hrtk627.Liljadevkit"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
