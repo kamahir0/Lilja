@@ -1,0 +1,24 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+[*.cs]
+dotnet_diagnostic.CS0649.severity = none
+
+# メソッド宣言パラメータの改行オフ
+csharp_wrap_parameters_style = wrap_if_long:1000
+# メソッド呼び出し引数の改行オフ  
+csharp_wrap_arguments_style = wrap_if_long:1000
+# 行長制限を大幅緩和（実質無制限）
+csharp_max_line_length = 1000
+# 空ブロックを一行に配置
+csharp_empty_block_style = together_same_line
