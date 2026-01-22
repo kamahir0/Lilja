@@ -9,11 +9,8 @@
     "com.unity.test-framework": "1.6.0"
   },
   "author": {
-    "name": "\u5e73\u6d25\u938c\u6d69",
-    "url": "http://www.example.com",
-    "email": "example@email.com"
-  },
-  "changelogUrl": "https://example.com/changelog.html",
-  "documentationUrl": "https://example.com/",
-  "licensesUrl": "https://example.com/licensing.html"
+    "name": "kamahir0",
+    "url": "https://github.com/kamahir0",
+    "email": "hrtk1330@gmail.com"
+  }
 }
