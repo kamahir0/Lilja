@@ -33,6 +33,9 @@ namespace Lilja.DevKit.PackageManagement
             public string authorName = "";
             public string authorUrl = "";
             public string authorEmail = "";
+
+            // 作成後の動作
+            public bool importAfterCreate = true;
         }
 
         #endregion
@@ -92,9 +95,13 @@ namespace Lilja.DevKit.PackageManagement
 
             // 4. Author情報（折りたたみ）
             DrawAuthorField();
+            EditorGUILayout.Space();
+
+            // 5. オプション
+            DrawOptionsField();
             EditorGUILayout.Space(20);
 
-            // 5. 作成ボタン
+            // 6. 作成ボタン
             DrawCreateButton();
         }
 
@@ -184,6 +191,15 @@ namespace Lilja.DevKit.PackageManagement
             }
         }
 
+        private void DrawOptionsField()
+        {
+            EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
+            _settings.importAfterCreate = EditorGUILayout.Toggle(
+                "With Import",
+                _settings.importAfterCreate
+            );
+        }
+
         private void DrawCreateButton()
         {
             bool canCreate = !string.IsNullOrEmpty(_settings.liljaPackagesDirectory) &&
@@ -236,6 +252,18 @@ namespace Lilja.DevKit.PackageManagement
 
             if (!string.IsNullOrEmpty(createdPath))
             {
+                // インポート設定が有効な場合はmanifest.jsonに追加
+                if (_settings.importAfterCreate)
+                {
+                    // パッケージディレクトリ（package.jsonがある場所）を取得
+                    string packageName = PackageCreator.GeneratePackageName(
+                        _settings.organizationName,
+                        _settings.packageBaseName
+                    );
+                    string packageDir = Path.Combine(createdPath, "Packages", packageName);
+                    PackageImporter.Import(packageDir);
+                }
+
                 EditorDialog.DisplayAlertDialog(
                     "Success",
                     $"Package created successfully:\n{createdPath}",
