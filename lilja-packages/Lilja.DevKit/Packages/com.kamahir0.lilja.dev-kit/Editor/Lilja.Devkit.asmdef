@@ -1,9 +1,7 @@
 {
-    "name": "Lilja.Devkit",
-    "rootNamespace": "Lilja.Devkit",
-    "references": [
-        "Hrtk627.Liljadevkit"
-    ],
+    "name": "Lilja.DevKit",
+    "rootNamespace": "Lilja.DevKit",
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
