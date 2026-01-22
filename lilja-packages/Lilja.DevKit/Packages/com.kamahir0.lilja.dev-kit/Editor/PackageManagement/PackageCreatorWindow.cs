@@ -35,7 +35,7 @@ namespace Lilja.DevKit.PackageManagement
             public string authorEmail = "";
 
             // 作成後の動作
-            public bool importAfterCreate = true;
+            public bool withImport = true;
         }
 
         #endregion
@@ -194,9 +194,9 @@ namespace Lilja.DevKit.PackageManagement
         private void DrawOptionsField()
         {
             EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
-            _settings.importAfterCreate = EditorGUILayout.Toggle(
+            _settings.withImport = EditorGUILayout.Toggle(
                 "With Import",
-                _settings.importAfterCreate
+                _settings.withImport
             );
         }
 
@@ -253,7 +253,7 @@ namespace Lilja.DevKit.PackageManagement
             if (!string.IsNullOrEmpty(createdPath))
             {
                 // インポート設定が有効な場合はmanifest.jsonに追加
-                if (_settings.importAfterCreate)
+                if (_settings.withImport)
                 {
                     // パッケージディレクトリ（package.jsonがある場所）を取得
                     string packageName = PackageCreator.GeneratePackageName(
