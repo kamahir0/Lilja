@@ -2,6 +2,8 @@
 
 個人開発用のUnityパッケージ群をまとめたリポジトリです。
 
+ライブラリ名の意味は "Library Layer of Joint-Architecture" -> "Lilja" です。
+
 ## ディレクトリ構成
 
 ### lilja-packages
