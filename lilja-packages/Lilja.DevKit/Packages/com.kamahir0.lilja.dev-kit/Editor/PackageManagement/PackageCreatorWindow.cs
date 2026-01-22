@@ -222,10 +222,11 @@ namespace Lilja.DevKit.PackageManagement
             // ディレクトリ存在チェック
             if (Directory.Exists(targetPath))
             {
-                EditorUtility.DisplayDialog(
+                EditorDialog.DisplayAlertDialog(
                     "Error",
                     $"Directory already exists:\n{targetPath}",
-                    "OK"
+                    "OK",
+                    DialogIconType.Error
                 );
                 return;
             }
@@ -235,10 +236,11 @@ namespace Lilja.DevKit.PackageManagement
 
             if (!string.IsNullOrEmpty(createdPath))
             {
-                EditorUtility.DisplayDialog(
+                EditorDialog.DisplayAlertDialog(
                     "Success",
                     $"Package created successfully:\n{createdPath}",
-                    "OK"
+                    "OK",
+                    DialogIconType.Info
                 );
             }
         }
