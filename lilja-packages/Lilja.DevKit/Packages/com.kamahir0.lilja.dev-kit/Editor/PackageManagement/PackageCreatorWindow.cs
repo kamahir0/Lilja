@@ -45,7 +45,7 @@ namespace Lilja.DevKit.PackageManagement
         #region Fields
 
         private Settings _settings;
-        private bool _showAuthorSection = false;
+        private bool _showAuthorSection;
 
         #endregion
 
