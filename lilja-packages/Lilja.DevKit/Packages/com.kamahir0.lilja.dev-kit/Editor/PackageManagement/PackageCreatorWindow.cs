@@ -25,17 +25,19 @@ namespace Lilja.DevKit.PackageManagement
         [System.Serializable]
         private class Settings
         {
-            public string liljaPackagesDirectory = "";
+            // ReSharper disable All
+            public string liljaPackagesDirectory = string.Empty;
             public string organizationName = "kamahir0";
             public string packageBaseName = "NewPackage";
 
             // Author情報（任意）
-            public string authorName = "";
-            public string authorUrl = "";
-            public string authorEmail = "";
+            public string authorName = string.Empty;
+            public string authorUrl = string.Empty;
+            public string authorEmail = string.Empty;
 
             // 作成後の動作
             public bool withImport = true;
+            // ReSharper restore All
         }
 
         #endregion
@@ -122,7 +124,7 @@ namespace Lilja.DevKit.PackageManagement
                     string path = EditorUtility.OpenFolderPanel(
                         "Select lilja-packages Directory",
                         _settings.liljaPackagesDirectory,
-                        ""
+                        string.Empty
                     );
 
                     if (!string.IsNullOrEmpty(path))

@@ -11,7 +11,7 @@ namespace Lilja.DevKit.PackageManagement
         /// <summary>
         /// lilja-packagesディレクトリの絶対パス
         /// </summary>
-        public string LiljaPackagesDirectory { get; set; } = "";
+        public string LiljaPackagesDirectory { get; set; } = string.Empty;
 
         /// <summary>
         /// 組織名（com.は含まない形式）
@@ -28,16 +28,16 @@ namespace Lilja.DevKit.PackageManagement
         /// <summary>
         /// 作者名（任意）
         /// </summary>
-        public string AuthorName { get; set; } = "";
+        public string AuthorName { get; set; } = string.Empty;
 
         /// <summary>
         /// 作者URL（任意）
         /// </summary>
-        public string AuthorUrl { get; set; } = "";
+        public string AuthorUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// 作者メールアドレス（任意）
         /// </summary>
-        public string AuthorEmail { get; set; } = "";
+        public string AuthorEmail { get; set; } = string.Empty;
     }
 }

@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -22,20 +20,19 @@ namespace Lilja.DevKit.PackageManagement
             // パラメータの検証
             if (string.IsNullOrEmpty(parameters.LiljaPackagesDirectory))
             {
-                UnityEngine.Debug.LogError("lilja-packagesディレクトリが指定されていません。");
+                Debug.LogError("lilja-packagesディレクトリが指定されていません。");
                 return null;
             }
 
             if (string.IsNullOrEmpty(parameters.PackageBaseName))
             {
-                UnityEngine.Debug.LogError("パッケージ基本名が指定されていません。");
+                Debug.LogError("パッケージ基本名が指定されていません。");
                 return null;
             }
 
             // 命名規則に従って各名前を生成
             string displayName = $"Lilja.{parameters.PackageBaseName}";
             string kebabName = ConvertToKebabCase(parameters.PackageBaseName);
-            string technicalName = $"lilja-{kebabName}";
             string packageName = $"com.{parameters.OrganizationName}.lilja.{kebabName}";
 
             // 出力先パス
@@ -45,14 +42,14 @@ namespace Lilja.DevKit.PackageManagement
             // ディレクトリ存在チェック
             if (Directory.Exists(projectPath))
             {
-                UnityEngine.Debug.LogError($"ディレクトリが既に存在します: {projectPath}");
+                Debug.LogError($"ディレクトリが既に存在します: {projectPath}");
                 return null;
             }
 
             // Unityプロジェクト構造を作成
             CreateUnityProjectStructure(projectPath, packagePath, displayName, packageName, parameters);
 
-            UnityEngine.Debug.Log($"✨ Created Lilja Package: {projectPath}");
+            Debug.Log($"✨ Created Lilja Package: {projectPath}");
 
             return projectPath;
         }
@@ -64,7 +61,7 @@ namespace Lilja.DevKit.PackageManagement
         {
             if (string.IsNullOrEmpty(input))
             {
-                return "";
+                return string.Empty;
             }
 
             string kebab = Regex.Replace(input, "(?<!^)([A-Z])", "-$1").ToLower();
@@ -165,7 +162,7 @@ namespace Lilja.DevKit.PackageManagement
             // 全て空の場合はAuthorセクション自体を省略
             if (!hasName && !hasUrl && !hasEmail)
             {
-                return "";
+                return string.Empty;
             }
 
             var fields = new List<string>();
@@ -173,10 +170,12 @@ namespace Lilja.DevKit.PackageManagement
             {
                 fields.Add($"    \"name\": \"{parameters.AuthorName}\"");
             }
+
             if (hasUrl)
             {
                 fields.Add($"    \"url\": \"{parameters.AuthorUrl}\"");
             }
+
             if (hasEmail)
             {
                 fields.Add($"    \"email\": \"{parameters.AuthorEmail}\"");
