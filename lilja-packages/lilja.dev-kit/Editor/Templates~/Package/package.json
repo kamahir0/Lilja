@@ -1,0 +1,10 @@
+{
+    "name": "#PACKAGE_NAME#",
+    "displayName": "#DISPLAY_NAME#",
+    "version": "0.1.0",
+    "unity": "#UNITY_VERSION#",
+    "description": "Lilja package created by DevKit.",
+    "keywords": [
+        "lilja"
+    ]#AUTHOR_SECTION#
+}
