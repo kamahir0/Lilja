@@ -103,55 +103,74 @@ namespace Lilja.DevKit.PackageManagement
             string packageName,
             PackageCreatorParameters parameters)
         {
-            // パッケージルートディレクトリ作成
-            Directory.CreateDirectory(packageRoot);
+            // 1. 基本パッケージテンプレートの展開
+            string packageTemplatePath = GetTemplatePath("Editor/Templates~/Package", parameters);
+            if (Directory.Exists(packageTemplatePath))
+            {
+                Debug.Log($"[PackageCreator] Copying package template from: {packageTemplatePath}");
+                CopyAndReplaceTemplate(packageTemplatePath, packageRoot, displayName);
+            }
+            else
+            {
+                Debug.LogError($"[PackageCreator] Package template not found at: {packageTemplatePath}");
+                return;
+            }
 
-            // サブディレクトリ作成
-            Directory.CreateDirectory(Path.Combine(packageRoot, "Runtime"));
-            Directory.CreateDirectory(Path.Combine(packageRoot, "Editor"));
+            // 2. package.json のプレースホルダーを追加置換
+            // CopyAndReplaceTemplateですでに #DISPLAY_NAME# は置換されているが、
+            // #PACKAGE_NAME#, #UNITY_VERSION#, #AUTHOR_SECTION# は残っているためここで処理する
+            ProcessPackageJson(packageRoot, packageName, displayName, parameters);
 
-            // package.json 作成
-            CreatePackageJson(packageRoot, packageName, displayName, parameters);
-
-            // Runtime/Editor asmdef 作成
-            CreateRuntimeAsmdef(packageRoot, displayName);
-            CreateEditorAsmdef(packageRoot, displayName);
-
-            // .gitignore 作成
-            CreateGitignore(packageRoot);
-
-            // アナライザ生成
+            // 3. アナライザ生成
             if (parameters.WithAnalyzer)
             {
                 CreateAnalyzerSolution(packageRoot, displayName, parameters);
             }
         }
 
-        private static void CreatePackageJson(
-            string packagePath,
+        private static void ProcessPackageJson(
+            string packageRoot,
             string packageName,
             string displayName,
             PackageCreatorParameters parameters)
         {
+            string packageJsonPath = Path.Combine(packageRoot, "package.json");
+            if (!File.Exists(packageJsonPath)) return;
+
+            string content = File.ReadAllText(packageJsonPath);
+
             // 現在のUnityバージョンからメジャー.マイナーを取得
             string unityVersion = Application.unityVersion;
             string[] versionParts = unityVersion.Split('.');
             string majorMinor = versionParts.Length >= 2 ? $"{versionParts[0]}.{versionParts[1]}" : unityVersion;
 
-            // Author部分を構築（空でないフィールドのみ含める）
+            // Author部分を構築
             string authorSection = BuildAuthorSection(parameters);
 
-            string jsonContent = $@"{{
-  ""name"": ""{packageName}"",
-  ""displayName"": ""{displayName}"",
-  ""version"": ""0.1.0"",
-  ""unity"": ""{majorMinor}"",
-  ""description"": ""Lilja package created by DevKit."",
-  ""keywords"": [
-    ""lilja""
-  ]{authorSection}
-}}";
-            File.WriteAllText(Path.Combine(packagePath, "package.json"), jsonContent);
+            // 置換実行
+            content = content.Replace("#PACKAGE_NAME#", packageName)
+                .Replace("#UNITY_VERSION#", majorMinor)
+                .Replace("#AUTHOR_SECTION#", authorSection);
+
+            File.WriteAllText(packageJsonPath, content);
+        }
+
+        private static string GetTemplatePath(string relativePath, PackageCreatorParameters parameters)
+        {
+            // テンプレートパスの解決 (簡易実装: Packages/com.kamahir0.lilja.dev-kit が存在するかチェックし、なければローカル開発用パスと仮定)
+            string devKitPackagePath = "Packages/com.kamahir0.lilja.dev-kit";
+            string fullPathInPackages = Path.GetFullPath(devKitPackagePath);
+
+            if (Directory.Exists(fullPathInPackages))
+            {
+                return Path.Combine(devKitPackagePath, relativePath);
+            }
+            else
+            {
+                // ローカル開発時 (lilja-packages/lilja.dev-kit)
+                string devKitDir = Path.Combine(parameters.LiljaPackagesDirectory, "lilja.dev-kit");
+                return Path.Combine(devKitDir, relativePath);
+            }
         }
 
         private static string BuildAuthorSection(PackageCreatorParameters parameters)
@@ -185,112 +204,12 @@ namespace Lilja.DevKit.PackageManagement
             return ",\n  \"author\": {\n" + string.Join(",\n", fields) + "\n  }";
         }
 
-        private static void CreateRuntimeAsmdef(string packagePath, string displayName)
-        {
-            string asmdefPath = Path.Combine(packagePath, "Runtime", $"{displayName}.asmdef");
-            string asmdefContent = $@"{{
-    ""name"": ""{displayName}"",
-    ""rootNamespace"": ""{displayName}"",
-    ""references"": [],
-    ""includePlatforms"": [],
-    ""excludePlatforms"": [],
-    ""allowUnsafeCode"": false,
-    ""overrideReferences"": false,
-    ""precompiledReferences"": [],
-    ""autoReferenced"": true,
-    ""defineConstraints"": [],
-    ""versionDefines"": [],
-    ""noEngineReferences"": false
-}}";
-            File.WriteAllText(asmdefPath, asmdefContent);
-        }
-
-        private static void CreateEditorAsmdef(string packagePath, string displayName)
-        {
-            string asmdefPath = Path.Combine(packagePath, "Editor", $"{displayName}.Editor.asmdef");
-            string asmdefContent = $@"{{
-    ""name"": ""{displayName}.Editor"",
-    ""rootNamespace"": ""{displayName}.Editor"",
-    ""references"": [
-        ""{displayName}""
-    ],
-    ""includePlatforms"": [
-        ""Editor""
-    ],
-    ""excludePlatforms"": [],
-    ""allowUnsafeCode"": false,
-    ""overrideReferences"": false,
-    ""precompiledReferences"": [],
-    ""autoReferenced"": true,
-    ""defineConstraints"": [],
-    ""versionDefines"": [],
-    ""noEngineReferences"": false
-}}";
-            File.WriteAllText(asmdefPath, asmdefContent);
-        }
-
-        private static void CreateGitignore(string projectPath)
-        {
-            string gitignore = @"# Unity generated
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Uu]ser[Ss]ettings/
-
-# Visual Studio cache directory
-.vs/
-
-# IDE
-*.csproj
-*.sln
-/.idea/
-";
-            File.WriteAllText(Path.Combine(projectPath, ".gitignore"), gitignore);
-        }
-
         private static void CreateAnalyzerSolution(
             string packageRoot,
             string displayName,
             PackageCreatorParameters parameters)
         {
-            // テンプレートディレクトリの検索
-            // このスクリプト: Lilja.DevKit/Editor/PackageManagement/PackageCreator.cs
-            // テンプレート:   Lilja.DevKit/Editor/Templates~/Analyzer
-
-            // ScriptableObject等のインスタンスがないため、このファイルのパスを取得するハックとしてStackFrame等があるが、
-            // Editorスクリプトなら AssetDatabase で自身の GUID からパスを引くのが確実だが、
-            // 静的メソッドかつランタイム外なので、一旦相対パスで決め打ちする
-
-            // 現在のファイルパスを取得できないため、lilja.dev-kit パッケージのパスを探す
-            string templateStatsPath = "Packages/com.kamahir0.lilja.dev-kit/Editor/Templates~/Analyzer";
-
-            // フルパスに変換
-            string templateFullPath = Path.GetFullPath(templateStatsPath);
-            if (!Directory.Exists(templateFullPath))
-            {
-                // ローカル開発環境(Assets/...等)にある可能性も考慮
-                // このクラスの場所から相対的に探す (Path.GetDirectoryName 相当の機能がないので Unity API 依存を避けるなら工夫が必要)
-                // ここではシンプルに、AssetDatabaseからパッケージパスを探すアプローチにする
-            }
-
-            // テンプレートパスの解決 (簡易実装: Packages/com.kamahir0.lilja.dev-kit が存在するかチェックし、なければローカル開発用パスと仮定)
-            string templatePath;
-            string devKitPackagePath = "Packages/com.kamahir0.lilja.dev-kit";
-            if (Directory.Exists(Path.GetFullPath(devKitPackagePath)))
-            {
-                templatePath = Path.Combine(devKitPackagePath, "Editor/Templates~/Analyzer");
-            }
-            else
-            {
-                // ローカル開発時 (lilja-packages/lilja.dev-kit)
-                // ここはユーザー環境に依存するため、とりあえず既知のパス構成から逆算する
-                // 呼び出し元のLiljaPackagesDirectoryと同じ階層にあるはず
-                string devKitDir = Path.Combine(parameters.LiljaPackagesDirectory, "lilja.dev-kit");
-                templatePath = Path.Combine(devKitDir, "Editor/Templates~/Analyzer");
-            }
+            string templatePath = GetTemplatePath("Editor/Templates~/Analyzer", parameters);
 
             string targetDir = Path.Combine(packageRoot, "Analyzer~");
 
