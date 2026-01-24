@@ -15,6 +15,16 @@ namespace Lilja.DevKit.PackageManagement
         private const string SettingsPath = "ProjectSettings/LiljaPackageCreatorSettings.json";
         private const string WindowTitle = "📦 Lilja Package Creator";
 
+        // EditorPrefs Keys
+        private const string KeyPrefix = "Lilja.DevKit.PackageCreator.";
+        private const string KeyLiljaPackagesDirectory = KeyPrefix + "LiljaPackagesDirectory";
+        private const string KeyPackageBaseName = KeyPrefix + "PackageBaseName";
+        private const string KeyAuthorName = KeyPrefix + "AuthorName";
+        private const string KeyAuthorUrl = KeyPrefix + "AuthorUrl";
+        private const string KeyAuthorEmail = KeyPrefix + "AuthorEmail";
+        private const string KeyWithImport = KeyPrefix + "WithImport";
+        private const string KeyUseAnalyzer = KeyPrefix + "UseAnalyzer";
+
         #endregion
 
         #region Serializable Settings
@@ -26,8 +36,11 @@ namespace Lilja.DevKit.PackageManagement
         private class Settings
         {
             // ReSharper disable All
-            public string liljaPackagesDirectory = string.Empty;
+            // Project Settings (Git管理対象)
             public string organizationName = "kamahir0";
+
+            // Local Settings (EditorPrefs管理対象 - Git管理外)
+            public string liljaPackagesDirectory = string.Empty;
             public string packageBaseName = "NewPackage";
 
             // Author情報（任意）
@@ -40,6 +53,17 @@ namespace Lilja.DevKit.PackageManagement
 
             // オプション生成
             public bool useAnalyzer = false;
+            // ReSharper restore All
+        }
+
+        /// <summary>
+        /// ディスク保存用（OrganizationNameのみ）
+        /// </summary>
+        [System.Serializable]
+        private class ProjectSettingsData
+        {
+            // ReSharper disable All
+            public string organizationName;
             // ReSharper restore All
         }
 
@@ -286,6 +310,7 @@ namespace Lilja.DevKit.PackageManagement
 
         private void LoadSettings()
         {
+            // 1. Load Project Settings (JSON)
             if (File.Exists(SettingsPath))
             {
                 try
@@ -302,6 +327,16 @@ namespace Lilja.DevKit.PackageManagement
             {
                 _settings = new Settings();
             }
+
+            // 2. Load Local Settings (EditorPrefs)
+            _settings.liljaPackagesDirectory =
+                EditorPrefs.GetString(KeyLiljaPackagesDirectory, _settings.liljaPackagesDirectory);
+            _settings.packageBaseName = EditorPrefs.GetString(KeyPackageBaseName, "NewPackage");
+            _settings.authorName = EditorPrefs.GetString(KeyAuthorName, "");
+            _settings.authorUrl = EditorPrefs.GetString(KeyAuthorUrl, "");
+            _settings.authorEmail = EditorPrefs.GetString(KeyAuthorEmail, "");
+            _settings.withImport = EditorPrefs.GetBool(KeyWithImport, true);
+            _settings.useAnalyzer = EditorPrefs.GetBool(KeyUseAnalyzer, false);
         }
 
         private void SaveSettings()
@@ -311,15 +346,29 @@ namespace Lilja.DevKit.PackageManagement
                 return;
             }
 
+            // 1. Save Project Settings (JSON) - Only serializable fields (organizationName) are saved via DTO
             try
             {
-                string json = JsonUtility.ToJson(_settings, true);
+                var projectSettings = new ProjectSettingsData
+                {
+                    organizationName = _settings.organizationName
+                };
+                string json = JsonUtility.ToJson(projectSettings, true);
                 File.WriteAllText(SettingsPath, json);
             }
             catch (System.Exception e)
             {
                 Debug.LogError($"Failed to save LiljaPackageCreator settings: {e.Message}");
             }
+
+            // 2. Save Local Settings (EditorPrefs)
+            EditorPrefs.SetString(KeyLiljaPackagesDirectory, _settings.liljaPackagesDirectory);
+            EditorPrefs.SetString(KeyPackageBaseName, _settings.packageBaseName);
+            EditorPrefs.SetString(KeyAuthorName, _settings.authorName);
+            EditorPrefs.SetString(KeyAuthorUrl, _settings.authorUrl);
+            EditorPrefs.SetString(KeyAuthorEmail, _settings.authorEmail);
+            EditorPrefs.SetBool(KeyWithImport, _settings.withImport);
+            EditorPrefs.SetBool(KeyUseAnalyzer, _settings.useAnalyzer);
         }
 
         #endregion
