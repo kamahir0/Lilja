@@ -49,7 +49,12 @@ namespace Lilja.DevKit.PackageManagement
             }
 
             // パッケージ構造を作成
-            CreatePackageStructure(packageRoot, displayName, packageName, parameters);
+            if (!CreatePackageStructure(packageRoot, displayName, packageName, parameters))
+            {
+                // 作成失敗時は（可能なら）クリーンアップしてnullを返す
+                // 現状はディレクトリが残る可能性があるが、エラーログが出ているのでユーザーに任せる
+                return null;
+            }
 
             Debug.Log($"✨ Created Lilja Package: {packageRoot}");
 
@@ -97,14 +102,15 @@ namespace Lilja.DevKit.PackageManagement
 
         #region Private Methods
 
-        private static void CreatePackageStructure(
+        private static bool CreatePackageStructure(
             string packageRoot,
             string displayName,
             string packageName,
             PackageCreatorParameters parameters)
         {
             // 1. 基本パッケージテンプレートの展開
-            string packageTemplatePath = GetTemplatePath("Editor/Templates~/Package", parameters);
+            // DevKit自体の構造変更により Scripts/Templates~ に移動
+            string packageTemplatePath = GetTemplatePath("Scripts/Templates~/Package", parameters);
             if (Directory.Exists(packageTemplatePath))
             {
                 CopyAndReplaceTemplate(packageTemplatePath, packageRoot, displayName);
@@ -112,7 +118,7 @@ namespace Lilja.DevKit.PackageManagement
             else
             {
                 Debug.LogError($"[PackageCreator] Package template not found at: {packageTemplatePath}");
-                return;
+                return false;
             }
 
             // 2. package.json のプレースホルダーを追加置換
@@ -125,6 +131,8 @@ namespace Lilja.DevKit.PackageManagement
             {
                 CreateAnalyzerSolution(packageRoot, displayName, parameters);
             }
+
+            return true;
         }
 
         private static void ProcessPackageJson(
@@ -167,6 +175,14 @@ namespace Lilja.DevKit.PackageManagement
             {
                 // ローカル開発時 (lilja-packages/lilja.dev-kit)
                 string devKitDir = Path.Combine(parameters.LiljaPackagesDirectory, "lilja.dev-kit");
+
+                // srcフォルダが存在する場合はそこを起点とする
+                string srcDir = Path.Combine(devKitDir, "src");
+                if (Directory.Exists(srcDir))
+                {
+                    return Path.Combine(srcDir, relativePath);
+                }
+
                 return Path.Combine(devKitDir, relativePath);
             }
         }
@@ -207,7 +223,7 @@ namespace Lilja.DevKit.PackageManagement
             string displayName,
             PackageCreatorParameters parameters)
         {
-            string templatePath = GetTemplatePath("Editor/Templates~/Analyzer", parameters);
+            string templatePath = GetTemplatePath("Scripts/Templates~/Analyzer", parameters);
 
             string targetDir = Path.Combine(packageRoot, "Analyzer");
 
