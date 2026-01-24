@@ -1,13 +1,13 @@
 {
   "dependencies": {
     "com.kamahir0.lilja.dev-kit": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.dev-kit",
+      "version": "file:../../../lilja-packages/lilja.dev-kit",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
     "com.kamahir0.lilja.roslyn-test": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.roslyn-test",
+      "version": "file:../../../lilja-packages/lilja.roslyn-test",
       "depth": 0,
       "source": "local",
       "dependencies": {}
