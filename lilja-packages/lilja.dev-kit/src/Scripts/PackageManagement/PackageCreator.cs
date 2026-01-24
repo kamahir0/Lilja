@@ -155,10 +155,14 @@ namespace Lilja.DevKit.PackageManagement
             // Author部分を構築
             string authorSection = BuildAuthorSection(parameters);
 
+            // URL部分を構築
+            string urlSection = BuildUrlSection(packageRoot);
+
             // 置換実行
             content = content.Replace("#PACKAGE_NAME#", packageName)
                 .Replace("#UNITY_VERSION#", majorMinor)
-                .Replace("#AUTHOR_SECTION#", authorSection);
+                .Replace("#AUTHOR_SECTION#", authorSection)
+                .Replace("#URL_SECTION#", urlSection);
 
             File.WriteAllText(packageJsonPath, content);
         }
@@ -232,6 +236,48 @@ namespace Lilja.DevKit.PackageManagement
             }
 
             return ",\n  \"author\": {\n" + string.Join(",\n", fields) + "\n  }";
+        }
+
+        private static string BuildUrlSection(string packageRoot)
+        {
+            string repoRoot = GetRepoRoot(packageRoot);
+            if (string.IsNullOrEmpty(repoRoot))
+            {
+                return string.Empty;
+            }
+
+            // リポジトリルートからの相対パスを取得
+            string relativePath = Path.GetRelativePath(repoRoot, packageRoot).Replace("\\", "/");
+
+            string baseUrl = "https://github.com/kamahir0/Lilja/blob/main";
+            string licenseUrl = $"{baseUrl}/LICENSE";
+            string docUrl = $"{baseUrl}/{relativePath}/README.md";
+            string changelogUrl = $"{baseUrl}/{relativePath}/CHANGELOG.md";
+
+            var fields = new List<string>
+            {
+                $"    \"documentationUrl\": \"{docUrl}\"",
+                $"    \"changelogUrl\": \"{changelogUrl}\"",
+                $"    \"licensesUrl\": \"{licenseUrl}\""
+            };
+
+            return ",\n" + string.Join(",\n", fields);
+        }
+
+        private static string GetRepoRoot(string path)
+        {
+            string directory = path;
+            while (directory != null)
+            {
+                if (Directory.Exists(Path.Combine(directory, ".git")))
+                {
+                    return directory;
+                }
+
+                directory = Path.GetDirectoryName(directory);
+            }
+
+            return null;
         }
 
         private static void CreateAnalyzerSolution(
