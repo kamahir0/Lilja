@@ -35,23 +35,25 @@ namespace Lilja.DevKit.PackageManagement
             string kebabName = ConvertToKebabCase(parameters.PackageBaseName);
             string packageName = $"com.{parameters.OrganizationName}.lilja.{kebabName}";
 
-            // 出力先パス
-            string projectPath = Path.Combine(parameters.LiljaPackagesDirectory, displayName);
-            string packagePath = Path.Combine(projectPath, "Packages", packageName);
+            // ディレクトリ名: lilja.package-name (kebab-case)
+            string directoryName = $"lilja.{kebabName}";
+
+            // 出力先パス (パッケージルート)
+            string packageRoot = Path.Combine(parameters.LiljaPackagesDirectory, directoryName);
 
             // ディレクトリ存在チェック
-            if (Directory.Exists(projectPath))
+            if (Directory.Exists(packageRoot))
             {
-                Debug.LogError($"ディレクトリが既に存在します: {projectPath}");
+                Debug.LogError($"ディレクトリが既に存在します: {packageRoot}");
                 return null;
             }
 
-            // Unityプロジェクト構造を作成
-            CreateUnityProjectStructure(projectPath, packagePath, displayName, packageName, parameters);
+            // パッケージ構造を作成
+            CreatePackageStructure(packageRoot, displayName, packageName, parameters);
 
-            Debug.Log($"✨ Created Lilja Package: {projectPath}");
+            Debug.Log($"✨ Created Lilja Package: {packageRoot}");
 
-            return projectPath;
+            return packageRoot;
         }
 
         /// <summary>
@@ -95,35 +97,28 @@ namespace Lilja.DevKit.PackageManagement
 
         #region Private Methods
 
-        private static void CreateUnityProjectStructure(
-            string projectPath,
-            string packagePath,
+        private static void CreatePackageStructure(
+            string packageRoot,
             string displayName,
             string packageName,
             PackageCreatorParameters parameters)
         {
-            // プロジェクトディレクトリ作成
-            Directory.CreateDirectory(projectPath);
-            Directory.CreateDirectory(Path.Combine(projectPath, "Assets"));
-            Directory.CreateDirectory(Path.Combine(projectPath, "ProjectSettings"));
+            // パッケージルートディレクトリ作成
+            Directory.CreateDirectory(packageRoot);
 
-            // パッケージディレクトリ作成
-            Directory.CreateDirectory(packagePath);
-            Directory.CreateDirectory(Path.Combine(packagePath, "Runtime"));
-            Directory.CreateDirectory(Path.Combine(packagePath, "Editor"));
+            // サブディレクトリ作成
+            Directory.CreateDirectory(Path.Combine(packageRoot, "Runtime"));
+            Directory.CreateDirectory(Path.Combine(packageRoot, "Editor"));
 
             // package.json 作成
-            CreatePackageJson(packagePath, packageName, displayName, parameters);
+            CreatePackageJson(packageRoot, packageName, displayName, parameters);
 
             // Runtime/Editor asmdef 作成
-            CreateRuntimeAsmdef(packagePath, displayName);
-            CreateEditorAsmdef(packagePath, displayName);
-
-            // ProjectSettings/ProjectVersion.txt 作成
-            CreateProjectVersionFile(projectPath);
+            CreateRuntimeAsmdef(packageRoot, displayName);
+            CreateEditorAsmdef(packageRoot, displayName);
 
             // .gitignore 作成
-            CreateGitignore(projectPath);
+            CreateGitignore(packageRoot);
         }
 
         private static void CreatePackageJson(
@@ -226,15 +221,6 @@ namespace Lilja.DevKit.PackageManagement
     ""noEngineReferences"": false
 }}";
             File.WriteAllText(asmdefPath, asmdefContent);
-        }
-
-        private static void CreateProjectVersionFile(string projectPath)
-        {
-            string projectSettingsPath = Path.Combine(projectPath, "ProjectSettings");
-            string projectVersionPath = Path.Combine(projectSettingsPath, "ProjectVersion.txt");
-
-            string content = $"m_EditorVersion: {Application.unityVersion}";
-            File.WriteAllText(projectVersionPath, content);
         }
 
         private static void CreateGitignore(string projectPath)

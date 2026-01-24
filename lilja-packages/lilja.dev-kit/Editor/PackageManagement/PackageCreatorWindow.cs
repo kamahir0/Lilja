@@ -234,8 +234,9 @@ namespace Lilja.DevKit.PackageManagement
             };
 
             // 出力先パス計算
-            string displayName = PackageCreator.GenerateDisplayName(_settings.packageBaseName);
-            string targetPath = Path.Combine(_settings.liljaPackagesDirectory, displayName);
+            string kebabName = PackageCreator.ConvertToKebabCase(_settings.packageBaseName);
+            string directoryName = $"lilja.{kebabName}";
+            string targetPath = Path.Combine(_settings.liljaPackagesDirectory, directoryName);
 
             // ディレクトリ存在チェック
             if (Directory.Exists(targetPath))
@@ -257,13 +258,8 @@ namespace Lilja.DevKit.PackageManagement
                 // インポート設定が有効な場合はmanifest.jsonに追加
                 if (_settings.withImport)
                 {
-                    // パッケージディレクトリ（package.jsonがある場所）を取得
-                    string packageName = PackageCreator.GeneratePackageName(
-                        _settings.organizationName,
-                        _settings.packageBaseName
-                    );
-                    string packageDir = Path.Combine(createdPath, "Packages", packageName);
-                    PackageImporter.Import(packageDir);
+                    // フラット構造になったため、作成されたパスそのものをインポート対象とする
+                    PackageImporter.Import(createdPath);
                 }
 
                 EditorDialog.DisplayAlertDialog(
