@@ -39,5 +39,10 @@ namespace Lilja.DevKit.PackageManagement
         /// 作者メールアドレス（任意）
         /// </summary>
         public string AuthorEmail { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Roslyn Analyzer ソリューションを作成するかどうか
+        /// </summary>
+        public bool WithAnalyzer { get; set; } = false;
     }
 }

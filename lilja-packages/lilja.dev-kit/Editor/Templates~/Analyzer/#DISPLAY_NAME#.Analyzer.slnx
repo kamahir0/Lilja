@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="#DISPLAY_NAME#.Analyzer/#DISPLAY_NAME#.Analyzer.csproj" />
+  <Project Path="#DISPLAY_NAME#.Analyzer.Test/#DISPLAY_NAME#.Analyzer.Test.csproj" />
+</Solution>

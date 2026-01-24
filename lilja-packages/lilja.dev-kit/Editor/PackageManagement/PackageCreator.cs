@@ -119,6 +119,12 @@ namespace Lilja.DevKit.PackageManagement
 
             // .gitignore 作成
             CreateGitignore(packageRoot);
+
+            // アナライザ生成
+            if (parameters.WithAnalyzer)
+            {
+                CreateAnalyzerSolution(packageRoot, displayName, parameters);
+            }
         }
 
         private static void CreatePackageJson(
@@ -243,6 +249,93 @@ namespace Lilja.DevKit.PackageManagement
 /.idea/
 ";
             File.WriteAllText(Path.Combine(projectPath, ".gitignore"), gitignore);
+        }
+
+        private static void CreateAnalyzerSolution(
+            string packageRoot,
+            string displayName,
+            PackageCreatorParameters parameters)
+        {
+            // テンプレートディレクトリの検索
+            // このスクリプト: Lilja.DevKit/Editor/PackageManagement/PackageCreator.cs
+            // テンプレート:   Lilja.DevKit/Editor/Templates~/Analyzer
+
+            // ScriptableObject等のインスタンスがないため、このファイルのパスを取得するハックとしてStackFrame等があるが、
+            // Editorスクリプトなら AssetDatabase で自身の GUID からパスを引くのが確実だが、
+            // 静的メソッドかつランタイム外なので、一旦相対パスで決め打ちする
+
+            // 現在のファイルパスを取得できないため、lilja.dev-kit パッケージのパスを探す
+            string templateStatsPath = "Packages/com.kamahir0.lilja.dev-kit/Editor/Templates~/Analyzer";
+
+            // フルパスに変換
+            string templateFullPath = Path.GetFullPath(templateStatsPath);
+            if (!Directory.Exists(templateFullPath))
+            {
+                // ローカル開発環境(Assets/...等)にある可能性も考慮
+                // このクラスの場所から相対的に探す (Path.GetDirectoryName 相当の機能がないので Unity API 依存を避けるなら工夫が必要)
+                // ここではシンプルに、AssetDatabaseからパッケージパスを探すアプローチにする
+            }
+
+            // テンプレートパスの解決 (簡易実装: Packages/com.kamahir0.lilja.dev-kit が存在するかチェックし、なければローカル開発用パスと仮定)
+            string templatePath;
+            string devKitPackagePath = "Packages/com.kamahir0.lilja.dev-kit";
+            if (Directory.Exists(Path.GetFullPath(devKitPackagePath)))
+            {
+                templatePath = Path.Combine(devKitPackagePath, "Editor/Templates~/Analyzer");
+            }
+            else
+            {
+                // ローカル開発時 (lilja-packages/lilja.dev-kit)
+                // ここはユーザー環境に依存するため、とりあえず既知のパス構成から逆算する
+                // 呼び出し元のLiljaPackagesDirectoryと同じ階層にあるはず
+                string devKitDir = Path.Combine(parameters.LiljaPackagesDirectory, "lilja.dev-kit");
+                templatePath = Path.Combine(devKitDir, "Editor/Templates~/Analyzer");
+            }
+
+            string targetDir = Path.Combine(packageRoot, "Analyzer~");
+
+            // ディレクトリコピー & 置換
+            if (Directory.Exists(templatePath))
+            {
+                Debug.Log($"[PackageCreator] Copying analyzer template from: {templatePath}");
+                CopyAndReplaceTemplate(templatePath, targetDir, displayName);
+            }
+            else
+            {
+                Debug.LogError($"[PackageCreator] Analyzer template not found at: {templatePath}");
+            }
+        }
+
+        private static void CopyAndReplaceTemplate(string sourceDir, string targetDir, string displayName)
+        {
+            Directory.CreateDirectory(targetDir);
+
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                string fileName = Path.GetFileName(file);
+                if (fileName.EndsWith(".meta")) continue;
+
+                // ファイル名の置換
+                string newFileName = fileName.Replace("#DISPLAY_NAME#", displayName);
+                string destFile = Path.Combine(targetDir, newFileName);
+
+                // 内容の読み込みと置換
+                string content = File.ReadAllText(file);
+                content = content.Replace("#DISPLAY_NAME#", displayName);
+
+                File.WriteAllText(destFile, content);
+            }
+
+            foreach (var directory in Directory.GetDirectories(sourceDir))
+            {
+                string dirName = Path.GetFileName(directory);
+
+                // ディレクトリ名の置換
+                string newDirName = dirName.Replace("#DISPLAY_NAME#", displayName);
+                string destDir = Path.Combine(targetDir, newDirName);
+
+                CopyAndReplaceTemplate(directory, destDir, displayName);
+            }
         }
 
         #endregion

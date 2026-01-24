@@ -37,6 +37,9 @@ namespace Lilja.DevKit.PackageManagement
 
             // 作成後の動作
             public bool withImport = true;
+
+            // オプション生成
+            public bool withAnalyzer = false;
             // ReSharper restore All
         }
 
@@ -200,6 +203,11 @@ namespace Lilja.DevKit.PackageManagement
                 "With Import",
                 _settings.withImport
             );
+
+            _settings.withAnalyzer = EditorGUILayout.Toggle(
+                "With Analyzer",
+                _settings.withAnalyzer
+            );
         }
 
         private void DrawCreateButton()
@@ -230,7 +238,8 @@ namespace Lilja.DevKit.PackageManagement
                 PackageBaseName = _settings.packageBaseName,
                 AuthorName = _settings.authorName,
                 AuthorUrl = _settings.authorUrl,
-                AuthorEmail = _settings.authorEmail
+                AuthorEmail = _settings.authorEmail,
+                WithAnalyzer = _settings.withAnalyzer
             };
 
             // 出力先パス計算
