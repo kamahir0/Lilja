@@ -119,10 +119,10 @@ namespace Lilja.DevKit.PackageManagement
             // 2. package.json のプレースホルダーを追加置換
             // CopyAndReplaceTemplateですでに #DISPLAY_NAME# は置換されているが、
             // #PACKAGE_NAME#, #UNITY_VERSION#, #AUTHOR_SECTION# は残っているためここで処理する
-            ProcessPackageJson(packageRoot, packageName, displayName, parameters);
+            ProcessPackageJson(packageRoot, packageName, parameters);
 
             // 3. アナライザ生成
-            if (parameters.WithAnalyzer)
+            if (parameters.UseAnalyzer)
             {
                 CreateAnalyzerSolution(packageRoot, displayName, parameters);
             }
@@ -131,7 +131,6 @@ namespace Lilja.DevKit.PackageManagement
         private static void ProcessPackageJson(
             string packageRoot,
             string packageName,
-            string displayName,
             PackageCreatorParameters parameters)
         {
             string packageJsonPath = Path.Combine(packageRoot, "package.json");

@@ -43,6 +43,6 @@ namespace Lilja.DevKit.PackageManagement
         /// <summary>
         /// Roslyn Analyzer ソリューションを作成するかどうか
         /// </summary>
-        public bool WithAnalyzer { get; set; } = false;
+        public bool UseAnalyzer { get; set; } = false;
     }
 }

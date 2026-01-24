@@ -39,7 +39,7 @@ namespace Lilja.DevKit.PackageManagement
             public bool withImport = true;
 
             // オプション生成
-            public bool withAnalyzer = false;
+            public bool useAnalyzer = false;
             // ReSharper restore All
         }
 
@@ -204,9 +204,9 @@ namespace Lilja.DevKit.PackageManagement
                 _settings.withImport
             );
 
-            _settings.withAnalyzer = EditorGUILayout.Toggle(
-                "With Analyzer",
-                _settings.withAnalyzer
+            _settings.useAnalyzer = EditorGUILayout.Toggle(
+                "Use Analyzer",
+                _settings.useAnalyzer
             );
         }
 
@@ -239,7 +239,7 @@ namespace Lilja.DevKit.PackageManagement
                 AuthorName = _settings.authorName,
                 AuthorUrl = _settings.authorUrl,
                 AuthorEmail = _settings.authorEmail,
-                WithAnalyzer = _settings.withAnalyzer
+                UseAnalyzer = _settings.useAnalyzer
             };
 
             // 出力先パス計算
