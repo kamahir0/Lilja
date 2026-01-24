@@ -8,5 +8,8 @@
     "url": "https://github.com/kamahir0",
     "email": "hrtk1330@gmail.com"
   },
-  "description": "Lilja package"
+  "description": "Lilja package",
+  "documentationUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.dev-kit/README.md",
+  "licensesUrl": "https://github.com/kamahir0/Lilja/blob/main/LICENSE",
+  "changelogUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.dev-kit/CHANGELOG.md"
 }
