@@ -6,12 +6,6 @@
       "source": "local",
       "dependencies": {}
     },
-    "com.kamahir0.lilja.roslyn-test": {
-      "version": "file:../../../lilja-packages/lilja.roslyn-test",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
     "com.unity.ext.nunit": {
       "version": "2.0.5",
       "depth": 1,
