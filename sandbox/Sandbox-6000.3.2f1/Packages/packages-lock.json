@@ -1,12 +1,16 @@
 {
   "dependencies": {
     "com.kamahir0.lilja.dev-kit": {
-      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/Lilja.DevKit/Packages/com.kamahir0.lilja.dev-kit",
+      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.dev-kit",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "com.unity.test-framework": "1.6.0"
-      }
+      "dependencies": {}
+    },
+    "com.kamahir0.lilja.roslyn-test": {
+      "version": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.roslyn-test",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
     },
     "com.unity.ext.nunit": {
       "version": "2.0.5",

@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "com.kamahir0.lilja.dev-kit": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/Lilja.DevKit/Packages/com.kamahir0.lilja.dev-kit",
+    "com.kamahir0.lilja.dev-kit": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.dev-kit",
+    "com.kamahir0.lilja.roslyn-test": "file:C:/Users/hrtkm/develop/unity/lilja/lilja-packages/lilja.roslyn-test",
     "com.unity.ide.antigravity": "https://github.com/HarineshS/com.unity.ide.antigravity.git",
     "com.unity.ide.rider": "3.0.39",
     "com.unity.modules.accessibility": "1.0.0",

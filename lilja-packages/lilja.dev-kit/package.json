@@ -1,0 +1,12 @@
+{
+  "name": "com.kamahir0.lilja.dev-kit",
+  "displayName": "Lilja.DevKit",
+  "version": "0.1.0",
+  "unity": "6000.3",
+  "author": {
+    "name": "kamahir0",
+    "url": "https://github.com/kamahir0",
+    "email": "hrtk1330@gmail.com"
+  },
+  "description": "Lilja package"
+}

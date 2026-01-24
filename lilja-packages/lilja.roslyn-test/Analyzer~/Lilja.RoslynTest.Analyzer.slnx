@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Lilja.RoslynTest.Analyzer/Lilja.RoslynTest.Analyzer.csproj" />
+  <Project Path="Tsst/Tsst.csproj" />
+</Solution>
