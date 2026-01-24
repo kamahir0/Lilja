@@ -2,9 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11</LangVersion>
     <Nullable>enable</Nullable>
+
     <IsRoslynComponent>true</IsRoslynComponent>
+    <AnalyzerLanguage>cs</AnalyzerLanguage>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
   </PropertyGroup>
 
@@ -14,7 +20,7 @@
 
   <Target Name="CopyDLLToPackage" AfterTargets="Build">
     <PropertyGroup>
-      <UnityPluginsPath>$(ProjectDir)..\..\Plugins</UnityPluginsPath>
+      <UnityPluginsPath>$(ProjectDir)..\..\src\Plugins</UnityPluginsPath>
     </PropertyGroup>
 
     <Message Text="Copying DLL to Unity Plugins folder...: $(UnityPluginsPath)" Importance="high" />
