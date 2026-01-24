@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -110,7 +112,7 @@ namespace Lilja.DevKit.PackageManagement
         {
             // 1. 基本パッケージテンプレートの展開
             // DevKit自体の構造変更により Scripts/Templates~ に移動
-            string packageTemplatePath = GetTemplatePath("Scripts/Templates~/Package", parameters);
+            string packageTemplatePath = GetTemplatePath("Package");
             if (Directory.Exists(packageTemplatePath))
             {
                 CopyAndReplaceTemplate(packageTemplatePath, packageRoot, displayName);
@@ -129,7 +131,7 @@ namespace Lilja.DevKit.PackageManagement
             // 3. アナライザ生成
             if (parameters.UseAnalyzer)
             {
-                CreateAnalyzerSolution(packageRoot, displayName, parameters);
+                CreateAnalyzerSolution(packageRoot, displayName);
             }
 
             return true;
@@ -161,30 +163,44 @@ namespace Lilja.DevKit.PackageManagement
             File.WriteAllText(packageJsonPath, content);
         }
 
-        private static string GetTemplatePath(string relativePath, PackageCreatorParameters parameters)
+        private static string GetTemplatePath(string templateName, [CallerFilePath] string callerPath = "")
         {
-            // テンプレートパスの解決 (簡易実装: Packages/com.kamahir0.lilja.dev-kit が存在するかチェックし、なければローカル開発用パスと仮定)
-            string devKitPackagePath = "Packages/com.kamahir0.lilja.dev-kit";
-            string fullPathInPackages = Path.GetFullPath(devKitPackagePath);
-
-            if (Directory.Exists(fullPathInPackages))
+            string packageRoot = GetDevKitPackageRoot(callerPath);
+            if (string.IsNullOrEmpty(packageRoot))
             {
-                return Path.Combine(devKitPackagePath, relativePath);
+                Debug.LogError("[PackageCreator] Could not find DevKit package root.");
+                return string.Empty;
             }
-            else
+
+            string templatesDir = FindTemplatesDirectory(packageRoot);
+            if (string.IsNullOrEmpty(templatesDir))
             {
-                // ローカル開発時 (lilja-packages/lilja.dev-kit)
-                string devKitDir = Path.Combine(parameters.LiljaPackagesDirectory, "lilja.dev-kit");
-
-                // srcフォルダが存在する場合はそこを起点とする
-                string srcDir = Path.Combine(devKitDir, "src");
-                if (Directory.Exists(srcDir))
-                {
-                    return Path.Combine(srcDir, relativePath);
-                }
-
-                return Path.Combine(devKitDir, relativePath);
+                Debug.LogError($"[PackageCreator] Templates~ directory not found in {packageRoot}");
+                return string.Empty;
             }
+
+            return Path.Combine(templatesDir, templateName);
+        }
+
+        private static string GetDevKitPackageRoot(string callerPath)
+        {
+            string directory = Path.GetDirectoryName(callerPath);
+            while (directory != null)
+            {
+                if (File.Exists(Path.Combine(directory, "package.json")))
+                    return directory;
+                directory = Path.GetDirectoryName(directory);
+            }
+
+            return null;
+        }
+
+        private static string FindTemplatesDirectory(string packageRoot)
+        {
+            // Search for "Templates~" directory
+            // Note: This might be slow if the package is huge, but it's executed only once per creation
+            var dirs = Directory.GetDirectories(packageRoot, "Templates~", SearchOption.AllDirectories);
+            return dirs.FirstOrDefault();
         }
 
         private static string BuildAuthorSection(PackageCreatorParameters parameters)
@@ -220,10 +236,9 @@ namespace Lilja.DevKit.PackageManagement
 
         private static void CreateAnalyzerSolution(
             string packageRoot,
-            string displayName,
-            PackageCreatorParameters parameters)
+            string displayName)
         {
-            string templatePath = GetTemplatePath("Scripts/Templates~/Analyzer", parameters);
+            string templatePath = GetTemplatePath("Analyzer");
 
             string targetDir = Path.Combine(packageRoot, "Analyzer");
 
