@@ -133,7 +133,7 @@ namespace Lilja.DevKit.PackageManagement
             string packageName,
             PackageCreatorParameters parameters)
         {
-            string packageJsonPath = Path.Combine(packageRoot, "package.json");
+            string packageJsonPath = Path.Combine(packageRoot, "src", "package.json");
             if (!File.Exists(packageJsonPath)) return;
 
             string content = File.ReadAllText(packageJsonPath);
@@ -210,7 +210,7 @@ namespace Lilja.DevKit.PackageManagement
         {
             string templatePath = GetTemplatePath("Editor/Templates~/Analyzer", parameters);
 
-            string targetDir = Path.Combine(packageRoot, "Analyzer~");
+            string targetDir = Path.Combine(packageRoot, "Analyzer");
 
             // ディレクトリコピー & 置換
             if (Directory.Exists(templatePath))

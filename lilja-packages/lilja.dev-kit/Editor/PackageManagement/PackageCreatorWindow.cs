@@ -267,8 +267,8 @@ namespace Lilja.DevKit.PackageManagement
                 // インポート設定が有効な場合はmanifest.jsonに追加
                 if (_settings.withImport)
                 {
-                    // フラット構造になったため、作成されたパスそのものをインポート対象とする
-                    PackageImporter.Import(createdPath);
+                    // srcフォルダ内にpackage.jsonがあるため、srcフォルダをインポート対象とする
+                    PackageImporter.Import(Path.Combine(createdPath, "src"));
                 }
 
                 EditorDialog.DisplayAlertDialog(
