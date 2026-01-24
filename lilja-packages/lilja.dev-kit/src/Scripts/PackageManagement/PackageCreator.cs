@@ -156,7 +156,7 @@ namespace Lilja.DevKit.PackageManagement
             string authorSection = BuildAuthorSection(parameters);
 
             // URL部分を構築
-            string urlSection = BuildUrlSection(packageRoot);
+            string urlSection = BuildUrlSection(packageRoot, parameters);
 
             // 置換実行
             content = content.Replace("#PACKAGE_NAME#", packageName)
@@ -238,7 +238,7 @@ namespace Lilja.DevKit.PackageManagement
             return ",\n  \"author\": {\n" + string.Join(",\n", fields) + "\n  }";
         }
 
-        private static string BuildUrlSection(string packageRoot)
+        private static string BuildUrlSection(string packageRoot, PackageCreatorParameters parameters)
         {
             string repoRoot = GetRepoRoot(packageRoot);
             if (string.IsNullOrEmpty(repoRoot))
@@ -249,7 +249,9 @@ namespace Lilja.DevKit.PackageManagement
             // リポジトリルートからの相対パスを取得
             string relativePath = Path.GetRelativePath(repoRoot, packageRoot).Replace("\\", "/");
 
-            string baseUrl = "https://github.com/kamahir0/Lilja/blob/main";
+            // OrganizationName（Githubのユーザー名/Org名と一致すると仮定）を使用してURLを構築
+            // RepositoryNameは現状 "Lilja" 固定だが、必要ならこれもパラメータ化検討
+            string baseUrl = $"https://github.com/{parameters.OrganizationName}/Lilja/blob/main";
             string licenseUrl = $"{baseUrl}/LICENSE";
             string docUrl = $"{baseUrl}/{relativePath}/README.md";
             string changelogUrl = $"{baseUrl}/{relativePath}/CHANGELOG.md";
