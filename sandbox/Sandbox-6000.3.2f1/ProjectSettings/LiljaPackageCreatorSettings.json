@@ -5,5 +5,5 @@
     "authorName": "kamahir0",
     "authorUrl": "https://github.com/kamahir0",
     "authorEmail": "hrtk1330@gmail.com",
-    "importAfterCreate": true
+    "withImport": true
 }
