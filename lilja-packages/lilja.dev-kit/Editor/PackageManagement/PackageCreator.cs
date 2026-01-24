@@ -107,7 +107,6 @@ namespace Lilja.DevKit.PackageManagement
             string packageTemplatePath = GetTemplatePath("Editor/Templates~/Package", parameters);
             if (Directory.Exists(packageTemplatePath))
             {
-                Debug.Log($"[PackageCreator] Copying package template from: {packageTemplatePath}");
                 CopyAndReplaceTemplate(packageTemplatePath, packageRoot, displayName);
             }
             else
@@ -215,7 +214,6 @@ namespace Lilja.DevKit.PackageManagement
             // ディレクトリコピー & 置換
             if (Directory.Exists(templatePath))
             {
-                Debug.Log($"[PackageCreator] Copying analyzer template from: {templatePath}");
                 CopyAndReplaceTemplate(templatePath, targetDir, displayName);
             }
             else
