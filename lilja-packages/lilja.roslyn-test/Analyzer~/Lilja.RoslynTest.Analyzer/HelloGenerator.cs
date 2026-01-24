@@ -11,6 +11,7 @@ namespace MyUnityGenerator
             context.RegisterPostInitializationOutput(ctx =>
             {
                 ctx.AddSource("Test.g.cs", "// Auto Generated Code \n public class GeneratedClass { }");
+                ctx.AddSource("Test2.g.cs", "// Auto Generated Code \n public class GeneratedClass2 { }");
             });
         }
     }
