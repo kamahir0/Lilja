@@ -18,12 +18,10 @@ trigger: always_on
   - クラス
   - 構造体
   - インターフェース (接頭辞 `I`)
+  - Enum
   - メソッド
-  - public変数
-  - internal変数
-  - publicプロパティ
-  - internalプロパティ
-  - private プロパティ
+  - public, internal, protected変数
+  - public, internal, protected, privateプロパティ
   - 定数
 - **camelCase**:
   - メソッド引数
@@ -34,10 +32,22 @@ trigger: always_on
   - 属性型: 必ず `Attribute` で終える
   - 列挙型: 原則として単数形。ただし `[Flags]` 属性付与時のみ複数形
 
-## 3. Unity 固有ルール
+## 3. コメント
+- 原則、C#コード内には日本語でコメントを書く
+- 以下の箇所には必ずXMLコメントを書く。以下の箇所以外には、重要性が高いコメントだけに絞って書く
+  - クラス
+  - 構造体
+  - インターフェース
+  - Enum
+  - public, internal, protectedメソッド
+  - public, internal, protectedプロパティ
+- インターフェースによって強制されて実装しているメンバ、ベースクラスをoverrideしているメンバのコメントはinheritdocとする
+- インターフェースに付けるXMLコメントは「XXXのI/F」のように"I/F"で終わる文言とする
+
+## 4. Unity 固有ルール
 - **Serialization**: `[SerializeField]` は「フィールド」にのみ付与し、「プロパティ」には付与しない。
 - **Unity Events**: `Start`, `Update` 等のイベント関数は原則 `private`。継承前提の場合のみ `protected`。
 
-## 4. 非同期処理 (UniTask)
+## 5. 非同期処理 (UniTask)
 - **Naming**: すべての非同期メソッドは末尾に `Async` を付与。
 - **Cancellation**: `CancellationToken` を引数に取れる場合は必ず受け取り、メソッド内部の非同期処理に伝搬させる。
