@@ -16,7 +16,7 @@ trigger: always_on
 ### sandbox
 
 - Liljaパッケージ開発用のプロジェクトを自由に配置できるディレクトリです
-- プロジェクトルートに .code-workspace を作成することで、開発用プロジェクトとLilfaパッケージを同時に開けるようにします
+- プロジェクトルートに .code-workspace を作成することで、開発用プロジェクトとlilja-packagesディレクトリを同時に開けるようにします
 
 ## Lilja.DevKit
 
