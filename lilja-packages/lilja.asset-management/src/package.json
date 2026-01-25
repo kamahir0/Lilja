@@ -1,18 +1,21 @@
 {
-    "name": "com.kamahir0.lilja.asset-management",
-    "displayName": "Lilja.AssetManagement",
-    "version": "0.1.0",
-    "unity": "6000.3",
-    "description": "Lilja package created by DevKit.",
-    "keywords": [
-        "lilja"
-    ],
+  "name": "com.kamahir0.lilja.asset-management",
+  "displayName": "Lilja.AssetManagement",
+  "version": "0.1.0",
+  "unity": "6000.3",
+  "description": "Lilja package created by DevKit.",
+  "keywords": [
+    "lilja"
+  ],
   "author": {
     "name": "kamahir0",
     "url": "https://github.com/kamahir0",
     "email": "hrtk1330@gmail.com"
   },
-    "documentationUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.asset-management/README.md",
-    "changelogUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.asset-management/CHANGELOG.md",
-    "licensesUrl": "https://github.com/kamahir0/Lilja/blob/main/LICENSE"
+  "documentationUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.asset-management/README.md",
+  "changelogUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.asset-management/CHANGELOG.md",
+  "licensesUrl": "https://github.com/kamahir0/Lilja/blob/main/LICENSE",
+  "dependencies": {
+    "com.cysharp.unitask": "2.5.10"
+  }
 }

@@ -1,9 +1,12 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.kamahir0.lilja.asset-management": "file:../../../lilja-packages/lilja.asset-management/src",
     "com.kamahir0.lilja.dev-kit": "file:../../../lilja-packages/lilja.dev-kit/src",
+    "com.unity.addressables": "2.7.4",
     "com.unity.ide.antigravity": "https://github.com/HarineshS/com.unity.ide.antigravity.git",
     "com.unity.ide.rider": "3.0.39",
+    "com.unity.ugui": "2.0.0",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
