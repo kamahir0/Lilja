@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Lilja
 
 個人開発用のUnityパッケージ群をまとめたリポジトリです。
@@ -31,3 +35,7 @@ Package Creatorで生成されるパッケージは以下の命名規則に従�
 | DisplayName      | Lilja.{PackageName}                         | `Lilja.FooBar`                 |
 | パッケージ名     | com.{OrganizationName}.lilja.{package-name} | `com.kamahir0.lilja.foo-bar`   |
 | 出力ディレクトリ | lilja-packages/lilja.{package-name}         | `lilja-packages/lilja.foo-bar` |
+
+## 開発ルール
+- 基本的なC#のコーディングルールは .agent/rules/csharp.md 準拠
+- MenuItemのパスは `Lilja` > `PackageName` > `機能名（必要に応じて更に階層を噛ませてもよい）`  で統一する
