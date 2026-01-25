@@ -6,8 +6,12 @@ using Object = UnityEngine.Object;
 
 namespace Lilja.AssetManagement
 {
+  /// <summary>
+  /// Addressablesを使用してアセットを読み込むローダーの実装
+  /// </summary>
   public sealed class AddressableAssetLoader : IAssetLoader
   {
+    /// <inheritdoc />
     public async UniTask<T> LoadAsync<T>(string key, AssetLifetime lifetime, CancellationToken ct = default)
       where T : Object
     {

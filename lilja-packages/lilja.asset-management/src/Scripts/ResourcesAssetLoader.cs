@@ -5,8 +5,12 @@ using Object = UnityEngine.Object;
 
 namespace Lilja.AssetManagement
 {
+    /// <summary>
+    /// Resourcesからアセットを読み込むローダーの実装
+    /// </summary>
     public sealed class ResourcesAssetLoader : IAssetLoader
     {
+        /// <inheritdoc />
         public async UniTask<T> LoadAsync<T>(string key, AssetLifetime lifetime, CancellationToken ct = default)
             where T : Object
         {
