@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 3d47e50dc39dafd4ebe26b43ff963f49
   m_SerializeEntries:
-  - m_GUID: 3abf4881a3284624a8558534fb65732e
-    m_Address: Red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e599371599430004d986f764f4f4a38b
     m_Address: lilja_1
     m_ReadOnly: 0
