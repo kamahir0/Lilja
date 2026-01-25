@@ -18,7 +18,7 @@ namespace Lilja.DevKit.PackageManagement
         /// このプロジェクトにローカルパッケージとしてインポートしているLiljaパッケージのパスを全て相対パスに修正する
         /// </summary>
         /// <returns>修正されたパッケージ数</returns>
-        [MenuItem("Lilja/Package Management/Fix Lilja Package Paths to Relative")]
+        [MenuItem("Lilja/DevKit/Package Management/Fix Lilja Package Paths to Relative")]
         public static int FixAllLiljaPackagePathsToRelative()
         {
             if (!File.Exists(ManifestPath))

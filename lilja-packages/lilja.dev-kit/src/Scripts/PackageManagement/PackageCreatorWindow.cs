@@ -78,7 +78,7 @@ namespace Lilja.DevKit.PackageManagement
 
         #region Menu Item
 
-        [MenuItem("Window/Lilja/Package Creator")]
+        [MenuItem("Lilja/DevKit/Package Creator Window")]
         public static void ShowWindow()
         {
             var window = GetWindow<PackageCreatorWindow>(WindowTitle);
