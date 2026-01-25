@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.kamahir0.lilja.asset-management": "file:../../../lilja-packages/lilja.asset-management/src",
     "com.kamahir0.lilja.dev-kit": "file:../../../lilja-packages/lilja.dev-kit/src",
     "com.unity.ide.antigravity": "https://github.com/HarineshS/com.unity.ide.antigravity.git",
     "com.unity.ide.rider": "3.0.39",

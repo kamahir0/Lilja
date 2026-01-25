@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.kamahir0.lilja.asset-management": {
+      "version": "file:../../../lilja-packages/lilja.asset-management/src",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.kamahir0.lilja.dev-kit": {
       "version": "file:../../../lilja-packages/lilja.dev-kit/src",
       "depth": 0,
