@@ -1,4 +1,3 @@
-using System;
 using Cysharp.Threading.Tasks;
 using Lilja.AssetManagement;
 using UnityEngine;
@@ -8,10 +7,11 @@ namespace AssetManagementTest
 {
     public class AddressableLoaderTest : MonoBehaviour
     {
-        [SerializeField] private Image _image;
-        [SerializeField] private string _key = "lilja_1";
+        [SerializeField] private RawImage _image;
+        [SerializeField] private string _path = "lilja_1";
 
         private AssetLifetime _lifetime;
+        private AssetLifetime _lifetime2;
         private IAssetLoader _loader;
 
         private void Start()
@@ -20,49 +20,27 @@ namespace AssetManagementTest
 
             UniTask.Void(async () =>
             {
-                await Load();
+                _lifetime = new AssetLifetime();
+                var texture = await _loader.LoadAsync<Texture>(_path, _lifetime, this.GetCancellationTokenOnDestroy());
+                _image.texture = texture;
+                Debug.Log($"アセットをロードしました 1回目");
+
+                _lifetime2 = new AssetLifetime();
+                var _ = await _loader.LoadAsync<Texture>(_path, _lifetime2, this.GetCancellationTokenOnDestroy());
+                Debug.Log($"アセットをロードしました 2回目");
+
                 await UniTask.Delay(1000);
-                Unload();
-            });
-        }
 
-        public async UniTask Load()
-        {
-            if (_lifetime != null)
-            {
-                Debug.LogWarning("Already loaded. Dispose first.");
-                return;
-            }
-
-            _lifetime = new AssetLifetime();
-
-            Debug.Log($"Loading {_key}...");
-            try
-            {
-                var sprite = await _loader.LoadAsync<Sprite>(_key, _lifetime, this.GetCancellationTokenOnDestroy());
-                _image.sprite = sprite;
-                Debug.Log($"Loaded: {sprite.name}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to load: {e}");
                 _lifetime.Dispose();
                 _lifetime = null;
-            }
-        }
+                Debug.Log($"アセットをアンロードしました 1回目");
 
-        public void Unload()
-        {
-            if (_lifetime == null)
-            {
-                Debug.LogWarning("Not loaded.");
-                return;
-            }
+                await UniTask.Delay(1000);
 
-            Debug.Log("Unloading...");
-            _lifetime.Dispose();
-            _lifetime = null;
-            Debug.Log("Unloaded.");
+                _lifetime2.Dispose();
+                _lifetime2 = null;
+                Debug.Log($"アセットをアンロードしました 2回目");
+            });
         }
     }
 }
