@@ -1,0 +1,23 @@
+{
+    "name": "ScreenManagementSample.Editor",
+    "rootNamespace": "ScreenManagementSample.Editor",
+    "references": [
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:8096e14ca1fe2ba40a1d56ebb541e9b7",
+        "GUID:5964e175f0c23694aa72af5e58d5569d",
+        "GUID:8630ab8b31ead3748b18f48d38df85c5",
+        "GUID:534cf4ab6798bcf4fa5549e218bee57d",
+        "GUID:0f7dbd1e47830b547980de3c7e7b42a0"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
