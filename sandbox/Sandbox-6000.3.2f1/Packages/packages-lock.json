@@ -21,6 +21,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.kamahir0.lilja.screen-management": {
+      "version": "file:../../../lilja-packages/lilja.screen-management/src",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.addressables": {
       "version": "2.7.4",
       "depth": 0,

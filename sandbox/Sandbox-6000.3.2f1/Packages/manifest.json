@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.kamahir0.lilja.screen-management": "file:../../../lilja-packages/lilja.screen-management/src",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.kamahir0.lilja.asset-management": "file:../../../lilja-packages/lilja.asset-management/src",
     "com.kamahir0.lilja.dev-kit": "file:../../../lilja-packages/lilja.dev-kit/src",
