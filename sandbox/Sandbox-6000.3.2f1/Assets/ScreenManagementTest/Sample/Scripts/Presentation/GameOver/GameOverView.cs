@@ -15,7 +15,6 @@ namespace ScreenManagementSample.Presentation
 
         [Header("3D")] [SerializeField] private Transform _fallingCubesContainer;
         [SerializeField] private float _fallSpeed = 5f;
-        [SerializeField] private float _rotationSpeed = 30f;
 
         [Header("アニメーション設定")] [SerializeField] private float _textAppearDelay = 0.5f;
         [SerializeField] private float _buttonAppearDelay = 1.5f;
