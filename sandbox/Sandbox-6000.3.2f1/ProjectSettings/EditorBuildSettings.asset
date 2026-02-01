@@ -4,7 +4,22 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/ScreenManagementTest/Sample/Scenes/Boot.unity
+    guid: 2d6fe61159b1c02429ed279296e59b04
+  - enabled: 1
+    path: Assets/ScreenManagementTest/Sample/Scenes/Title.unity
+    guid: dd7f982ae3f49d340a7a24446e00d83e
+  - enabled: 1
+    path: Assets/ScreenManagementTest/Sample/Scenes/Map.unity
+    guid: bb15a44b7f8022c4b99082426a566f6b
+  - enabled: 1
+    path: Assets/ScreenManagementTest/Sample/Scenes/Battle.unity
+    guid: 991cb5fdabaa77249b74055bbb06eefd
+  - enabled: 1
+    path: Assets/ScreenManagementTest/Sample/Scenes/GameOver.unity
+    guid: 84784f70eca6e244099b00aee6f12a5e
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 5ee5ad0fb1cfdcd4aa7d1003d3f3ff93, type: 2}
   m_UseUCBPForAssetBundles: 0
