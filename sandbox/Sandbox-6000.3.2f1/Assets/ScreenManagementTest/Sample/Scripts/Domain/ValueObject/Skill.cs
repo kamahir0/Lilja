@@ -7,12 +7,18 @@ namespace ScreenManagementSample.Domain
     {
         /// <summary> 通常攻撃 </summary>
         Attack,
+
         /// <summary> 強攻撃（高ダメージ） </summary>
         HeavyAttack,
+
         /// <summary> 回復 </summary>
         Heal,
+
         /// <summary> 防御（次の被ダメージ減少） </summary>
-        Defend
+        Defend,
+
+        /// <summary> 自爆 </summary>
+        SelfDestruct
     }
 
     /// <summary>
@@ -75,7 +81,15 @@ namespace ScreenManagementSample.Domain
             SkillType.Defend
         );
 
+        /// <summary> 自爆 </summary>
+        public static Skill SelfDestruct { get; } = new Skill(
+            "じばく",
+            "敵に大ダメージを与えて自滅する",
+            SkillType.SelfDestruct,
+            power: 9999
+        );
+
         /// <summary> 全スキルのリスト </summary>
-        public static Skill[] All { get; } = { Attack, HeavyAttack, Heal, Defend };
+        public static Skill[] All { get; } = { Attack, HeavyAttack, Heal, Defend, SelfDestruct };
     }
 }

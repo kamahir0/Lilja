@@ -45,6 +45,19 @@ namespace ScreenManagementSample.Domain
                 }
                 case SkillType.Defend:
                     return new SkillResult($"{player.Name}は防御の構えをとった！", 0, 0, true);
+                case SkillType.SelfDestruct:
+                {
+                    // プレイヤーのHPを0にする
+                    var playerDamage = player.CurrentHp;
+                    player.TakeDamage(playerDamage);
+
+                    // 敵に大ダメージ
+                    var baseDamage = skill.Power;
+                    var actualDamage = System.Math.Max(1, baseDamage - enemy.Defense);
+                    enemy.TakeDamage(baseDamage);
+
+                    return new SkillResult($"{player.Name}は自爆した！敵に{actualDamage}のダメージ！", actualDamage, 0, false);
+                }
                 default:
                     return new SkillResult("何も起こらなかった...", 0, 0, false);
             }
@@ -80,6 +93,9 @@ namespace ScreenManagementSample.Domain
         /// </summary>
         public BattleResult? CheckBattleResult(Player player, Enemy[] enemies)
         {
+            // プレイヤーが倒れたら敗北
+            if (!player.IsAlive) return BattleResult.Defeat;
+
             // 全敵が倒れていたら勝利
             bool allEnemiesDead = true;
             foreach (var enemy in enemies)
@@ -90,10 +106,8 @@ namespace ScreenManagementSample.Domain
                     break;
                 }
             }
-            if (allEnemiesDead) return BattleResult.Victory;
 
-            // プレイヤーが倒れたら敗北
-            if (!player.IsAlive) return BattleResult.Defeat;
+            if (allEnemiesDead) return BattleResult.Victory;
 
             return null; // バトル継続
         }

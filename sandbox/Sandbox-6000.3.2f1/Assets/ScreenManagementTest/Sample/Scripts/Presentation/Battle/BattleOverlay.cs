@@ -130,6 +130,7 @@ namespace ScreenManagementSample.Presentation
                         ReturnToCommandMenu();
                         return;
                     }
+
                     await ExecutePlayerTurnAsync(Skill.Attack, target);
                 }
             });
@@ -153,7 +154,7 @@ namespace ScreenManagementSample.Presentation
                     switch (phase)
                     {
                         case 0: // スキル選択
-                            var availableSkills = new[] { Skill.HeavyAttack, Skill.Heal };
+                            var availableSkills = new[] { Skill.HeavyAttack, Skill.Heal, Skill.SelfDestruct };
                             selectedSkill = await new SkillSelectOverlay(availableSkills).CallAsync(default, DisposeCancellationToken);
 
                             if (selectedSkill == null)
@@ -162,7 +163,7 @@ namespace ScreenManagementSample.Presentation
                                 phase = -1; // ループ終了
                                 ReturnToCommandMenu();
                             }
-                            else if (selectedSkill.Type == SkillType.HeavyAttack)
+                            else if (selectedSkill.Type == SkillType.HeavyAttack || selectedSkill.Type == SkillType.SelfDestruct)
                             {
                                 // 攻撃系はターゲット選択へ
                                 phase = 1;
@@ -173,6 +174,7 @@ namespace ScreenManagementSample.Presentation
                                 await ExecutePlayerTurnAsync(selectedSkill, null);
                                 phase = -1;
                             }
+
                             break;
 
                         case 1: // ターゲット選択
@@ -197,6 +199,7 @@ namespace ScreenManagementSample.Presentation
                                     phase = -1;
                                 }
                             }
+
                             break;
                     }
                 }
@@ -250,7 +253,7 @@ namespace ScreenManagementSample.Presentation
             var battleService = GameServices.BattleService;
 
             // 攻撃系スキルの場合はアニメーション
-            if ((skill.Type == SkillType.Attack || skill.Type == SkillType.HeavyAttack) && target != null)
+            if ((skill.Type == SkillType.Attack || skill.Type == SkillType.HeavyAttack || skill.Type == SkillType.SelfDestruct) && target != null)
             {
                 await _view.PlayPlayerAttackAnimationAsync(DisposeCancellationToken);
 

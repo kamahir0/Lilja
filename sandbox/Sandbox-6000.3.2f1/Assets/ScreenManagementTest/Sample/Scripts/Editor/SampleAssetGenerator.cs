@@ -14,8 +14,8 @@ namespace ScreenManagementSample.Editor
     /// </summary>
     public static class SampleAssetGenerator
     {
-        private const string ScenesPath = "Assets/PrivateRepository/20_ScreenManagement/Sample/Scenes";
-        private const string ResourcesPath = "Assets/PrivateRepository/20_ScreenManagement/Sample/Resources";
+        private const string ScenesPath = "Assets/ScreenManagementTest/Sample/Scenes";
+        private const string ResourcesPath = "Assets/ScreenManagementTest/Sample/Resources";
 
         // 3Dカラーパレット
         private static readonly Color PlayerColor = new Color(0.2f, 0.6f, 1f, 1f); // 青
@@ -110,12 +110,12 @@ namespace ScreenManagementSample.Editor
             decorationGo.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
 
             // タイトルテキスト
-            var titleText = CreateText("TitleText", "Sample RPG", 48, canvas.transform);
-            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.85f), new Vector2(400, 100));
+            var titleText = CreateText("TitleText", "Sample RPG", 96, canvas.transform);
+            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.85f), new Vector2(800, 200));
 
             // スタートボタン
             var startButton = CreateButton("StartButton", "ゲームスタート", canvas.transform);
-            SetRectTransform(startButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.15f), new Vector2(200, 60));
+            SetRectTransform(startButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.15f), new Vector2(400, 120));
 
             // TitleViewにボタンを設定
             var serializedObject = new SerializedObject(titleView);
@@ -164,33 +164,33 @@ namespace ScreenManagementSample.Editor
             playerGo.transform.localScale = new Vector3(0.6f, 0.5f, 0.6f);
 
             // 位置表示
-            var posText = CreateText("PositionText", "位置: (0, 0)", 24, canvas.transform);
-            SetRectTransform(posText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.95f), new Vector2(200, 40));
+            var posText = CreateText("PositionText", "位置: (0, 0)", 48, canvas.transform);
+            SetRectTransform(posText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.95f), new Vector2(400, 80));
 
             // HP表示
-            var hpText = CreateText("HpText", "HP: 100/100", 24, canvas.transform);
-            SetRectTransform(hpText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(200, 40));
+            var hpText = CreateText("HpText", "HP: 100/100", 48, canvas.transform);
+            SetRectTransform(hpText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(400, 80));
 
             // 移動ボタン
             var upButton = CreateButton("UpButton", "↑", canvas.transform);
-            SetRectTransform(upButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.25f), new Vector2(60, 60));
+            SetRectTransform(upButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.25f), new Vector2(120, 120));
 
             var downButton = CreateButton("DownButton", "↓", canvas.transform);
-            SetRectTransform(downButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.05f), new Vector2(60, 60));
+            SetRectTransform(downButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.05f), new Vector2(120, 120));
 
             var leftButton = CreateButton("LeftButton", "←", canvas.transform);
-            SetRectTransform(leftButton.GetComponent<RectTransform>(), new Vector2(0.4f, 0.15f), new Vector2(60, 60));
+            SetRectTransform(leftButton.GetComponent<RectTransform>(), new Vector2(0.4f, 0.15f), new Vector2(120, 120));
 
             var rightButton = CreateButton("RightButton", "→", canvas.transform);
-            SetRectTransform(rightButton.GetComponent<RectTransform>(), new Vector2(0.6f, 0.15f), new Vector2(60, 60));
+            SetRectTransform(rightButton.GetComponent<RectTransform>(), new Vector2(0.6f, 0.15f), new Vector2(120, 120));
 
             // メニューボタン
             var menuButton = CreateButton("MenuButton", "メニュー", canvas.transform);
-            SetRectTransform(menuButton.GetComponent<RectTransform>(), new Vector2(0.9f, 0.95f), new Vector2(120, 50));
+            SetRectTransform(menuButton.GetComponent<RectTransform>(), new Vector2(0.9f, 0.95f), new Vector2(240, 100));
 
             // インタラクトボタン（初期状態では非表示）
             var interactButton = CreateButton("InteractButton", "調べる", canvas.transform);
-            SetRectTransform(interactButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.4f), new Vector2(120, 50));
+            SetRectTransform(interactButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.4f), new Vector2(240, 100));
             interactButton.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.3f, 1f);
             interactButton.gameObject.SetActive(false);
 
@@ -250,29 +250,29 @@ namespace ScreenManagementSample.Editor
             Object.DestroyImmediate(enemyPrefab);
 
             // プレイヤーステータス
-            var playerStatus = CreateText("PlayerStatusText", "プレイヤー\nHP: 100/100", 20, canvas.transform);
-            SetRectTransform(playerStatus.GetComponent<RectTransform>(), new Vector2(0.15f, 0.2f), new Vector2(200, 80));
+            var playerStatus = CreateText("PlayerStatusText", "プレイヤー\nHP: 100/100", 40, canvas.transform);
+            SetRectTransform(playerStatus.GetComponent<RectTransform>(), new Vector2(0.15f, 0.2f), new Vector2(400, 160));
 
             // 敵ステータス（複数敵表示用に拡大）
-            var enemyStatus = CreateText("EnemyStatusText", "敵A (HP:30/30)\n敵B (HP:30/30)\n敵C (HP:30/30)", 16, canvas.transform);
-            SetRectTransform(enemyStatus.GetComponent<RectTransform>(), new Vector2(0.85f, 0.75f), new Vector2(250, 120));
+            var enemyStatus = CreateText("EnemyStatusText", "敵A (HP:30/30)\n敵B (HP:30/30)\n敵C (HP:30/30)", 32, canvas.transform);
+            SetRectTransform(enemyStatus.GetComponent<RectTransform>(), new Vector2(0.85f, 0.75f), new Vector2(500, 240));
 
             // メッセージ
-            var message = CreateText("MessageText", "敵が現れた！", 24, canvas.transform);
-            SetRectTransform(message.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(400, 60));
+            var message = CreateText("MessageText", "敵が現れた！", 48, canvas.transform);
+            SetRectTransform(message.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(800, 120));
 
             // コマンドボタン（4つ横並び）
             var attackButton = CreateButton("AttackButton", "たたかう", canvas.transform);
-            SetRectTransform(attackButton.GetComponent<RectTransform>(), new Vector2(0.2f, 0.1f), new Vector2(120, 50));
+            SetRectTransform(attackButton.GetComponent<RectTransform>(), new Vector2(0.2f, 0.1f), new Vector2(240, 100));
 
             var skillButton = CreateButton("SkillButton", "スキル", canvas.transform);
-            SetRectTransform(skillButton.GetComponent<RectTransform>(), new Vector2(0.4f, 0.1f), new Vector2(120, 50));
+            SetRectTransform(skillButton.GetComponent<RectTransform>(), new Vector2(0.4f, 0.1f), new Vector2(240, 100));
 
             var itemButton = CreateButton("ItemButton", "アイテム", canvas.transform);
-            SetRectTransform(itemButton.GetComponent<RectTransform>(), new Vector2(0.6f, 0.1f), new Vector2(120, 50));
+            SetRectTransform(itemButton.GetComponent<RectTransform>(), new Vector2(0.6f, 0.1f), new Vector2(240, 100));
 
             var defendButton = CreateButton("DefendButton", "防御", canvas.transform);
-            SetRectTransform(defendButton.GetComponent<RectTransform>(), new Vector2(0.8f, 0.1f), new Vector2(120, 50));
+            SetRectTransform(defendButton.GetComponent<RectTransform>(), new Vector2(0.8f, 0.1f), new Vector2(240, 100));
 
             // BattleViewに設定
             var serializedObject = new SerializedObject(battleView);
@@ -322,13 +322,13 @@ namespace ScreenManagementSample.Editor
             }
 
             // ゲームオーバーテキスト
-            var gameOverText = CreateText("GameOverText", "GAME OVER", 48, canvas.transform);
-            SetRectTransform(gameOverText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.7f), new Vector2(400, 100));
+            var gameOverText = CreateText("GameOverText", "GAME OVER", 96, canvas.transform);
+            SetRectTransform(gameOverText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.7f), new Vector2(800, 200));
             gameOverText.GetComponent<Text>().color = Color.red;
 
             // タイトルへ戻るボタン
             var titleButton = CreateButton("TitleButton", "タイトルへ", canvas.transform);
-            SetRectTransform(titleButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.2f), new Vector2(200, 60));
+            SetRectTransform(titleButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.2f), new Vector2(400, 120));
 
             // GameOverViewに設定
             var serializedObject = new SerializedObject(gameOverView);
@@ -371,16 +371,16 @@ namespace ScreenManagementSample.Editor
             // パネル
             var panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(canvasGo.transform, false);
-            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(400, 300));
+            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(800, 600));
             panel.GetComponent<Image>().color = new Color(0.15f, 0.15f, 0.2f, 1f);
 
             // ステータステキスト
-            var statusText = CreateText("StatusText", "ステータス", 20, panel.transform);
-            SetRectTransform(statusText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.7f), new Vector2(350, 150));
+            var statusText = CreateText("StatusText", "ステータス", 40, panel.transform);
+            SetRectTransform(statusText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.7f), new Vector2(700, 300));
 
             // 閉じるボタン
             var closeButton = CreateButton("CloseButton", "閉じる", panel.transform);
-            SetRectTransform(closeButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.15f), new Vector2(150, 50));
+            SetRectTransform(closeButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.15f), new Vector2(300, 100));
 
             // MenuViewに設定
             var serializedObject = new SerializedObject(menuView);
@@ -420,12 +420,12 @@ namespace ScreenManagementSample.Editor
             // パネル
             var panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(canvasGo.transform, false);
-            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(400, 350));
+            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(800, 700));
             panel.GetComponent<Image>().color = new Color(0.15f, 0.15f, 0.25f, 1f);
 
             // タイトル
-            var titleText = CreateText("TitleText", "スキル選択", 28, panel.transform);
-            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(300, 50));
+            var titleText = CreateText("TitleText", "スキル選択", 56, panel.transform);
+            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(600, 100));
 
             // ボタンコンテナ（動的ボタン用）
             var buttonContainer = new GameObject("ButtonContainer", typeof(RectTransform), typeof(VerticalLayoutGroup));
@@ -436,7 +436,7 @@ namespace ScreenManagementSample.Editor
             containerRect.sizeDelta = Vector2.zero;
             containerRect.anchoredPosition = Vector2.zero;
             var layout = buttonContainer.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 10;
+            layout.spacing = 20;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = false;
@@ -445,17 +445,17 @@ namespace ScreenManagementSample.Editor
 
             // スキルボタンプレハブ（非表示）
             var skillButtonPrefab = CreateButton("SkillButtonPrefab", "スキル", panel.transform);
-            SetRectTransform(skillButtonPrefab.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(250, 50));
+            SetRectTransform(skillButtonPrefab.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(500, 100));
             skillButtonPrefab.gameObject.SetActive(false);
 
             // 戻るボタン
             var backButton = CreateButton("BackButton", "もどる", panel.transform);
-            SetRectTransform(backButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.08f), new Vector2(150, 40));
+            SetRectTransform(backButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.08f), new Vector2(300, 80));
             backButton.GetComponent<Image>().color = new Color(0.4f, 0.25f, 0.25f, 1f);
 
             // 説明テキスト
-            var descText = CreateText("DescriptionText", "スキルを選んでください", 18, panel.transform);
-            SetRectTransform(descText.GetComponent<RectTransform>(), new Vector2(0.5f, -0.05f), new Vector2(350, 40));
+            var descText = CreateText("DescriptionText", "スキルを選んでください", 36, panel.transform);
+            SetRectTransform(descText.GetComponent<RectTransform>(), new Vector2(0.5f, -0.05f), new Vector2(700, 80));
 
             // SkillSelectViewに設定
             var serializedObject = new SerializedObject(skillSelectView);
@@ -497,12 +497,12 @@ namespace ScreenManagementSample.Editor
             // パネル
             var panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(canvasGo.transform, false);
-            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(400, 350));
+            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(800, 700));
             panel.GetComponent<Image>().color = new Color(0.15f, 0.2f, 0.15f, 1f);
 
             // タイトル
-            var titleText = CreateText("TitleText", "アイテム選択", 28, panel.transform);
-            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(300, 50));
+            var titleText = CreateText("TitleText", "アイテム選択", 56, panel.transform);
+            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(600, 100));
 
             // ボタンコンテナ（動的ボタン用）
             var buttonContainer = new GameObject("ButtonContainer", typeof(RectTransform), typeof(VerticalLayoutGroup));
@@ -513,7 +513,7 @@ namespace ScreenManagementSample.Editor
             containerRect.sizeDelta = Vector2.zero;
             containerRect.anchoredPosition = Vector2.zero;
             var layout = buttonContainer.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 10;
+            layout.spacing = 20;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = false;
@@ -522,17 +522,17 @@ namespace ScreenManagementSample.Editor
 
             // アイテムボタンプレハブ（非表示）
             var itemButtonPrefab = CreateButton("ItemButtonPrefab", "アイテム", panel.transform);
-            SetRectTransform(itemButtonPrefab.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(250, 50));
+            SetRectTransform(itemButtonPrefab.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(500, 100));
             itemButtonPrefab.gameObject.SetActive(false);
 
             // 戻るボタン
             var backButton = CreateButton("BackButton", "もどる", panel.transform);
-            SetRectTransform(backButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.08f), new Vector2(150, 40));
+            SetRectTransform(backButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.08f), new Vector2(300, 80));
             backButton.GetComponent<Image>().color = new Color(0.4f, 0.25f, 0.25f, 1f);
 
             // 説明テキスト
-            var descText = CreateText("DescriptionText", "アイテムを選んでください", 18, panel.transform);
-            SetRectTransform(descText.GetComponent<RectTransform>(), new Vector2(0.5f, -0.05f), new Vector2(350, 40));
+            var descText = CreateText("DescriptionText", "アイテムを選んでください", 36, panel.transform);
+            SetRectTransform(descText.GetComponent<RectTransform>(), new Vector2(0.5f, -0.05f), new Vector2(700, 80));
 
             // ItemSelectViewに設定
             var serializedObject = new SerializedObject(itemSelectView);
@@ -574,12 +574,12 @@ namespace ScreenManagementSample.Editor
             // パネル
             var panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(canvasGo.transform, false);
-            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(350, 300));
+            SetRectTransform(panel.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(700, 600));
             panel.GetComponent<Image>().color = new Color(0.2f, 0.15f, 0.15f, 1f);
 
             // タイトル
-            var titleText = CreateText("TitleText", "ターゲット選択", 28, panel.transform);
-            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(300, 50));
+            var titleText = CreateText("TitleText", "ターゲット選択", 56, panel.transform);
+            SetRectTransform(titleText.GetComponent<RectTransform>(), new Vector2(0.5f, 0.9f), new Vector2(600, 100));
 
             // ボタンコンテナ（動的ボタン用）
             var buttonContainer = new GameObject("ButtonContainer", typeof(RectTransform), typeof(VerticalLayoutGroup));
@@ -590,7 +590,7 @@ namespace ScreenManagementSample.Editor
             containerRect.sizeDelta = Vector2.zero;
             containerRect.anchoredPosition = Vector2.zero;
             var layout = buttonContainer.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 8;
+            layout.spacing = 16;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = false;
@@ -599,17 +599,17 @@ namespace ScreenManagementSample.Editor
 
             // ターゲットボタンプレハブ（非表示）
             var targetButtonPrefab = CreateButton("TargetButtonPrefab", "敵A (HP:30/30)", panel.transform);
-            SetRectTransform(targetButtonPrefab.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(250, 45));
+            SetRectTransform(targetButtonPrefab.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(500, 90));
             targetButtonPrefab.gameObject.SetActive(false);
 
             // 戻るボタン
             var backButton = CreateButton("BackButton", "もどる", panel.transform);
-            SetRectTransform(backButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.08f), new Vector2(150, 40));
+            SetRectTransform(backButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0.08f), new Vector2(300, 80));
             backButton.GetComponent<Image>().color = new Color(0.4f, 0.25f, 0.25f, 1f);
 
             // 説明テキスト
-            var descText = CreateText("DescriptionText", "ターゲットを選んでください", 18, panel.transform);
-            SetRectTransform(descText.GetComponent<RectTransform>(), new Vector2(0.5f, -0.05f), new Vector2(350, 40));
+            var descText = CreateText("DescriptionText", "ターゲットを選んでください", 36, panel.transform);
+            SetRectTransform(descText.GetComponent<RectTransform>(), new Vector2(0.5f, -0.05f), new Vector2(700, 80));
 
             // TargetSelectViewに設定
             var serializedObject2 = new SerializedObject(targetSelectView);
@@ -672,11 +672,11 @@ namespace ScreenManagementSample.Editor
 
             // マテリアル設定（URP/Built-in両対応）
             var renderer = go.GetComponent<Renderer>();
-            
+
             // マテリアルをアセットとして保存・読み込み（プレハブ化時にリンクが切れないように）
             var materialName = $"Mat_{name}";
             var materialPath = $"{ResourcesPath}/Common/{materialName}.mat";
-            
+
             // 既存のマテリアルがあればロード、なければ作成
             Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if (material == null)
@@ -798,7 +798,7 @@ namespace ScreenManagementSample.Editor
             return textGo;
         }
 
-        private static Button CreateButton(string name, string label, Transform parent)
+        private static Button CreateButton(string name, string label, Transform parent, int fontSize = 48)
         {
             var buttonGo = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             buttonGo.transform.SetParent(parent, false);
@@ -815,7 +815,7 @@ namespace ScreenManagementSample.Editor
 
             var textComp = textGo.GetComponent<Text>();
             textComp.text = label;
-            textComp.fontSize = 24;
+            textComp.fontSize = fontSize;
             textComp.color = Color.white;
             textComp.alignment = TextAnchor.MiddleCenter;
             textComp.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
