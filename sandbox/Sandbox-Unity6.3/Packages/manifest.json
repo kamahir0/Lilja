@@ -1,12 +1,14 @@
 {
   "dependencies": {
-    "com.kamahir0.lilja.screen-management": "file:../../../lilja-packages/lilja.screen-management/src",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.kamahir0.lilja.asset-management": "file:../../../lilja-packages/lilja.asset-management/src",
     "com.kamahir0.lilja.dev-kit": "file:../../../lilja-packages/lilja.dev-kit/src",
-    "com.unity.addressables": "2.7.4",
+    "com.kamahir0.lilja.repository": "file:../../../lilja-packages/lilja.repository/src",
+    "com.kamahir0.lilja.screen-management": "file:../../../lilja-packages/lilja.screen-management/src",
+    "com.unity.addressables": "2.8.1",
     "com.unity.ide.antigravity": "https://github.com/HarineshS/com.unity.ide.antigravity.git",
     "com.unity.ide.rider": "3.0.39",
+    "com.unity.scriptablebuildpipeline": "2.5.2",
     "com.unity.ugui": "2.0.0",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
@@ -42,5 +44,28 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "scopedRegistries": [
+    {
+      "name": "neuecc",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.neuecc"
+      ]
+    },
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "org.nuget"
+      ]
+    },
+    {
+      "name": "CySharp",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.cysharp"
+      ]
+    }
+  ]
 }
