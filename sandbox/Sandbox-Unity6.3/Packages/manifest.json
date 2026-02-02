@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.github-glitchenzo.nugetforunity": "4.5.0",
     "com.kamahir0.lilja.asset-management": "file:../../../lilja-packages/lilja.asset-management/src",
     "com.kamahir0.lilja.dev-kit": "file:../../../lilja-packages/lilja.dev-kit/src",
     "com.kamahir0.lilja.repository": "file:../../../lilja-packages/lilja.repository/src",
@@ -65,6 +66,13 @@
       "url": "https://package.openupm.com",
       "scopes": [
         "com.cysharp"
+      ]
+    },
+    {
+      "name": "NuGetForUnity",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.github-glitchenzo.nugetforunity"
       ]
     }
   ]
