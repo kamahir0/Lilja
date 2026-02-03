@@ -66,6 +66,7 @@ internal static class RepositoryEmitter
         var entityFullName = string.IsNullOrEmpty(entity.Namespace)
             ? entity.ClassName
             : $"{entity.Namespace}.{entity.ClassName}";
+        var dtoFullName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
@@ -88,6 +89,14 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        private readonly Dictionary<{keyField.TypeName}, {entityFullName}> _storage = new Dictionary<{keyField.TypeName}, {entityFullName}>();");
             sb.AppendLine();
 
+            // GetKey helper - ITransferable経由でDTOからキーを取得
+            sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            var transferable = (ITransferable<{dtoFullName}>)entity;");
+            sb.AppendLine($"            return transferable.ToDto().{keyField.DtoFieldName};");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
             // Read
             sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} key)");
             sb.AppendLine("        {");
@@ -99,14 +108,14 @@ internal static class RepositoryEmitter
             // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            _storage[entity.{keyField.DtoFieldName}] = entity;");
+            sb.AppendLine("            _storage[GetKey(entity)] = entity;");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            _storage[entity.{keyField.DtoFieldName}] = entity;");
+            sb.AppendLine("            _storage[GetKey(entity)] = entity;");
             sb.AppendLine("        }");
             sb.AppendLine();
 

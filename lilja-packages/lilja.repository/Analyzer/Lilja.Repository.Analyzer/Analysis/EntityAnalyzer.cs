@@ -59,7 +59,7 @@ internal static class EntityAnalyzer
 
             var fieldInfo = new Models.FieldInfo(
                 fieldSymbol.Name,
-                fieldSymbol.Type.Name,
+                GetPrimitiveTypeName(fieldSymbol.Type),
                 fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 index,
                 isKey,
