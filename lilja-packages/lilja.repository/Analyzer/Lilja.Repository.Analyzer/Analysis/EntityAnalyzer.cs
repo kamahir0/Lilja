@@ -1,0 +1,173 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CodeAnalysis;
+using Lilja.Repository.Analyzer.Models;
+
+namespace Lilja.Repository.Analyzer.Analysis;
+
+/// <summary>
+/// Entity解析ロジック。
+/// </summary>
+internal static class EntityAnalyzer
+{
+    private const string EntityAttributeFullName = "Lilja.Repository.EntityAttribute";
+    private const string KeyAttributeFullName = "Lilja.Repository.KeyAttribute";
+    private const string PersistAttributeFullName = "Lilja.Repository.PersistAttribute";
+    private const string ToPrimitiveAttributeFullName = "Lilja.Repository.ToPrimitiveAttribute";
+
+    /// <summary>
+    /// シンボルからEntity情報を解析する。
+    /// </summary>
+    public static EntityInfo? Analyze(INamedTypeSymbol classSymbol, Compilation compilation)
+    {
+        // Entity属性チェック
+        if (!HasAttribute(classSymbol, EntityAttributeFullName))
+        {
+            return null;
+        }
+
+        var fields = new List<Models.FieldInfo>();
+
+        foreach (var member in classSymbol.GetMembers())
+        {
+            if (member is not IFieldSymbol fieldSymbol)
+            {
+                continue;
+            }
+
+            // Persist属性を持つフィールドのみ対象
+            var persistAttr = GetAttribute(fieldSymbol, PersistAttributeFullName);
+            if (persistAttr == null)
+            {
+                continue;
+            }
+
+            // インデックス取得
+            var index = 0;
+            if (persistAttr.ConstructorArguments.Length > 0 &&
+                persistAttr.ConstructorArguments[0].Value is int idx)
+            {
+                index = idx;
+            }
+
+            // Key属性チェック
+            var isKey = HasAttribute(fieldSymbol, KeyAttributeFullName);
+
+            // ValueObject検出
+            var valueObjectInfo = AnalyzeValueObject(fieldSymbol.Type);
+
+            var fieldInfo = new Models.FieldInfo(
+                fieldSymbol.Name,
+                fieldSymbol.Type.Name,
+                fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                index,
+                isKey,
+                valueObjectInfo
+            );
+
+            fields.Add(fieldInfo);
+        }
+
+        if (fields.Count == 0)
+        {
+            return null;
+        }
+
+        // インデックス順にソート
+        fields.Sort((a, b) => a.Index.CompareTo(b.Index));
+
+        var ns = classSymbol.ContainingNamespace.IsGlobalNamespace
+            ? string.Empty
+            : classSymbol.ContainingNamespace.ToDisplayString();
+
+        return new EntityInfo(ns, classSymbol.Name, fields);
+    }
+
+    private static ValueObjectInfo AnalyzeValueObject(ITypeSymbol typeSymbol)
+    {
+        // ToPrimitive属性を持つメソッドを探す
+        foreach (var member in typeSymbol.GetMembers())
+        {
+            if (member is not IMethodSymbol methodSymbol)
+            {
+                continue;
+            }
+
+            var toPrimitiveAttr = GetAttribute(methodSymbol, ToPrimitiveAttributeFullName);
+            if (toPrimitiveAttr == null)
+            {
+                continue;
+            }
+
+            // 戻り値の型を解析
+            var returnType = methodSymbol.ReturnType;
+            var tupleElements = new List<TupleElementInfo>();
+
+            if (returnType is INamedTypeSymbol namedType && namedType.IsTupleType)
+            {
+                // タプル型
+                foreach (var element in namedType.TupleElements)
+                {
+                    tupleElements.Add(new TupleElementInfo(
+                        GetPrimitiveTypeName(element.Type),
+                        element.Name
+                    ));
+                }
+            }
+            else
+            {
+                // 単一プリミティブ型
+                tupleElements.Add(new TupleElementInfo(
+                    GetPrimitiveTypeName(returnType),
+                    "Value"
+                ));
+            }
+
+            return new ValueObjectInfo(true, methodSymbol.Name, tupleElements);
+        }
+
+        return ValueObjectInfo.None;
+    }
+
+    private static string GetPrimitiveTypeName(ITypeSymbol typeSymbol)
+    {
+        return typeSymbol.SpecialType switch
+        {
+            SpecialType.System_Boolean => "bool",
+            SpecialType.System_Byte => "byte",
+            SpecialType.System_SByte => "sbyte",
+            SpecialType.System_Int16 => "short",
+            SpecialType.System_UInt16 => "ushort",
+            SpecialType.System_Int32 => "int",
+            SpecialType.System_UInt32 => "uint",
+            SpecialType.System_Int64 => "long",
+            SpecialType.System_UInt64 => "ulong",
+            SpecialType.System_Single => "float",
+            SpecialType.System_Double => "double",
+            SpecialType.System_String => "string",
+            _ => typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+        };
+    }
+
+    private static bool HasAttribute(ISymbol symbol, string attributeFullName)
+    {
+        return GetAttribute(symbol, attributeFullName) != null;
+    }
+
+    private static AttributeData? GetAttribute(ISymbol symbol, string attributeFullName)
+    {
+        foreach (var attr in symbol.GetAttributes())
+        {
+            var attrClass = attr.AttributeClass;
+            if (attrClass == null) continue;
+
+            var fullName = attrClass.ToDisplayString();
+            if (fullName == attributeFullName)
+            {
+                return attr;
+            }
+        }
+        return null;
+    }
+}
