@@ -9,8 +9,6 @@ Console.WriteLine("- InMemoryItemRepository.g.cs");
 // Source Generatorテスト用サンプルコード
 // 生成されたコードの確認用
 
-//using Lilja.Generated.Formatters;
-//
 // namespace Lilja.Repository.Sample
 // {
 //     /// <summary>
@@ -37,15 +35,11 @@ Console.WriteLine("- InMemoryItemRepository.g.cs");
 //     [Entity]
 //     public partial class Item
 //     {
-//         [Key]
-//         [Persist(0)]
-//         private int _id;
+//         [Key] [Persist(0)] private int _id;
 //
-//         [Persist(1)]
-//         private string _name;
+//         [Persist(1)] private string _name;
 //
-//         [Persist(2)]
-//         private Coordinate _position;
+//         [Persist(2)] private Coordinate _position;
 //
 //         public Item(int id, string name, Coordinate position)
 //         {
