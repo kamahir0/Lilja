@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Sandbox-6000.3.2f1.sln"
+    "dotnet.defaultSolution": "Sandbox-Unity6.3.sln"
 }
