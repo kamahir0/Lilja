@@ -28,21 +28,6 @@ namespace Lilja.Repository.Sample
         private Coordinate _position;
 
         /// <summary>
-        /// アイテムIDを取得する。
-        /// </summary>
-        public int Id => _id;
-
-        /// <summary>
-        /// アイテム名を取得する。
-        /// </summary>
-        public string Name => _name;
-
-        /// <summary>
-        /// 位置座標を取得する。
-        /// </summary>
-        public Coordinate Position => _position;
-
-        /// <summary>
         /// コンストラクタ。
         /// </summary>
         /// <param name="id">アイテムID。</param>
