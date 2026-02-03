@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 namespace SourceGeneratorSample;
 
 [Generator(LanguageNames.CSharp)]
-public partial class SampleGenerator : IIncrementalGenerator
+public class SampleGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
