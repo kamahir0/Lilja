@@ -4,7 +4,8 @@ using Lilja.Repository.Analyzer.Models;
 namespace Lilja.Repository.Analyzer.Emitters;
 
 /// <summary>
-/// ITransferable実装生成。
+/// DTO変換メソッド生成。
+/// internal staticなToDto/FromDtoメソッドとprivateコンストラクタを生成する。
 /// </summary>
 internal static class TransferableEmitter
 {
@@ -12,6 +13,9 @@ internal static class TransferableEmitter
     {
         var sb = new StringBuilder();
         var dtoTypeName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
+        var entityFullName = string.IsNullOrEmpty(entity.Namespace)
+            ? entity.ClassName
+            : $"{entity.Namespace}.{entity.ClassName}";
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
@@ -22,61 +26,25 @@ internal static class TransferableEmitter
             sb.AppendLine("{");
         }
 
-        sb.AppendLine($"    partial class {entity.ClassName} : Lilja.Repository.ITransferable<{dtoTypeName}>");
-        sb.AppendLine("    {");
+        var indent = string.IsNullOrEmpty(entity.Namespace) ? "" : "    ";
 
-        // ToDto
-        sb.AppendLine($"        public {dtoTypeName} ToDto()");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            var dto = new {dtoTypeName}();");
+        sb.AppendLine($"{indent}partial class {entity.ClassName}");
+        sb.AppendLine($"{indent}{{");
 
-        foreach (var field in entity.Fields)
+        // Private Constructor (Persist属性付きフィールドを全て引数に持つ)
+        // 既に該当するコンストラクタが存在する場合はスキップ
+        if (entity.NeedsConstructorGeneration)
         {
-            if (field.ValueObjectInfo.IsValueObject)
-            {
-                // ValueObjectはToPrimitiveメソッドを呼び出してフラット化
-                sb.AppendLine($"            var {field.Name}_tuple = {field.Name}.{field.ValueObjectInfo.ToPrimitiveMethodName}();");
-                foreach (var element in field.ValueObjectInfo.TupleElements)
-                {
-                    sb.AppendLine($"            dto.{field.DtoFieldName}_{element.Name} = {field.Name}_tuple.{element.Name};");
-                }
-            }
-            else
-            {
-                sb.AppendLine($"            dto.{field.DtoFieldName} = {field.Name};");
-            }
+            EmitPrivateConstructor(sb, entity, indent);
         }
 
-        sb.AppendLine("            return dto;");
-        sb.AppendLine("        }");
-        sb.AppendLine();
+        // ToDto (internal static)
+        EmitToDto(sb, entity, dtoTypeName, indent);
 
-        // FromDto
-        sb.AppendLine($"        public void FromDto({dtoTypeName} dto)");
-        sb.AppendLine("        {");
+        // FromDto (internal static)
+        EmitFromDto(sb, entity, dtoTypeName, entityFullName, indent);
 
-        foreach (var field in entity.Fields)
-        {
-            if (field.ValueObjectInfo.IsValueObject)
-            {
-                // ValueObjectを再構築
-                var args = new StringBuilder();
-                for (int i = 0; i < field.ValueObjectInfo.TupleElements.Count; i++)
-                {
-                    if (i > 0) args.Append(", ");
-                    var element = field.ValueObjectInfo.TupleElements[i];
-                    args.Append($"dto.{field.DtoFieldName}_{element.Name}");
-                }
-                sb.AppendLine($"            {field.Name} = new {field.FullTypeName}({args});");
-            }
-            else
-            {
-                sb.AppendLine($"            {field.Name} = dto.{field.DtoFieldName};");
-            }
-        }
-
-        sb.AppendLine("        }");
-        sb.AppendLine("    }");
+        sb.AppendLine($"{indent}}}");
 
         if (!string.IsNullOrEmpty(entity.Namespace))
         {
@@ -84,5 +52,125 @@ internal static class TransferableEmitter
         }
 
         return sb.ToString();
+    }
+
+    private static void EmitPrivateConstructor(StringBuilder sb, EntityInfo entity, string indent)
+    {
+        sb.AppendLine($"{indent}    /// <summary>");
+        sb.AppendLine($"{indent}    /// DTO復元用のprivateコンストラクタ。");
+        sb.AppendLine($"{indent}    /// </summary>");
+
+        // 引数リストを構築
+        var paramList = new StringBuilder();
+        for (int i = 0; i < entity.Fields.Count; i++)
+        {
+            if (i > 0) paramList.Append(", ");
+            var field = entity.Fields[i];
+
+            if (field.ValueObjectInfo.IsValueObject)
+            {
+                paramList.Append($"{field.FullTypeName} {field.DtoFieldName.ToLowerFirstChar()}");
+            }
+            else
+            {
+                paramList.Append($"{field.TypeName} {field.DtoFieldName.ToLowerFirstChar()}");
+            }
+        }
+
+        sb.AppendLine($"{indent}    private {entity.ClassName}({paramList})");
+        sb.AppendLine($"{indent}    {{");
+
+        // フィールドへの代入
+        foreach (var field in entity.Fields)
+        {
+            sb.AppendLine($"{indent}        {field.Name} = {field.DtoFieldName.ToLowerFirstChar()};");
+        }
+
+        sb.AppendLine($"{indent}    }}");
+        sb.AppendLine();
+    }
+
+    private static void EmitToDto(StringBuilder sb, EntityInfo entity, string dtoTypeName, string indent)
+    {
+        sb.AppendLine($"{indent}    /// <summary>");
+        sb.AppendLine($"{indent}    /// EntityをDTOに変換する。");
+        sb.AppendLine($"{indent}    /// </summary>");
+        sb.AppendLine($"{indent}    internal static {dtoTypeName} ToDto({entity.ClassName} entity)");
+        sb.AppendLine($"{indent}    {{");
+        sb.AppendLine($"{indent}        var dto = new {dtoTypeName}();");
+
+        foreach (var field in entity.Fields)
+        {
+            if (field.ValueObjectInfo.IsValueObject)
+            {
+                // ValueObjectはToPrimitiveメソッドを呼び出してフラット化
+                sb.AppendLine($"{indent}        var {field.Name}_tuple = entity.{field.Name}.{field.ValueObjectInfo.ToPrimitiveMethodName}();");
+                foreach (var element in field.ValueObjectInfo.TupleElements)
+                {
+                    sb.AppendLine($"{indent}        dto.{field.DtoFieldName}_{element.Name} = {field.Name}_tuple.{element.Name};");
+                }
+            }
+            else
+            {
+                sb.AppendLine($"{indent}        dto.{field.DtoFieldName} = entity.{field.Name};");
+            }
+        }
+
+        sb.AppendLine($"{indent}        return dto;");
+        sb.AppendLine($"{indent}    }}");
+        sb.AppendLine();
+    }
+
+    private static void EmitFromDto(StringBuilder sb, EntityInfo entity, string dtoTypeName, string entityFullName, string indent)
+    {
+        sb.AppendLine($"{indent}    /// <summary>");
+        sb.AppendLine($"{indent}    /// DTOからEntityを復元する。");
+        sb.AppendLine($"{indent}    /// </summary>");
+        sb.AppendLine($"{indent}    internal static {entity.ClassName} FromDto({dtoTypeName} dto)");
+        sb.AppendLine($"{indent}    {{");
+
+        // コンストラクタ引数を構築
+        var argList = new StringBuilder();
+        for (int i = 0; i < entity.Fields.Count; i++)
+        {
+            if (i > 0) argList.Append(", ");
+            var field = entity.Fields[i];
+
+            if (field.ValueObjectInfo.IsValueObject)
+            {
+                // ValueObjectを再構築
+                var voArgs = new StringBuilder();
+                for (int j = 0; j < field.ValueObjectInfo.TupleElements.Count; j++)
+                {
+                    if (j > 0) voArgs.Append(", ");
+                    var element = field.ValueObjectInfo.TupleElements[j];
+                    voArgs.Append($"dto.{field.DtoFieldName}_{element.Name}");
+                }
+                argList.Append($"new {field.FullTypeName}({voArgs})");
+            }
+            else
+            {
+                argList.Append($"dto.{field.DtoFieldName}");
+            }
+        }
+
+        sb.AppendLine($"{indent}        return new {entity.ClassName}({argList});");
+        sb.AppendLine($"{indent}    }}");
+    }
+}
+
+/// <summary>
+/// 文字列拡張メソッド。
+/// </summary>
+internal static class StringExtensions
+{
+    /// <summary>
+    /// 先頭文字を小文字にする。
+    /// </summary>
+    public static string ToLowerFirstChar(this string str)
+    {
+        if (string.IsNullOrEmpty(str) || char.IsLower(str[0]))
+            return str;
+        return char.ToLowerInvariant(str[0]) + str.Substring(1);
     }
 }

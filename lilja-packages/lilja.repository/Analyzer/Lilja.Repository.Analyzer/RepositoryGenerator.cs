@@ -96,7 +96,7 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
     private static void GenerateTransferable(SourceProductionContext context, EntityInfo entity)
     {
         var source = TransferableEmitter.Emit(entity);
-        context.AddSource($"{entity.ClassName}.Transferable.g.cs", source);
+        context.AddSource($"{entity.ClassName}.Converter.g.cs", source);
     }
 
     private static void GenerateFormatter(SourceProductionContext context, EntityInfo entity)

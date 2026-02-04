@@ -89,11 +89,10 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        private readonly Dictionary<{keyField.TypeName}, {entityFullName}> _storage = new Dictionary<{keyField.TypeName}, {entityFullName}>();");
             sb.AppendLine();
 
-            // GetKey helper - ITransferable経由でDTOからキーを取得
+            // GetKey helper - static ToDto経由でキーを取得
             sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var transferable = (ITransferable<{dtoFullName}>)entity;");
-            sb.AppendLine($"            return transferable.ToDto().{keyField.DtoFieldName};");
+            sb.AppendLine($"            return {entity.ClassName}.ToDto(entity).{keyField.DtoFieldName};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -206,11 +205,10 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // GetKey helper
+            // GetKey helper - static ToDto経由でキーを取得
             sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var transferable = (ITransferable<{dtoFullName}>)entity;");
-            sb.AppendLine($"            return transferable.ToDto().{keyField.DtoFieldName};");
+            sb.AppendLine($"            return {entity.ClassName}.ToDto(entity).{keyField.DtoFieldName};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -227,16 +225,14 @@ internal static class RepositoryEmitter
             sb.AppendLine("            {");
             sb.AppendLine("                return null;");
             sb.AppendLine("            }");
-            sb.AppendLine($"            var entity = new {entityFullName}();");
-            sb.AppendLine($"            ((ITransferable<{dtoFullName}>)entity).FromDto(dto);");
-            sb.AppendLine("            return entity;");
+            sb.AppendLine($"            return {entity.ClassName}.FromDto(dto);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = ((ITransferable<{dtoFullName}>)entity).ToDto();");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
@@ -245,7 +241,7 @@ internal static class RepositoryEmitter
             // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = ((ITransferable<{dtoFullName}>)entity).ToDto();");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
@@ -323,16 +319,14 @@ internal static class RepositoryEmitter
             sb.AppendLine("            {");
             sb.AppendLine("                return null;");
             sb.AppendLine("            }");
-            sb.AppendLine($"            var entity = new {entityFullName}();");
-            sb.AppendLine($"            ((ITransferable<{dtoFullName}>)entity).FromDto(_cache);");
-            sb.AppendLine("            return entity;");
+            sb.AppendLine($"            return {entity.ClassName}.FromDto(_cache);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            _cache = ((ITransferable<{dtoFullName}>)entity).ToDto();");
+            sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -431,11 +425,10 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // GetKey helper
+            // GetKey helper - static ToDto経由でキーを取得
             sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var transferable = (ITransferable<{dtoFullName}>)entity;");
-            sb.AppendLine($"            return transferable.ToDto().{keyField.DtoFieldName};");
+            sb.AppendLine($"            return {entity.ClassName}.ToDto(entity).{keyField.DtoFieldName};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -452,16 +445,14 @@ internal static class RepositoryEmitter
             sb.AppendLine("            {");
             sb.AppendLine("                return null;");
             sb.AppendLine("            }");
-            sb.AppendLine($"            var entity = new {entityFullName}();");
-            sb.AppendLine($"            ((ITransferable<{dtoFullName}>)entity).FromDto(dto);");
-            sb.AppendLine("            return entity;");
+            sb.AppendLine($"            return {entity.ClassName}.FromDto(dto);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = ((ITransferable<{dtoFullName}>)entity).ToDto();");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
@@ -470,7 +461,7 @@ internal static class RepositoryEmitter
             // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = ((ITransferable<{dtoFullName}>)entity).ToDto();");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
@@ -549,16 +540,14 @@ internal static class RepositoryEmitter
             sb.AppendLine("            {");
             sb.AppendLine("                return null;");
             sb.AppendLine("            }");
-            sb.AppendLine($"            var entity = new {entityFullName}();");
-            sb.AppendLine($"            ((ITransferable<{dtoFullName}>)entity).FromDto(_cache);");
-            sb.AppendLine("            return entity;");
+            sb.AppendLine($"            return {entity.ClassName}.FromDto(_cache);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            _cache = ((ITransferable<{dtoFullName}>)entity).ToDto();");
+            sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
             sb.AppendLine();

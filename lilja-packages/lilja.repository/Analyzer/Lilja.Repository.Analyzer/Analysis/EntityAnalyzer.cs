@@ -81,7 +81,51 @@ internal static class EntityAnalyzer
             ? string.Empty
             : classSymbol.ContainingNamespace.ToDisplayString();
 
-        return new EntityInfo(ns, classSymbol.Name, fields);
+        // 既存コンストラクタの存在チェック
+        var needsConstructorGeneration = !HasMatchingConstructor(classSymbol, fields);
+
+        return new EntityInfo(ns, classSymbol.Name, fields, needsConstructorGeneration);
+    }
+
+    /// <summary>
+    /// Persist属性フィールドと同じシグネチャのコンストラクタが存在するかチェック。
+    /// </summary>
+    private static bool HasMatchingConstructor(INamedTypeSymbol classSymbol, List<Models.FieldInfo> fields)
+    {
+        foreach (var ctor in classSymbol.Constructors)
+        {
+            if (ctor.IsImplicitlyDeclared || ctor.IsStatic)
+            {
+                continue;
+            }
+
+            var parameters = ctor.Parameters;
+            if (parameters.Length != fields.Count)
+            {
+                continue;
+            }
+
+            var match = true;
+            for (int i = 0; i < fields.Count; i++)
+            {
+                var field = fields[i];
+                var param = parameters[i];
+
+                // 型を比較（フル修飾名で比較）
+                var paramTypeName = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                if (paramTypeName != field.FullTypeName)
+                {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static ValueObjectInfo AnalyzeValueObject(ITypeSymbol typeSymbol)

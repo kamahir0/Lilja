@@ -32,11 +32,18 @@ internal readonly struct EntityInfo
     /// </summary>
     public FieldInfo? KeyField { get; }
 
-    public EntityInfo(string @namespace, string className, IReadOnlyList<FieldInfo> fields)
+    /// <summary>
+    /// DTO復元用のprivateコンストラクタを生成する必要があるかどうか。
+    /// 既にPersist属性フィールドを網羅したコンストラクタが存在する場合はfalse。
+    /// </summary>
+    public bool NeedsConstructorGeneration { get; }
+
+    public EntityInfo(string @namespace, string className, IReadOnlyList<FieldInfo> fields, bool needsConstructorGeneration)
     {
         Namespace = @namespace;
         ClassName = className;
         Fields = fields;
+        NeedsConstructorGeneration = needsConstructorGeneration;
 
         FieldInfo? keyField = null;
         foreach (var field in fields)
