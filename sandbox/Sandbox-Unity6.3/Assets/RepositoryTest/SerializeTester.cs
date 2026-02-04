@@ -1,5 +1,5 @@
-using Lilja.Generated.Dtos;
-using Lilja.Generated.Formatters; // 生成されたFormatter
+using Lilja.Repository.Generated.Dtos.RepositoryTest;
+using Lilja.Repository.Generated.Formatters.RepositoryTest;
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
