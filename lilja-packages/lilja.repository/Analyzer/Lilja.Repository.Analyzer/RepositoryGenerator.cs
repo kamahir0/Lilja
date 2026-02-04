@@ -15,6 +15,11 @@ namespace Lilja.Repository.Analyzer;
 [Generator(LanguageNames.CSharp)]
 public sealed class RepositoryGenerator : IIncrementalGenerator
 {
+    /// <summary>
+    /// MessagePackのIMessagePackFormatter型の完全修飾名。
+    /// </summary>
+    private const string MessagePackFormatterTypeName = "MessagePack.Formatters.IMessagePackFormatter`1";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // 属性定義を埋め込み生成（RuntimeにあるものをSource Generator側でも認識できるようにする）
@@ -29,15 +34,40 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
             .Where(static info => info.HasValue)
             .Select(static (info, _) => info!.Value);
 
+        // MessagePackの存在確認用にCompilationを取得
+        var hasMessagePack = context.CompilationProvider
+            .Select(static (compilation, _) => HasMessagePackReference(compilation));
+
+        // EntityとMessagePack存在フラグを結合
+        var entityWithContext = entityClasses.Combine(hasMessagePack);
+
         // コンパイルと結合して出力
-        context.RegisterSourceOutput(entityClasses, static (spc, entity) =>
+        context.RegisterSourceOutput(entityWithContext, static (spc, tuple) =>
         {
+            var (entity, messagePackAvailable) = tuple;
+
             GenerateDto(spc, entity);
             GenerateTransferable(spc, entity);
-            GenerateFormatter(spc, entity);
+
+            // MessagePackが参照されている場合のみFormatter生成
+            if (messagePackAvailable)
+            {
+                GenerateFormatter(spc, entity);
+            }
+
             GenerateRepositoryInterface(spc, entity);
             GenerateRepositoryImplementation(spc, entity);
         });
+    }
+
+    /// <summary>
+    /// コンパイル対象のアセンブリでMessagePackが参照されているか確認する。
+    /// </summary>
+    private static bool HasMessagePackReference(Compilation compilation)
+    {
+        // IMessagePackFormatter<T>型が存在するか確認
+        var formatterType = compilation.GetTypeByMetadataName(MessagePackFormatterTypeName);
+        return formatterType != null;
     }
 
     private static EntityInfo? GetEntityInfo(GeneratorAttributeSyntaxContext context)
