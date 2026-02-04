@@ -10,7 +10,7 @@ namespace Lilja.Repository.Analyzer;
 
 /// <summary>
 /// Lilja.Repository Source Generator。
-/// [Entity]属性を持つクラスからDTO、ITransferable実装、Formatter、Repositoryを生成する。
+/// [Entity]属性を持つクラスからDTO、Converter、Formatter、Repositoryを生成する。
 /// </summary>
 [Generator(LanguageNames.CSharp)]
 public sealed class RepositoryGenerator : IIncrementalGenerator
@@ -47,7 +47,7 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
             var (entity, messagePackAvailable) = tuple;
 
             GenerateDto(spc, entity);
-            GenerateTransferable(spc, entity);
+            GenerateConverter(spc, entity);
 
             // MessagePackが参照されている場合のみFormatter生成
             if (messagePackAvailable)
@@ -93,9 +93,9 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
         context.AddSource($"{entity.ClassName}Dto.g.cs", source);
     }
 
-    private static void GenerateTransferable(SourceProductionContext context, EntityInfo entity)
+    private static void GenerateConverter(SourceProductionContext context, EntityInfo entity)
     {
-        var source = TransferableEmitter.Emit(entity);
+        var source = ConverterEmitter.Emit(entity);
         context.AddSource($"{entity.ClassName}.Converter.g.cs", source);
     }
 

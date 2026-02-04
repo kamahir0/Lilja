@@ -4,10 +4,9 @@ using Lilja.Repository.Analyzer.Models;
 namespace Lilja.Repository.Analyzer.Emitters;
 
 /// <summary>
-/// DTO変換メソッド生成。
-/// internal staticなToDto/FromDtoメソッドとprivateコンストラクタを生成する。
+/// Converter生成（ToDto/FromDtoメソッドとprivateコンストラクタ）。
 /// </summary>
-internal static class TransferableEmitter
+internal static class ConverterEmitter
 {
     public static string Emit(EntityInfo entity)
     {
