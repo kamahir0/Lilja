@@ -1,4 +1,6 @@
-namespace Lilja.Repository.Sample
+using Lilja.Repository;
+
+namespace RepositoryTest
 {
     /// <summary>
     /// 座標を表すValueObject。
