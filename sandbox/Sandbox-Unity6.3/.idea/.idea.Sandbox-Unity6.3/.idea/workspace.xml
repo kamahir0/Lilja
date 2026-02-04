@@ -5,120 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bda3718b-2b38-45aa-a35e-26d194046c0a" name="変更" comment="">
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Dummy.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Dummy.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Analyzer.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Analyzer.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Internal.asmdef" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Internal.asmdef.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/.signature.p7s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/MessagePack.nuspec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/MessagePack.nuspec.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/lib.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/lib/netstandard2.1.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/lib/netstandard2.1/MessagePack.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/lib/netstandard2.1/MessagePack.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/lib/netstandard2.1/MessagePack.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.3.1.4/lib/netstandard2.1/MessagePack.xml.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/.signature.p7s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/MessagePack.Annotations.nuspec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/MessagePack.Annotations.nuspec.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/lib.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/lib/netstandard2.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/lib/netstandard2.0/MessagePack.Annotations.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/lib/netstandard2.0/MessagePack.Annotations.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/lib/netstandard2.0/MessagePack.Annotations.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePack.Annotations.3.1.4/lib/netstandard2.0/MessagePack.Annotations.xml.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/.signature.p7s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/MessagePackAnalyzer.nuspec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/MessagePackAnalyzer.nuspec.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers/roslyn4.3.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers/roslyn4.3/cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers/roslyn4.3/cs/MessagePack.Analyzers.CodeFixes.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers/roslyn4.3/cs/MessagePack.Analyzers.CodeFixes.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers/roslyn4.3/cs/MessagePack.SourceGenerator.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/MessagePackAnalyzer.3.1.4/analyzers/roslyn4.3/cs/MessagePack.SourceGenerator.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/.signature.p7s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/MSBuild-NuGet-Icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/MSBuild-NuGet-Icon.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/Microsoft.NET.StringTools.nuspec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/Microsoft.NET.StringTools.nuspec.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/README.md.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/lib.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/lib/netstandard2.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/lib/netstandard2.0/Microsoft.NET.StringTools.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/lib/netstandard2.0/Microsoft.NET.StringTools.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/lib/netstandard2.0/Microsoft.NET.StringTools.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/lib/netstandard2.0/Microsoft.NET.StringTools.xml.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/notices.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/notices/THIRDPARTYNOTICES.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Microsoft.NET.StringTools.17.11.4/notices/THIRDPARTYNOTICES.txt.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/.signature.p7s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/Icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/Icon.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/LICENSE.TXT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/LICENSE.TXT.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/PACKAGE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/PACKAGE.md.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/System.Collections.Immutable.nuspec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/System.Collections.Immutable.nuspec.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/THIRD-PARTY-NOTICES.TXT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/THIRD-PARTY-NOTICES.TXT.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net461.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net461/System.Collections.Immutable.targets" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net461/System.Collections.Immutable.targets.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net462.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net462/_._" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net462/_._.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net6.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net6.0/_._" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/net6.0/_._.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/netcoreapp2.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/netcoreapp2.0/System.Collections.Immutable.targets" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/buildTransitive/netcoreapp2.0/System.Collections.Immutable.targets.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/lib.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/lib/netstandard2.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/lib/netstandard2.0/System.Collections.Immutable.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/lib/netstandard2.0/System.Collections.Immutable.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/lib/netstandard2.0/System.Collections.Immutable.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/lib/netstandard2.0/System.Collections.Immutable.xml.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/useSharedDesignerContext.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Collections.Immutable.8.0.0/useSharedDesignerContext.txt.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/.signature.p7s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/Icon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/Icon.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/LICENSE.TXT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/LICENSE.TXT.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/System.Runtime.CompilerServices.Unsafe.nuspec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/System.Runtime.CompilerServices.Unsafe.nuspec.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/THIRD-PARTY-NOTICES.TXT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/THIRD-PARTY-NOTICES.TXT.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive/netcoreapp2.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.targets" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.targets.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive/netcoreapp3.1.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive/netcoreapp3.1/_._" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/buildTransitive/netcoreapp3.1/_._.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/lib.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/lib/netstandard2.0.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/useSharedDesignerContext.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/System.Runtime.CompilerServices.Unsafe.6.0.0/useSharedDesignerContext.txt.meta" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/RepositoryTest/SerializeTester.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Sandbox-Unity6.3/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Sandbox-Unity6.3/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/Coordinate.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/Coordinate.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/Item.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/Item.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/RepositoryTest.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/RepositoryTest.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/NewEmptyCSharpScript.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/NewEmptyCSharpScript.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/SerializeTester.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/packages.config" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/packages.config" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -146,7 +38,16 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/IItemRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/IPlayerDataRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/InMemoryPlayerDataRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/Item.Converter.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/ItemDto.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/ItemDtoFormatter.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/JsonItemRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/MessagePackItemRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/c3d9aff5e3fdccd651792c434abe9be8bb373429fbab4d64b4df4fc276e6/Attributes.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/RepositoryTest/PlayerData.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
     <commands />
@@ -161,23 +62,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "repository",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;repository&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Unity エディターにアタッチ.Unity エディターにアタッチ">
     <configuration name="ユニットテスト (バッチモード)" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe" />
@@ -226,6 +127,8 @@
       <workItem from="1770036384729" duration="14000" />
       <workItem from="1770123705740" duration="2188000" />
       <workItem from="1770134020580" duration="2919000" />
+      <workItem from="1770216062363" duration="253000" />
+      <workItem from="1770216363885" duration="4180000" />
     </task>
     <servers />
   </component>
