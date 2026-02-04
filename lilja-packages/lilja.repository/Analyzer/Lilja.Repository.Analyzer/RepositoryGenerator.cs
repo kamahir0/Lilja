@@ -56,7 +56,14 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
             }
 
             GenerateRepositoryInterface(spc, entity);
-            GenerateRepositoryImplementation(spc, entity);
+            GenerateInMemoryRepository(spc, entity);
+            GenerateJsonRepository(spc, entity);
+
+            // MessagePackが参照されている場合のみMessagePackRepository生成
+            if (messagePackAvailable)
+            {
+                GenerateMessagePackRepository(spc, entity);
+            }
         });
     }
 
@@ -104,9 +111,21 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
         context.AddSource($"I{entity.ClassName}Repository.g.cs", source);
     }
 
-    private static void GenerateRepositoryImplementation(SourceProductionContext context, EntityInfo entity)
+    private static void GenerateInMemoryRepository(SourceProductionContext context, EntityInfo entity)
     {
         var source = RepositoryEmitter.EmitInMemoryImplementation(entity);
         context.AddSource($"InMemory{entity.ClassName}Repository.g.cs", source);
+    }
+
+    private static void GenerateJsonRepository(SourceProductionContext context, EntityInfo entity)
+    {
+        var source = RepositoryEmitter.EmitJsonImplementation(entity);
+        context.AddSource($"Json{entity.ClassName}Repository.g.cs", source);
+    }
+
+    private static void GenerateMessagePackRepository(SourceProductionContext context, EntityInfo entity)
+    {
+        var source = RepositoryEmitter.EmitMessagePackImplementation(entity);
+        context.AddSource($"MessagePack{entity.ClassName}Repository.g.cs", source);
     }
 }
