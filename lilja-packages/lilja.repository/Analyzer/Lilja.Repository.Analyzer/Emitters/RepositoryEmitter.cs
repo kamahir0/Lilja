@@ -66,7 +66,10 @@ internal static class RepositoryEmitter
         var entityFullName = string.IsNullOrEmpty(entity.Namespace)
             ? entity.ClassName
             : $"{entity.Namespace}.{entity.ClassName}";
-        var dtoFullName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
+        var dtoNamespace = string.IsNullOrEmpty(entity.Namespace)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{entity.Namespace}";
+        var dtoFullName = $"{dtoNamespace}.{entity.ClassName}Dto";
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
@@ -162,7 +165,10 @@ internal static class RepositoryEmitter
         var entityFullName = string.IsNullOrEmpty(entity.Namespace)
             ? entity.ClassName
             : $"{entity.Namespace}.{entity.ClassName}";
-        var dtoFullName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
+        var dtoNamespace = string.IsNullOrEmpty(entity.Namespace)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{entity.Namespace}";
+        var dtoFullName = $"{dtoNamespace}.{entity.ClassName}Dto";
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
@@ -383,8 +389,14 @@ internal static class RepositoryEmitter
         var entityFullName = string.IsNullOrEmpty(entity.Namespace)
             ? entity.ClassName
             : $"{entity.Namespace}.{entity.ClassName}";
-        var dtoFullName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
-        var formatterFullName = $"Lilja.Generated.Formatters.{entity.ClassName}DtoFormatter";
+        var dtoNamespace = string.IsNullOrEmpty(entity.Namespace)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{entity.Namespace}";
+        var formatterNamespace = string.IsNullOrEmpty(entity.Namespace)
+            ? "Lilja.Repository.Generated.Formatters"
+            : $"Lilja.Repository.Generated.Formatters.{entity.Namespace}";
+        var dtoFullName = $"{dtoNamespace}.{entity.ClassName}Dto";
+        var formatterFullName = $"{formatterNamespace}.{entity.ClassName}DtoFormatter";
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();

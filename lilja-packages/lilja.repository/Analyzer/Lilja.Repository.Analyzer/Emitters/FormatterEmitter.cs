@@ -11,19 +11,28 @@ internal static class FormatterEmitter
     public static string Emit(EntityInfo entity)
     {
         var sb = new StringBuilder();
-        var dtoTypeName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
+
+        // Entityのnamespaceを含めたDTO/Formatter namespace
+        var entityNs = entity.Namespace;
+        var dtoNamespace = string.IsNullOrEmpty(entityNs)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{entityNs}";
+        var formatterNamespace = string.IsNullOrEmpty(entityNs)
+            ? "Lilja.Repository.Generated.Formatters"
+            : $"Lilja.Repository.Generated.Formatters.{entityNs}";
+        var dtoTypeName = $"{dtoNamespace}.{entity.ClassName}Dto";
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
         sb.AppendLine("using MessagePack;");
         sb.AppendLine("using MessagePack.Formatters;");
         sb.AppendLine();
-        sb.AppendLine("namespace Lilja.Generated.Formatters");
+        sb.AppendLine($"namespace {formatterNamespace}");
         sb.AppendLine("{");
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// {entity.ClassName}Dto用のMessagePackFormatter。");
         sb.AppendLine("    /// </summary>");
-        sb.AppendLine($"    public sealed class {entity.ClassName}DtoFormatter : IMessagePackFormatter<{dtoTypeName}>");
+        sb.AppendLine($"    public sealed class {entity.ClassName}DtoFormatter : IMessagePackFormatter<{dtoTypeName}>");;
         sb.AppendLine("    {");
 
         // フラット化後の総フィールド数を計算

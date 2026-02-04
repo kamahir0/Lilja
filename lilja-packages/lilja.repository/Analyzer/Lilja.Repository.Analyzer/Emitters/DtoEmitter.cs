@@ -12,11 +12,16 @@ internal static class DtoEmitter
     {
         var sb = new StringBuilder();
 
+        // Entityのnamespaceを含めたDTO namespace
+        var dtoNamespace = string.IsNullOrEmpty(entity.Namespace)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{entity.Namespace}";
+
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
         sb.AppendLine("using System;");
         sb.AppendLine();
-        sb.AppendLine("namespace Lilja.Generated.Dtos");
+        sb.AppendLine($"namespace {dtoNamespace}");
         sb.AppendLine("{");
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// {entity.ClassName}のDTO。");

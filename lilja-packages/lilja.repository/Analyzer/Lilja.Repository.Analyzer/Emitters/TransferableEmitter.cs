@@ -12,7 +12,12 @@ internal static class TransferableEmitter
     public static string Emit(EntityInfo entity)
     {
         var sb = new StringBuilder();
-        var dtoTypeName = $"Lilja.Generated.Dtos.{entity.ClassName}Dto";
+
+        // Entityのnamespaceを含めたDTO namespace
+        var dtoNamespace = string.IsNullOrEmpty(entity.Namespace)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{entity.Namespace}";
+        var dtoTypeName = $"{dtoNamespace}.{entity.ClassName}Dto";
         var entityFullName = string.IsNullOrEmpty(entity.Namespace)
             ? entity.ClassName
             : $"{entity.Namespace}.{entity.ClassName}";
