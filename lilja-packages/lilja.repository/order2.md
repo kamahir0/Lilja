@@ -23,7 +23,7 @@ Please strictly follow the "High-Fidelity Technical Specification" below to impl
 Scan user code for `[Entity]` and `[ToPrimitive]` attributes, and generate:
 
 1. **DTOs:** Flattened `[Serializable]` classes.
-2. **Transfers:** Explicit implementation of `ITransferable<TDto>` on Entities (Backdoor).
+2. **Transfers:** `internal static ToDto` / `FromDto` methods on the Entity (Backdoor).
 3. **Formatters:** Dependency-free MessagePack formatters.
 4. **Repositories:** Interface and Basic InMemory implementation.
 
@@ -77,10 +77,15 @@ src/Scripts/
 ### 4.3. Emission Phase 2: Entity Implementation
 
 * **Target:** `partial class {EntityName}`
-* **Interface:** `Lilja.Repository.Core.Interfaces.ITransferable<Lilja.Generated.Dtos.{EntityName}Dto>`
+* **Feature:** Backdoor mechanics for data transfer.
 * **Logic:**
-* `Export()`: Map private fields (`_hp`) and ValueObjects (`_loc.AsPrimitive()`) to DTO fields.
-* `Import()`: Map DTO fields back to private fields and reconstruct ValueObjects (`new Coordinate(dto.x, dto.y)`).
+* `internal static {Dto} ToDto({Entity} entity)`:
+  * Map private fields (`_hp`) and ValueObjects (`_loc.AsPrimitive()`) to DTO fields.
+* `internal static {Entity} FromDto({Dto} dto)`:
+  * Call the private constructor.
+* `private {Entity}(...)`:
+  * Constructor accepting all persisted fields to reconstruct the state.
+  * Reconstruct ValueObjects (`new Coordinate(dto.x, dto.y)`).
 
 
 
@@ -103,7 +108,7 @@ src/Scripts/
 * Use `IReadableTx` and `IReadWriteTx` from Core.
 
 
-* **InMemory:** `InMemory{EntityName}Repository` implementing the interface using a `Dictionary` (if Keyed) or `Field` (if Singleton).
+* **Implementations:** Provide `InMemory`, `Json`, and `MessagePack` implementations.
 
 ---
 

@@ -53,7 +53,7 @@ The following components **MUST** be implemented in `Runtime/Core` as they are f
 
 * The Source Generator will scan for `[Entity]` and `[ToPrimitive]` to generate:
 1. **DTOs:** Single `[Serializable]` class with flattened public fields.
-2. **Backdoor:** `ITransferable<TDto>` implementation on the Entity.
+2. **Backdoor:** `internal static ToDto` / `FromDto` methods and a `private` constructor on the Entity.
 3. **Formatters:** Custom MessagePack formatters (dependency-free).
 4. **Repositories:** `I{Entity}Repository` interfaces.
 
@@ -73,9 +73,6 @@ The file placement must strictly follow this layout relative to `package.json`:
 │   ├── Core/               <-- PLACE CORE DEFINITIONS HERE
 │   │   ├── Attributes/     ([Entity], [ToPrimitive], etc.)
 │   │   ├── Transactions/   (ITxFactory, TxFactory, IReadableTx)
-│   │   └── Interfaces/     (ITransferable, etc.)
-│   ├── Infrastructure/     (Base Repository Implementations)
-│   └── Generated/          (Target folder for SG output)
 └── Tests/
     └── Editor/             (Unit Tests)
 
