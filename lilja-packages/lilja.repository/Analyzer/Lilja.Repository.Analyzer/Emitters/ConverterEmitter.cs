@@ -73,11 +73,11 @@ internal static class ConverterEmitter
 
             if (field.ValueObjectInfo.IsValueObject)
             {
-                paramList.Append($"{field.FullTypeName} {field.DtoFieldName.ToLowerFirstChar()}");
+                paramList.Append($"{field.FullTypeName} {field.DtoFieldName.ToCamelCase()}");
             }
             else
             {
-                paramList.Append($"{field.TypeName} {field.DtoFieldName.ToLowerFirstChar()}");
+                paramList.Append($"{field.TypeName} {field.DtoFieldName.ToCamelCase()}");
             }
         }
 
@@ -87,7 +87,7 @@ internal static class ConverterEmitter
         // フィールドへの代入
         foreach (var field in entity.Fields)
         {
-            sb.AppendLine($"{indent}        {field.Name} = {field.DtoFieldName.ToLowerFirstChar()};");
+            sb.AppendLine($"{indent}        {field.Name} = {field.DtoFieldName.ToCamelCase()};");
         }
 
         sb.AppendLine($"{indent}    }}");
@@ -169,12 +169,23 @@ internal static class ConverterEmitter
 internal static class StringExtensions
 {
     /// <summary>
-    /// 先頭文字を小文字にする。
+    /// 文字列をCamelCaseに変換する。
+    /// アンダースコアを除去し、先頭文字を小文字にする。
     /// </summary>
-    public static string ToLowerFirstChar(this string str)
+    public static string ToCamelCase(this string str)
     {
-        if (string.IsNullOrEmpty(str) || char.IsLower(str[0]))
+        if (string.IsNullOrEmpty(str))
             return str;
-        return char.ToLowerInvariant(str[0]) + str.Substring(1);
+
+        // アンダースコアを除去
+        var removed = str.Replace("_", "");
+        if (string.IsNullOrEmpty(removed))
+            return str; // 元が "_" のみのような場合
+
+        // 先頭を小文字化
+        if (char.IsLower(removed[0]))
+            return removed;
+        
+        return char.ToLowerInvariant(removed[0]) + removed.Substring(1);
     }
 }

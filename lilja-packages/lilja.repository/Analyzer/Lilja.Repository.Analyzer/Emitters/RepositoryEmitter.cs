@@ -34,11 +34,13 @@ internal static class RepositoryEmitter
                 ? entity.ClassName
                 : $"{entity.Namespace}.{entity.ClassName}";
 
+            var keyParamName = keyField.Name.ToCamelCase();
+
             // Keyed Entity: CRUD operations
-            sb.AppendLine($"        {entityFullName} Read(IReadableTx tx, {keyField.TypeName} key);");
+            sb.AppendLine($"        {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName});");
             sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
-            sb.AppendLine($"        void Delete(IReadWriteTx tx, {keyField.TypeName} key);");
+            sb.AppendLine($"        void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName});");
         }
         else
         {
@@ -88,6 +90,8 @@ internal static class RepositoryEmitter
         {
             var keyField = entity.KeyField.Value;
 
+            var keyParamName = keyField.Name.ToCamelCase();
+
             // Dictionary storage
             sb.AppendLine($"        private readonly Dictionary<{keyField.TypeName}, {entityFullName}> _storage = new Dictionary<{keyField.TypeName}, {entityFullName}>();");
             sb.AppendLine();
@@ -100,9 +104,9 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} key)");
+            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName})");
             sb.AppendLine("        {");
-            sb.AppendLine("            _storage.TryGetValue(key, out var entity);");
+            sb.AppendLine($"            _storage.TryGetValue({keyParamName}, out var entity);");
             sb.AppendLine("            return entity;");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -122,9 +126,9 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Delete
-            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} key)");
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName})");
             sb.AppendLine("        {");
-            sb.AppendLine("            _storage.Remove(key);");
+            sb.AppendLine($"            _storage.Remove({keyParamName});");
             sb.AppendLine("        }");
         }
         else
@@ -191,6 +195,8 @@ internal static class RepositoryEmitter
         {
             var keyField = entity.KeyField.Value;
 
+            var keyParamName = keyField.Name.ToCamelCase();
+
             // Keyed Entity: Dictionary storage with wrapper for serialization
             sb.AppendLine($"        private Dictionary<{keyField.TypeName}, {dtoFullName}> _cache;");
             sb.AppendLine();
@@ -225,9 +231,9 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} key)");
+            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName})");
             sb.AppendLine("        {");
-            sb.AppendLine("            if (!_cache.TryGetValue(key, out var dto))");
+            sb.AppendLine($"            if (!_cache.TryGetValue({keyParamName}, out var dto))");
             sb.AppendLine("            {");
             sb.AppendLine("                return null;");
             sb.AppendLine("            }");
@@ -254,9 +260,9 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Delete
-            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} key)");
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName})");
             sb.AppendLine("        {");
-            sb.AppendLine("            _cache.Remove(key);");
+            sb.AppendLine($"            _cache.Remove({keyParamName});");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -423,6 +429,8 @@ internal static class RepositoryEmitter
         {
             var keyField = entity.KeyField.Value;
 
+            var keyParamName = keyField.Name.ToCamelCase();
+
             // Keyed Entity: Dictionary storage
             sb.AppendLine($"        private Dictionary<{keyField.TypeName}, {dtoFullName}> _cache;");
             sb.AppendLine();
@@ -451,9 +459,9 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} key)");
+            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName})");
             sb.AppendLine("        {");
-            sb.AppendLine("            if (!_cache.TryGetValue(key, out var dto))");
+            sb.AppendLine($"            if (!_cache.TryGetValue({keyParamName}, out var dto))");
             sb.AppendLine("            {");
             sb.AppendLine("                return null;");
             sb.AppendLine("            }");
@@ -480,9 +488,9 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Delete
-            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} key)");
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName})");
             sb.AppendLine("        {");
-            sb.AppendLine("            _cache.Remove(key);");
+            sb.AppendLine($"            _cache.Remove({keyParamName});");
             sb.AppendLine("            Save();");
             sb.AppendLine("        }");
             sb.AppendLine();
