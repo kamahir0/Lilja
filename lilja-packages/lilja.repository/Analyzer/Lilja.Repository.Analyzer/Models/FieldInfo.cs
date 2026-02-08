@@ -40,18 +40,37 @@ internal readonly struct ValueObjectInfo
     public string ToPrimitiveMethodName { get; }
 
     /// <summary>
+    /// FromPrimitiveメソッド名（staticメソッドの場合）。
+    /// nullまたは空文字列の場合はコンストラクタを使用。
+    /// </summary>
+    public string FromPrimitiveMethodName { get; }
+
+    /// <summary>
+    /// FromPrimitiveがstaticメソッドかどうか。
+    /// falseの場合はコンストラクタを使用。
+    /// </summary>
+    public bool IsFromPrimitiveStatic { get; }
+
+    /// <summary>
     /// タプル要素一覧（フラット化用）。
     /// </summary>
     public IReadOnlyList<TupleElementInfo> TupleElements { get; }
 
-    public ValueObjectInfo(bool isValueObject, string toPrimitiveMethodName, IReadOnlyList<TupleElementInfo> tupleElements)
+    public ValueObjectInfo(
+        bool isValueObject,
+        string toPrimitiveMethodName,
+        string fromPrimitiveMethodName,
+        bool isFromPrimitiveStatic,
+        IReadOnlyList<TupleElementInfo> tupleElements)
     {
         IsValueObject = isValueObject;
         ToPrimitiveMethodName = toPrimitiveMethodName;
+        FromPrimitiveMethodName = fromPrimitiveMethodName;
+        IsFromPrimitiveStatic = isFromPrimitiveStatic;
         TupleElements = tupleElements;
     }
 
-    public static ValueObjectInfo None => new(false, string.Empty, System.Array.Empty<TupleElementInfo>());
+    public static ValueObjectInfo None => new(false, string.Empty, string.Empty, false, System.Array.Empty<TupleElementInfo>());
 }
 
 /// <summary>

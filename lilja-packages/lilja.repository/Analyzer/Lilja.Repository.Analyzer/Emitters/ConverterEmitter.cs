@@ -150,7 +150,17 @@ internal static class ConverterEmitter
                     var element = field.ValueObjectInfo.TupleElements[j];
                     voArgs.Append($"dto.{field.DtoFieldName}_{element.Name}");
                 }
-                argList.Append($"new {field.FullTypeName}({voArgs})");
+
+                if (field.ValueObjectInfo.IsFromPrimitiveStatic)
+                {
+                    // staticメソッドを使用: Type.FromPrimitive(args)
+                    argList.Append($"{field.FullTypeName}.{field.ValueObjectInfo.FromPrimitiveMethodName}({voArgs})");
+                }
+                else
+                {
+                    // コンストラクタを使用: new Type(args)
+                    argList.Append($"new {field.FullTypeName}({voArgs})");
+                }
             }
             else
             {

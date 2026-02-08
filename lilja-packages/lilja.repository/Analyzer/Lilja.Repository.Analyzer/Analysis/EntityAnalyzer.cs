@@ -15,6 +15,7 @@ internal static class EntityAnalyzer
     private const string KeyAttributeFullName = "Lilja.Repository.KeyAttribute";
     private const string PersistAttributeFullName = "Lilja.Repository.PersistAttribute";
     private const string ToPrimitiveAttributeFullName = "Lilja.Repository.ToPrimitiveAttribute";
+    private const string FromPrimitiveAttributeFullName = "Lilja.Repository.FromPrimitiveAttribute";
 
     /// <summary>
     /// シンボルからEntity情報を解析する。
@@ -141,6 +142,9 @@ internal static class EntityAnalyzer
     private static ValueObjectInfo AnalyzeValueObject(ITypeSymbol typeSymbol)
     {
         // ToPrimitive属性を持つメソッドを探す
+        string toPrimitiveMethodName = null;
+        var tupleElements = new List<TupleElementInfo>();
+
         foreach (var member in typeSymbol.GetMembers())
         {
             if (member is not IMethodSymbol methodSymbol)
@@ -154,9 +158,10 @@ internal static class EntityAnalyzer
                 continue;
             }
 
+            toPrimitiveMethodName = methodSymbol.Name;
+
             // 戻り値の型を解析
             var returnType = methodSymbol.ReturnType;
-            var tupleElements = new List<TupleElementInfo>();
 
             if (returnType is INamedTypeSymbol namedType && namedType.IsTupleType)
             {
@@ -177,11 +182,49 @@ internal static class EntityAnalyzer
                     "Value"
                 ));
             }
-
-            return new ValueObjectInfo(true, methodSymbol.Name, tupleElements);
+            break;
         }
 
-        return ValueObjectInfo.None;
+        if (toPrimitiveMethodName == null)
+        {
+            return ValueObjectInfo.None;
+        }
+
+        // FromPrimitive属性を持つstaticメソッドまたはコンストラクタを探す
+        string fromPrimitiveMethodName = null;
+        var isFromPrimitiveStatic = false;
+
+        foreach (var member in typeSymbol.GetMembers())
+        {
+            if (member is IMethodSymbol methodSymbol)
+            {
+                var fromPrimitiveAttr = GetAttribute(methodSymbol, FromPrimitiveAttributeFullName);
+                if (fromPrimitiveAttr != null && methodSymbol.IsStatic)
+                {
+                    fromPrimitiveMethodName = methodSymbol.Name;
+                    isFromPrimitiveStatic = true;
+                    break;
+                }
+            }
+        }
+
+        // staticメソッドがなければコンストラクタを探す
+        if (fromPrimitiveMethodName == null)
+        {
+            foreach (var constructor in ((INamedTypeSymbol)typeSymbol).Constructors)
+            {
+                var fromPrimitiveAttr = GetAttribute(constructor, FromPrimitiveAttributeFullName);
+                if (fromPrimitiveAttr != null)
+                {
+                    // コンストラクタ使用（メソッド名は空）
+                    fromPrimitiveMethodName = string.Empty;
+                    isFromPrimitiveStatic = false;
+                    break;
+                }
+            }
+        }
+
+        return new ValueObjectInfo(true, toPrimitiveMethodName, fromPrimitiveMethodName ?? string.Empty, isFromPrimitiveStatic, tupleElements);
     }
 
     private static string GetPrimitiveTypeName(ITypeSymbol typeSymbol)
