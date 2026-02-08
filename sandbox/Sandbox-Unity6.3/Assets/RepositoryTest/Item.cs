@@ -9,24 +9,32 @@ namespace RepositoryTest
     [Entity]
     public partial class Item
     {
+        [Key] [Persist(0)] private readonly string _userId;
+
         /// <summary>
         /// アイテムID（主キー）。
         /// </summary>
-        [Key]
-        [Persist(0)]
-        private int _id;
+        [Key] [Persist(1)] private readonly int _id;
 
         /// <summary>
         /// アイテム名。
         /// </summary>
-        [Persist(1)]
-        private string _name;
+        [Persist(2)] private readonly string _name;
 
         /// <summary>
         /// アイテムの位置座標。
         /// ValueObjectのフラット化をテストするためのフィールド。
         /// </summary>
-        [Persist(2)]
-        private Coordinate _position;
+        [Persist(3)] private Coordinate _position;
+
+        public void MoveX(int step)
+        {
+            _position = new Coordinate(_position.X + step, _position.Y);
+        }
+
+        public void MoveY(int step)
+        {
+            _position = new Coordinate(_position.X, _position.Y + step);
+        }
     }
 }
