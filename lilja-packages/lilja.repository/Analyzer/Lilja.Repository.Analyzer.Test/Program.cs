@@ -48,6 +48,12 @@ Console.WriteLine("- InMemoryItemRepository.g.cs");
 //             _position = position;
 //         }
 //     }
+//
+//     [Entity]
+//     public partial class ConfigData
+//     {
+//         [Persist(0)] public int _bgmVolume;
+//     }
 // }
 
 #region DefinitionsForTest
