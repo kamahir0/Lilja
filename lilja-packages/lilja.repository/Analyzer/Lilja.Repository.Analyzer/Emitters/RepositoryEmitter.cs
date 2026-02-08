@@ -50,7 +50,9 @@ internal static class RepositoryEmitter
                 : $"{entity.Namespace}.{entity.ClassName}";
 
             sb.AppendLine($"        {entityFullName} Read(IReadableTx tx);");
+            sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
+            sb.AppendLine($"        void Delete(IReadWriteTx tx);");
         }
 
         sb.AppendLine("    }");
@@ -145,9 +147,23 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Update
+            // Update
+            sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            _entity = entity;");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            _entity = entity;");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // Delete
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            _entity = null;");
             sb.AppendLine("        }");
         }
 
@@ -336,10 +352,29 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Update
+            // Update
+            sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
+            sb.AppendLine("            Save();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            Save();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // Delete
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            _cache = null;");
+            sb.AppendLine("            if (File.Exists(_filePath))");
+            sb.AppendLine("            {");
+            sb.AppendLine("                File.Delete(_filePath);");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -565,10 +600,29 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Update
+            // Update
+            sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
+            sb.AppendLine("            Save();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            Save();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // Delete
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            _cache = null;");
+            sb.AppendLine("            if (File.Exists(_filePath))");
+            sb.AppendLine("            {");
+            sb.AppendLine("                File.Delete(_filePath);");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine();
 
