@@ -1,5 +1,11 @@
 using Lilja.Repository;
 
+// External init
+namespace System.Runtime.CompilerServices
+{
+    public class IsExternalInit { }
+}
+
 namespace RepositoryTest
 {
     /// <summary>
@@ -8,34 +14,32 @@ namespace RepositoryTest
     /// </summary>
     public readonly struct Coordinate
     {
-        /// <summary>
-        /// X座標。
-        /// </summary>
-        public int X { get; }
+        public int X { get; init; }
+
+        public int Y { get; init; }
 
         /// <summary>
-        /// Y座標。
+        /// プリミティブ型から復元する（staticメソッド）
         /// </summary>
-        public int Y { get; }
-
-        /// <summary>
-        /// コンストラクタ。
-        /// </summary>
-        /// <param name="x">X座標。</param>
-        /// <param name="y">Y座標。</param>
-        public Coordinate(int x, int y)
+        [FromPrimitive]
+        internal static Coordinate FromPrimitive(int x, int y)
         {
-            X = x;
-            Y = y;
+            return new Coordinate { X = x, Y = y };
         }
 
+        // NOTE: コンストラクタでもOK
+        // [FromPrimitive]
+        // internal Coordinate(int x, int y)
+        // {
+        //     X = x;
+        //     Y = y;
+        // }
+
         /// <summary>
-        /// プリミティブ型に変換する。
-        /// Source Generatorがこのメソッドを検出してDTOにフラット化する。
+        /// プリミティブ型に変換する（タプルを返す）
         /// </summary>
-        /// <returns>X, Y座標のタプル。</returns>
         [ToPrimitive]
-        public (int x, int y) Serialize()
+        internal (int x, int y) ToPrimitive()
         {
             return (X, Y);
         }

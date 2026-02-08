@@ -29,12 +29,12 @@ namespace RepositoryTest
 
         public void MoveX(int step)
         {
-            _position = new Coordinate(_position.X + step, _position.Y);
+            _position = new Coordinate { X = _position.X + step, Y = _position.Y };
         }
 
         public void MoveY(int step)
         {
-            _position = new Coordinate(_position.X, _position.Y + step);
+            _position = new Coordinate { X = _position.X, Y = _position.Y + step };
         }
     }
 }
