@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using Lilja.Repository.Analyzer.Models;
 
@@ -8,6 +9,76 @@ namespace Lilja.Repository.Analyzer.Emitters;
 /// </summary>
 internal static class RepositoryEmitter
 {
+    #region ヘルパーメソッド
+
+    /// <summary>
+    /// キーの型文字列を取得する。
+    /// 複合キーの場合はValueTuple形式、単一キーの場合は型名のみ。
+    /// </summary>
+    private static string GetKeyTypeName(EntityInfo entity)
+    {
+        if (!entity.HasKey) return string.Empty;
+
+        if (entity.IsCompositeKey)
+        {
+            // 複合キー: (Type1, Type2, ...)
+            var types = new List<string>();
+            foreach (var keyField in entity.KeyFields)
+            {
+                types.Add(keyField.TypeName);
+            }
+            return $"({string.Join(", ", types)})";
+        }
+        else
+        {
+            // 単一キー
+            return entity.KeyFields[0].TypeName;
+        }
+    }
+
+    /// <summary>
+    /// キーのパラメータ名を取得する。
+    /// 複合キーの場合は"key"固定、単一キーの場合はフィールド名をcamelCase化。
+    /// </summary>
+    private static string GetKeyParamName(EntityInfo entity)
+    {
+        if (!entity.HasKey) return string.Empty;
+
+        if (entity.IsCompositeKey)
+        {
+            return "key";
+        }
+        else
+        {
+            return entity.KeyFields[0].Name.ToCamelCase();
+        }
+    }
+
+    /// <summary>
+    /// GetKeyヘルパーメソッドの本体を生成する。
+    /// </summary>
+    private static string GetKeyReturnExpression(EntityInfo entity, string entityClassName, string dtoVarName)
+    {
+        if (!entity.HasKey) return string.Empty;
+
+        if (entity.IsCompositeKey)
+        {
+            // 複合キー: (dto.Key1, dto.Key2, ...)
+            var parts = new List<string>();
+            foreach (var keyField in entity.KeyFields)
+            {
+                parts.Add($"{dtoVarName}.{keyField.DtoFieldName}");
+            }
+            return $"({string.Join(", ", parts)})";
+        }
+        else
+        {
+            return $"{dtoVarName}.{entity.KeyFields[0].DtoFieldName}";
+        }
+    }
+
+    #endregion
+
     public static string EmitInterface(EntityInfo entity)
     {
         var sb = new StringBuilder();
@@ -27,28 +98,24 @@ internal static class RepositoryEmitter
         sb.AppendLine($"    public interface I{entity.ClassName}Repository");
         sb.AppendLine("    {");
 
-        if (entity.HasKey && entity.KeyField.HasValue)
-        {
-            var keyField = entity.KeyField.Value;
-            var entityFullName = string.IsNullOrEmpty(entity.Namespace)
-                ? entity.ClassName
-                : $"{entity.Namespace}.{entity.ClassName}";
+        var entityFullName = string.IsNullOrEmpty(entity.Namespace)
+            ? entity.ClassName
+            : $"{entity.Namespace}.{entity.ClassName}";
 
-            var keyParamName = keyField.Name.ToCamelCase();
+        if (entity.HasKey)
+        {
+            var keyTypeName = GetKeyTypeName(entity);
+            var keyParamName = GetKeyParamName(entity);
 
             // Keyed Entity: CRUD operations
-            sb.AppendLine($"        {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName});");
+            sb.AppendLine($"        {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName});");
             sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
-            sb.AppendLine($"        void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName});");
+            sb.AppendLine($"        void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName});");
         }
         else
         {
             // Singleton Entity
-            var entityFullName = string.IsNullOrEmpty(entity.Namespace)
-                ? entity.ClassName
-                : $"{entity.Namespace}.{entity.ClassName}";
-
             sb.AppendLine($"        {entityFullName} Read(IReadableTx tx);");
             sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
@@ -88,25 +155,26 @@ internal static class RepositoryEmitter
         sb.AppendLine($"    public class InMemory{entity.ClassName}Repository : I{entity.ClassName}Repository");
         sb.AppendLine("    {");
 
-        if (entity.HasKey && entity.KeyField.HasValue)
+        if (entity.HasKey)
         {
-            var keyField = entity.KeyField.Value;
-
-            var keyParamName = keyField.Name.ToCamelCase();
+            var keyTypeName = GetKeyTypeName(entity);
+            var keyParamName = GetKeyParamName(entity);
+            var keyReturnExpr = GetKeyReturnExpression(entity, entity.ClassName, $"{entity.ClassName}.ToDto(entity)");
 
             // Dictionary storage
-            sb.AppendLine($"        private readonly Dictionary<{keyField.TypeName}, {entityFullName}> _storage = new Dictionary<{keyField.TypeName}, {entityFullName}>();");
+            sb.AppendLine($"        private readonly Dictionary<{keyTypeName}, {entityFullName}> _storage = new Dictionary<{keyTypeName}, {entityFullName}>();");
             sb.AppendLine();
 
-            // GetKey helper - static ToDto経由でキーを取得
-            sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
+            // GetKey helper
+            sb.AppendLine($"        private static {keyTypeName} GetKey({entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            return {entity.ClassName}.ToDto(entity).{keyField.DtoFieldName};");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
+            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName})");
+            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _storage.TryGetValue({keyParamName}, out var entity);");
             sb.AppendLine("            return entity;");
@@ -128,7 +196,7 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Delete
-            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName})");
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _storage.Remove({keyParamName});");
             sb.AppendLine("        }");
@@ -146,14 +214,14 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Update
-            // Update
+            // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            _entity = entity;");
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine("            _entity = entity;");
@@ -207,14 +275,13 @@ internal static class RepositoryEmitter
         sb.AppendLine("    {");
         sb.AppendLine($"        private readonly string _filePath;");
 
-        if (entity.HasKey && entity.KeyField.HasValue)
+        if (entity.HasKey)
         {
-            var keyField = entity.KeyField.Value;
-
-            var keyParamName = keyField.Name.ToCamelCase();
+            var keyTypeName = GetKeyTypeName(entity);
+            var keyParamName = GetKeyParamName(entity);
 
             // Keyed Entity: Dictionary storage with wrapper for serialization
-            sb.AppendLine($"        private Dictionary<{keyField.TypeName}, {dtoFullName}> _cache;");
+            sb.AppendLine($"        private Dictionary<{keyTypeName}, {dtoFullName}> _cache;");
             sb.AppendLine();
 
             // Wrapper class for JsonUtility serialization (Dictionary not directly supported)
@@ -233,21 +300,22 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // GetKey helper - static ToDto経由でキーを取得
-            sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
+            // GetKey helper
+            sb.AppendLine($"        private static {keyTypeName} GetKey({entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            return {entity.ClassName}.ToDto(entity).{keyField.DtoFieldName};");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
+            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            sb.AppendLine($"        private static {keyField.TypeName} GetKeyFromDto({dtoFullName} dto)");
+            sb.AppendLine($"        private static {keyTypeName} GetKeyFromDto({dtoFullName} dto)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            return dto.{keyField.DtoFieldName};");
+            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName})");
+            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (!_cache.TryGetValue({keyParamName}, out var dto))");
             sb.AppendLine("            {");
@@ -276,7 +344,7 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Delete
-            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName})");
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache.Remove({keyParamName});");
             sb.AppendLine("            Save();");
@@ -286,7 +354,7 @@ internal static class RepositoryEmitter
             // Load
             sb.AppendLine("        private void Load()");
             sb.AppendLine("        {");
-            sb.AppendLine($"            _cache = new Dictionary<{keyField.TypeName}, {dtoFullName}>();");
+            sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
             sb.AppendLine("            if (!File.Exists(_filePath))");
             sb.AppendLine("            {");
             sb.AppendLine("                return;");
@@ -351,8 +419,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Update
-            // Update
+            // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
@@ -360,6 +427,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
@@ -460,14 +528,13 @@ internal static class RepositoryEmitter
         sb.AppendLine($"        private readonly string _filePath;");
         sb.AppendLine($"        private readonly MessagePackSerializerOptions _options;");
 
-        if (entity.HasKey && entity.KeyField.HasValue)
+        if (entity.HasKey)
         {
-            var keyField = entity.KeyField.Value;
-
-            var keyParamName = keyField.Name.ToCamelCase();
+            var keyTypeName = GetKeyTypeName(entity);
+            var keyParamName = GetKeyParamName(entity);
 
             // Keyed Entity: Dictionary storage
-            sb.AppendLine($"        private Dictionary<{keyField.TypeName}, {dtoFullName}> _cache;");
+            sb.AppendLine($"        private Dictionary<{keyTypeName}, {dtoFullName}> _cache;");
             sb.AppendLine();
 
             // Constructor
@@ -480,21 +547,22 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // GetKey helper - static ToDto経由でキーを取得
-            sb.AppendLine($"        private static {keyField.TypeName} GetKey({entityFullName} entity)");
+            // GetKey helper
+            sb.AppendLine($"        private static {keyTypeName} GetKey({entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            return {entity.ClassName}.ToDto(entity).{keyField.DtoFieldName};");
+            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
+            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            sb.AppendLine($"        private static {keyField.TypeName} GetKeyFromDto({dtoFullName} dto)");
+            sb.AppendLine($"        private static {keyTypeName} GetKeyFromDto({dtoFullName} dto)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            return dto.{keyField.DtoFieldName};");
+            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyField.TypeName} {keyParamName})");
+            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (!_cache.TryGetValue({keyParamName}, out var dto))");
             sb.AppendLine("            {");
@@ -523,7 +591,7 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Delete
-            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyField.TypeName} {keyParamName})");
+            sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache.Remove({keyParamName});");
             sb.AppendLine("            Save();");
@@ -533,7 +601,7 @@ internal static class RepositoryEmitter
             // Load
             sb.AppendLine("        private void Load()");
             sb.AppendLine("        {");
-            sb.AppendLine($"            _cache = new Dictionary<{keyField.TypeName}, {dtoFullName}>();");
+            sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
             sb.AppendLine("            if (!File.Exists(_filePath))");
             sb.AppendLine("            {");
             sb.AppendLine("                return;");
@@ -599,8 +667,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Update
-            // Update
+            // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
@@ -608,6 +675,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");

@@ -77,6 +77,16 @@ internal static class EntityAnalyzer
         // インデックス順にソート
         fields.Sort((a, b) => a.Index.CompareTo(b.Index));
 
+        // キーフィールドを抽出（インデックス順）
+        var keyFields = new List<Models.FieldInfo>();
+        foreach (var field in fields)
+        {
+            if (field.IsKey)
+            {
+                keyFields.Add(field);
+            }
+        }
+
         var ns = classSymbol.ContainingNamespace.IsGlobalNamespace
             ? string.Empty
             : classSymbol.ContainingNamespace.ToDisplayString();
@@ -84,7 +94,7 @@ internal static class EntityAnalyzer
         // 既存コンストラクタの存在チェック
         var needsConstructorGeneration = !HasMatchingConstructor(classSymbol, fields);
 
-        return new EntityInfo(ns, classSymbol.Name, fields, needsConstructorGeneration);
+        return new EntityInfo(ns, classSymbol.Name, fields, keyFields, needsConstructorGeneration);
     }
 
     /// <summary>

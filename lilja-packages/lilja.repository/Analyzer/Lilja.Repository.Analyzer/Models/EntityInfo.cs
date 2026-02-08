@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Lilja.Repository.Analyzer.Models;
 
@@ -23,14 +24,19 @@ internal readonly struct EntityInfo
     public IReadOnlyList<FieldInfo> Fields { get; }
 
     /// <summary>
-    /// Keyフィールドが存在するかどうか。
+    /// Keyフィールド一覧（Persistインデックス順）。
     /// </summary>
-    public bool HasKey { get; }
+    public IReadOnlyList<FieldInfo> KeyFields { get; }
 
     /// <summary>
-    /// Keyフィールド（存在する場合）。
+    /// Keyフィールドが存在するかどうか。
     /// </summary>
-    public FieldInfo? KeyField { get; }
+    public bool HasKey => KeyFields.Count > 0;
+
+    /// <summary>
+    /// 複合キーかどうか（Keyフィールドが2つ以上）。
+    /// </summary>
+    public bool IsCompositeKey => KeyFields.Count > 1;
 
     /// <summary>
     /// DTO復元用のprivateコンストラクタを生成する必要があるかどうか。
@@ -38,23 +44,12 @@ internal readonly struct EntityInfo
     /// </summary>
     public bool NeedsConstructorGeneration { get; }
 
-    public EntityInfo(string @namespace, string className, IReadOnlyList<FieldInfo> fields, bool needsConstructorGeneration)
+    public EntityInfo(string @namespace, string className, IReadOnlyList<FieldInfo> fields, IReadOnlyList<FieldInfo> keyFields, bool needsConstructorGeneration)
     {
         Namespace = @namespace;
         ClassName = className;
         Fields = fields;
+        KeyFields = keyFields;
         NeedsConstructorGeneration = needsConstructorGeneration;
-
-        FieldInfo? keyField = null;
-        foreach (var field in fields)
-        {
-            if (field.IsKey)
-            {
-                keyField = field;
-                break;
-            }
-        }
-        HasKey = keyField.HasValue;
-        KeyField = keyField;
     }
 }
