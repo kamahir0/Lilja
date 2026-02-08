@@ -35,11 +35,13 @@ Console.WriteLine("- InMemoryItemRepository.g.cs");
 //     [Entity]
 //     public partial class Item
 //     {
-//         [Key] [Persist(0)] private int _id;
+//         [Key] [Persist(0)] private readonly int _id;
 //
-//         [Persist(1)] private string _name;
+//         [Key] [Persist(1)] private readonly string _userId;
 //
-//         [Persist(2)] private Coordinate _position;
+//         [Persist(2)] private readonly string _name;
+//
+//         [Persist(3)] private Coordinate _position;
 //
 //         public Item(int id, string name, Coordinate position)
 //         {
@@ -76,17 +78,42 @@ namespace Lilja.Repository
     [System.AttributeUsage(System.AttributeTargets.Method)]
     public class ToPrimitiveAttribute : System.Attribute { }
 
-    public interface ITransferable<T>
+    public interface IReadableTx{}
+    public interface IReadWriteTx{}
+}
+
+namespace UnityEngine
+{
+    public static class Application
     {
-        T ToDto();
-        void FromDto(T dto);
+        public static string persistentDataPath => "";
+    }
+    
+    public static class Debug
+    {
+        public static void Log(string message){}
+        public static void LogError(string message){}
+    }
+
+    public static class JsonUtility
+    {
+        public static string ToJson(object obj, bool prettyPrint = false) => "";
+        public static T FromJson<T>(string json) => default;
     }
 }
 
 namespace MessagePack
 {
     public enum MessagePackSerializerOptions{}
+
+    public static class MessagePackSerializer
+    {
+        public static T Deserialize<T>(byte[] bytes, MessagePackSerializerOptions options = default) => default;
+        public static byte[] Serialize(object obj, MessagePackSerializerOptions options = default) => null;
+    }
 }
+
+namespace MessagePack.Resolvers { }
 
 namespace MessagePack.Formatters
 {
@@ -111,5 +138,4 @@ namespace MessagePack.Formatters
         T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options);
     }
 }
-
 #endregion
