@@ -122,13 +122,38 @@ namespace BalloonFight
             GameManager.Instance.OnPlayerDied();
         }
 
+        public void OnTouchSea()
+        {
+            if (isDead) return;
+            
+            // まだ死なずに、動きを止めてサメを待つ
+            // 溺れる演出（水面で停止）
+            isDead = true; // 操作不能にする
+            rb.linearVelocity = Vector3.zero;
+            rb.useGravity = false; // 沈まないようにする
+            
+            // サメを呼ぶ
+            GameManager.Instance.SpawnShark(transform.position);
+        }
+
+        public void EatenByShark()
+        {
+            // 食べられたので消える
+            gameObject.SetActive(false);
+            GameManager.Instance.OnPlayerDied();
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (isDead) return;
 
-            if (other.CompareTag("Spark") || other.CompareTag("Sea"))
+            if (other.CompareTag("Spark"))
             {
                 Die();
+            }
+            else if (other.CompareTag("Sea"))
+            {
+                OnTouchSea();
             }
             else if (other.CompareTag("Collectible"))
             {

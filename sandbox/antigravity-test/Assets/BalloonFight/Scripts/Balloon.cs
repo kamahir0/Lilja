@@ -25,8 +25,8 @@ namespace BalloonFight
             }
             else if (other.CompareTag("Sea"))
             {
-                // 海に落ちたら死亡
-                playerController.Die();
+                // 海に落ちたらサメに食べられる
+                playerController.OnTouchSea();
             }
             else if (other.CompareTag("Collectible"))
             {

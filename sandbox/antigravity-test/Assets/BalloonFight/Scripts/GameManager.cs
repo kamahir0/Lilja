@@ -19,6 +19,7 @@ namespace BalloonFight
         private GameObject collectiblePrefab;
         private GameObject seaPrefab;
         private GameObject starPrefab;
+        private GameObject sharkPrefab;
 
         private bool isGameOver = false;
         private int score = 0;
@@ -59,7 +60,27 @@ namespace BalloonFight
             collectiblePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BalloonFight/Prefabs/CollectibleBalloon.prefab");
             seaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BalloonFight/Prefabs/Sea.prefab");
             starPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BalloonFight/Prefabs/Star.prefab");
+            sharkPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BalloonFight/Prefabs/Shark.prefab");
 #endif
+        }
+
+        public void SpawnShark(Vector3 targetPos)
+        {
+            if (sharkPrefab == null) return;
+            
+            // 水面下（Y=-5付近）から生成
+            Vector3 spawnPos = new Vector3(targetPos.x, -5f, 0);
+            var sharkObj = Instantiate(sharkPrefab, spawnPos, Quaternion.identity);
+            
+            var shark = sharkObj.GetComponent<Shark>();
+            if (shark != null)
+            {
+                var player = Object.FindFirstObjectByType<PlayerController>();
+                if (player != null)
+                {
+                    shark.Attack(player.transform);
+                }
+            }
         }
 
         private void Update()

@@ -122,6 +122,7 @@ namespace BalloonFight.Editor
             // オブジェクト用
             set.Spark = CreateMaterial("Spark", new Color(1f, 1f, 0.2f), true); // 発光
             set.Collectible = CreateMaterial("Collectible", new Color(1f, 0.6f, 0.2f)); // オレンジ色の風船
+            set.Shark = CreateMaterial("Shark", new Color(0.3f, 0.3f, 0.35f)); // 灰色
             
             // 環境用
             set.Sea = CreateMaterial("Sea", new Color(0.1f, 0.2f, 0.8f));
@@ -154,6 +155,51 @@ namespace BalloonFight.Editor
             CreateCollectiblePrefab(materials);
             CreateSeaPrefab(materials);
             CreateStarPrefab(materials);
+            CreateSharkPrefab(materials);
+        }
+
+        private static void CreateSharkPrefab(MaterialSet materials)
+        {
+            var shark = new GameObject("Shark");
+            shark.tag = "Untagged"; // サメ本体にはタグなし（コライダーで判定）
+
+            var rb = shark.AddComponent<Rigidbody>();
+            rb.mass = 2f;
+            rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezeRotationY;
+
+            // 胴体
+            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            body.transform.SetParent(shark.transform);
+            body.transform.localScale = new Vector3(0.8f, 1.5f, 0.8f);
+            body.transform.localRotation = Quaternion.Euler(90, 0, 0); // 横向き
+            body.GetComponent<Renderer>().sharedMaterial = materials.Shark;
+            Object.DestroyImmediate(body.GetComponent<Collider>());
+
+            // 背びれ
+            var fin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fin.transform.SetParent(shark.transform);
+            fin.transform.localPosition = new Vector3(0, 0.6f, -0.2f);
+            fin.transform.localScale = new Vector3(0.1f, 0.6f, 0.4f);
+            fin.transform.localRotation = Quaternion.Euler(-30, 0, 0);
+            fin.GetComponent<Renderer>().sharedMaterial = materials.Shark;
+            Object.DestroyImmediate(fin.GetComponent<Collider>());
+
+            // コライダー（捕食用）
+            var collider = shark.AddComponent<CapsuleCollider>();
+            collider.direction = 2; // Z-axis matching the body rotation
+            collider.radius = 0.5f;
+            collider.height = 2f;
+            collider.isTrigger = true;
+
+            // Sharkスクリプト
+            var sharkType = System.Type.GetType("BalloonFight.Shark, Assembly-CSharp");
+            if (sharkType != null)
+            {
+                shark.AddComponent(sharkType);
+            }
+
+            PrefabUtility.SaveAsPrefabAsset(shark, $"{PrefabsPath}/Shark.prefab");
+            Object.DestroyImmediate(shark);
         }
 
         private static void CreatePlayerPrefab(MaterialSet materials)
@@ -321,8 +367,6 @@ namespace BalloonFight.Editor
             Object.DestroyImmediate(str.GetComponent<Collider>());
         }
 
-
-
         private static void CreateBootScene(MaterialSet materials)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -374,9 +418,11 @@ namespace BalloonFight.Editor
             public Material BalloonString;
             public Material Spark;
             public Material Collectible;
+            public Material Shark;
             public Material Sea;
             public Material Star;
             public Material Background;
         }
     }
 }
+
