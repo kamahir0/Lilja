@@ -29,6 +29,7 @@ internal static class EntityAnalyzer
         }
 
         var fields = new List<Models.FieldInfo>();
+        var keyFields = new List<Models.FieldInfo>();
 
         foreach (var member in classSymbol.GetMembers())
         {
@@ -37,40 +38,59 @@ internal static class EntityAnalyzer
                 continue;
             }
 
-            // Persist属性を持つフィールドのみ対象
-            var persistAttr = GetAttribute(fieldSymbol, PersistAttributeFullName);
-            if (persistAttr == null)
-            {
-                continue;
-            }
-
-            // インデックス取得
-            var index = 0;
-            if (persistAttr.ConstructorArguments.Length > 0 &&
-                persistAttr.ConstructorArguments[0].Value is int idx)
-            {
-                index = idx;
-            }
-
             // Key属性チェック
             var isKey = HasAttribute(fieldSymbol, KeyAttributeFullName);
 
-            // ValueObject検出
-            var valueObjectInfo = AnalyzeValueObject(fieldSymbol.Type);
+            // Persist属性を持つフィールドのみ対象
+            var persistAttr = GetAttribute(fieldSymbol, PersistAttributeFullName);
 
-            var fieldInfo = new Models.FieldInfo(
-                fieldSymbol.Name,
-                GetPrimitiveTypeName(fieldSymbol.Type),
-                fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                index,
-                isKey,
-                valueObjectInfo
-            );
+            if (persistAttr != null)
+            {
+                // インデックス取得
+                var index = 0;
+                if (persistAttr.ConstructorArguments.Length > 0 &&
+                    persistAttr.ConstructorArguments[0].Value is int idx)
+                {
+                    index = idx;
+                }
 
-            fields.Add(fieldInfo);
+                // ValueObject検出
+                var valueObjectInfo = AnalyzeValueObject(fieldSymbol.Type);
+
+                var fieldInfo = new Models.FieldInfo(
+                    fieldSymbol.Name,
+                    GetPrimitiveTypeName(fieldSymbol.Type),
+                    fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    index,
+                    isKey,
+                    valueObjectInfo
+                );
+
+                fields.Add(fieldInfo);
+
+                if (isKey)
+                {
+                    keyFields.Add(fieldInfo);
+                }
+            }
+            else if (isKey)
+            {
+                // Persist属性なしだがKey属性のみのフィールド（InMemory専用のKey）
+                var keyFieldInfo = new Models.FieldInfo(
+                    fieldSymbol.Name,
+                    GetPrimitiveTypeName(fieldSymbol.Type),
+                    fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    -1,
+                    true,
+                    ValueObjectInfo.None
+                );
+
+                keyFields.Add(keyFieldInfo);
+            }
         }
 
-        if (fields.Count == 0)
+        // PersistフィールドもKeyフィールドもない場合はスキップ
+        if (fields.Count == 0 && keyFields.Count == 0)
         {
             return null;
         }
@@ -78,22 +98,12 @@ internal static class EntityAnalyzer
         // インデックス順にソート
         fields.Sort((a, b) => a.Index.CompareTo(b.Index));
 
-        // キーフィールドを抽出（インデックス順）
-        var keyFields = new List<Models.FieldInfo>();
-        foreach (var field in fields)
-        {
-            if (field.IsKey)
-            {
-                keyFields.Add(field);
-            }
-        }
-
         var ns = classSymbol.ContainingNamespace.IsGlobalNamespace
             ? string.Empty
             : classSymbol.ContainingNamespace.ToDisplayString();
 
-        // 既存コンストラクタの存在チェック
-        var needsConstructorGeneration = !HasMatchingConstructor(classSymbol, fields);
+        // 既存コンストラクタの存在チェック（Persistフィールドがある場合のみ）
+        var needsConstructorGeneration = fields.Count > 0 && !HasMatchingConstructor(classSymbol, fields);
 
         return new EntityInfo(ns, classSymbol.Name, fields, keyFields, needsConstructorGeneration);
     }

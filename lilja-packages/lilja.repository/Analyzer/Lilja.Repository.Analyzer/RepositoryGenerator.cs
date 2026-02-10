@@ -46,23 +46,29 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
         {
             var (entity, messagePackAvailable) = tuple;
 
-            GenerateDto(spc, entity);
-            GenerateConverter(spc, entity);
-
-            // MessagePackが参照されている場合のみFormatter生成
-            if (messagePackAvailable)
-            {
-                GenerateFormatter(spc, entity);
-            }
-
+            // Interface + InMemory は常に生成
             GenerateRepositoryInterface(spc, entity);
             GenerateInMemoryRepository(spc, entity);
-            GenerateJsonRepository(spc, entity);
 
-            // MessagePackが参照されている場合のみMessagePackRepository生成
-            if (messagePackAvailable)
+            // Key有りEntityはKeyAccessorを生成
+            if (entity.HasKey)
             {
-                GenerateMessagePackRepository(spc, entity);
+                GenerateKeyAccessor(spc, entity);
+            }
+
+            // Persist属性フィールドがある場合のみDTO/Converter/永続化リポジトリを生成
+            if (entity.HasPersistFields)
+            {
+                GenerateDto(spc, entity);
+                GenerateConverter(spc, entity);
+                GenerateJsonRepository(spc, entity);
+
+                // MessagePackが参照されている場合のみFormatter + MessagePackRepository生成
+                if (messagePackAvailable)
+                {
+                    GenerateFormatter(spc, entity);
+                    GenerateMessagePackRepository(spc, entity);
+                }
             }
         });
     }
@@ -121,6 +127,12 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
     {
         var source = RepositoryEmitter.EmitJsonImplementation(entity);
         context.AddSource($"Json{entity.ClassName}Repository.g.cs", source);
+    }
+
+    private static void GenerateKeyAccessor(SourceProductionContext context, EntityInfo entity)
+    {
+        var source = KeyAccessorEmitter.Emit(entity);
+        context.AddSource($"{entity.ClassName}.KeyAccessor.g.cs", source);
     }
 
     private static void GenerateMessagePackRepository(SourceProductionContext context, EntityInfo entity)

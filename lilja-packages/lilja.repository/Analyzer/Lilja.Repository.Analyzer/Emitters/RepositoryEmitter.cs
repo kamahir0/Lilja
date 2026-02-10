@@ -175,18 +175,9 @@ internal static class RepositoryEmitter
         {
             var keyTypeName = GetKeyTypeName(entity);
             var keyParamName = GetKeyParamName(entity);
-            var keyReturnExpr = GetKeyReturnExpression(entity, entity.ClassName, $"{entity.ClassName}.ToDto(entity)");
 
             // Dictionary storage
             sb.AppendLine($"        private readonly Dictionary<{keyTypeName}, {entityFullName}> _storage = new Dictionary<{keyTypeName}, {entityFullName}>();");
-            sb.AppendLine();
-
-            // GetKey helper
-            sb.AppendLine($"        private static {keyTypeName} GetKey({entityFullName} entity)");
-            sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
-            sb.AppendLine("        }");
             sb.AppendLine();
 
             // Read
@@ -200,14 +191,14 @@ internal static class RepositoryEmitter
             // Create
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine("            _storage[GetKey(entity)] = entity;");
+            sb.AppendLine($"            _storage[{entity.ClassName}.GetKey(entity)] = entity;");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // Update
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
-            sb.AppendLine("            _storage[GetKey(entity)] = entity;");
+            sb.AppendLine($"            _storage[{entity.ClassName}.GetKey(entity)] = entity;");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -317,13 +308,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // GetKey helper
-            sb.AppendLine($"        private static {keyTypeName} GetKey({entityFullName} entity)");
-            sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
-            sb.AppendLine("        }");
-            sb.AppendLine();
+            // GetKeyFromDto helper
 
             sb.AppendLine($"        private static {keyTypeName} GetKeyFromDto({dtoFullName} dto)");
             sb.AppendLine("        {");
@@ -568,13 +553,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // GetKey helper
-            sb.AppendLine($"        private static {keyTypeName} GetKey({entityFullName} entity)");
-            sb.AppendLine("        {");
-            sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
-            sb.AppendLine("        }");
-            sb.AppendLine();
+            // GetKeyFromDto helper
 
             sb.AppendLine($"        private static {keyTypeName} GetKeyFromDto({dtoFullName} dto)");
             sb.AppendLine("        {");

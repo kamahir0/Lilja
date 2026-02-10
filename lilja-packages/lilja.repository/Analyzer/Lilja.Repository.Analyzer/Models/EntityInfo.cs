@@ -39,6 +39,11 @@ internal readonly struct EntityInfo
     public bool IsCompositeKey => KeyFields.Count > 1;
 
     /// <summary>
+    /// Persist属性フィールドが存在するかどうか。
+    /// </summary>
+    public bool HasPersistFields => Fields.Count > 0;
+
+    /// <summary>
     /// DTO復元用のprivateコンストラクタを生成する必要があるかどうか。
     /// 既にPersist属性フィールドを網羅したコンストラクタが存在する場合はfalse。
     /// </summary>
