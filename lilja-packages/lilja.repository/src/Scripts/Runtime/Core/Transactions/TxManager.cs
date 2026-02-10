@@ -14,6 +14,16 @@ namespace Lilja.Repository
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
+        /// 読み取りトランザクションを開始する。
+        /// </summary>
+        /// <param name="action">トランザクション内で実行するアクション。</param>
+        public void BeginROTransaction(Action<IReadOnlyTx> action)
+        {
+            using var tx = new ReadOnlyTxImpl();
+            action(tx);
+        }
+
+        /// <summary>
         /// 読み書きトランザクションを開始する（同期Lambda）。
         /// Lambda正常完了でコミット、例外発生でロールバックされる。
         /// </summary>
@@ -43,57 +53,6 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// 読み書きトランザクションを開始する（非同期Lambda）。
-        /// Lambda正常完了でコミット、例外発生でロールバックされる。
-        /// </summary>
-        /// <param name="action">トランザクション内で実行する非同期アクション。</param>
-        /// <param name="ct">キャンセルトークン。</param>
-        public async UniTask BeginRWTransactionAsync(Func<IReadWriteTx, UniTask> action, CancellationToken ct = default)
-        {
-            await _writeLock.WaitAsync(ct);
-            try
-            {
-                using var tx = new ReadWriteTxImpl();
-                try
-                {
-                    await action(tx);
-                    tx.ExecuteCommit();
-                }
-                catch
-                {
-                    tx.ExecuteRollback();
-                    throw;
-                }
-            }
-            finally
-            {
-                _writeLock.Release();
-            }
-        }
-
-        /// <summary>
-        /// 読み取りトランザクションを開始する。
-        /// </summary>
-        /// <typeparam name="T">戻り値の型。</typeparam>
-        /// <param name="func">トランザクション内で実行する関数。</param>
-        /// <returns>関数の戻り値。</returns>
-        public T BeginROTransaction<T>(Func<IReadOnlyTx, T> func)
-        {
-            using var tx = new ReadOnlyTxImpl();
-            return func(tx);
-        }
-
-        /// <summary>
-        /// 読み取りトランザクションを開始する（戻り値なし）。
-        /// </summary>
-        /// <param name="action">トランザクション内で実行するアクション。</param>
-        public void BeginROTransaction(Action<IReadOnlyTx> action)
-        {
-            using var tx = new ReadOnlyTxImpl();
-            action(tx);
-        }
-
-        /// <summary>
         /// 読み取り専用トランザクションの内部実装。
         /// </summary>
         private sealed class ReadOnlyTxImpl : IReadOnlyTx
@@ -107,6 +66,7 @@ namespace Lilja.Repository
                 {
                     return;
                 }
+
                 _disposed = true;
             }
         }
@@ -161,6 +121,7 @@ namespace Lilja.Repository
                 {
                     return;
                 }
+
                 _disposed = true;
                 _commitActions.Clear();
                 _rollbackActions.Clear();
