@@ -78,7 +78,7 @@ namespace Lilja.Repository
     [System.AttributeUsage(System.AttributeTargets.Method)]
     public class ToPrimitiveAttribute : System.Attribute { }
 
-    public interface IReadableTx{}
+    public interface IReadOnlyTx{}
     public interface IReadWriteTx{}
 }
 

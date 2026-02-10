@@ -1,18 +1,22 @@
+using System;
+
 namespace Lilja.Repository
 {
     /// <summary>
     /// 読み書き可能トランザクションのI/F。
     /// </summary>
-    public interface IReadWriteTx : IReadableTx
+    public interface IReadWriteTx : IReadOnlyTx
     {
         /// <summary>
-        /// トランザクションをコミットする。
+        /// コミット時に実行するアクションを登録する。
         /// </summary>
-        void Commit();
+        /// <param name="action">コミット時に実行するアクション。</param>
+        void OnCommit(Action action);
 
         /// <summary>
-        /// トランザクションをロールバックする。
+        /// ロールバック時に実行するアクションを登録する。
         /// </summary>
-        void Rollback();
+        /// <param name="action">ロールバック時に実行するアクション。</param>
+        void OnRollback(Action action);
     }
 }

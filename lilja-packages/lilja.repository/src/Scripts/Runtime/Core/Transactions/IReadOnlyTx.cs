@@ -5,7 +5,7 @@ namespace Lilja.Repository
     /// <summary>
     /// 読み取り専用トランザクションのI/F。
     /// </summary>
-    public interface IReadableTx : IDisposable
+    public interface IReadOnlyTx : IDisposable
     {
     }
 }

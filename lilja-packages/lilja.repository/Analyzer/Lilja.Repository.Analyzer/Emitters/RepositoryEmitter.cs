@@ -77,6 +77,22 @@ internal static class RepositoryEmitter
         }
     }
 
+    /// <summary>
+    /// MarkDirtyメソッドを生成する共通ヘルパー。
+    /// トランザクションにOnCommit/OnRollbackアクションを登録し、重複登録を防止する。
+    /// </summary>
+    private static void EmitMarkDirty(StringBuilder sb)
+    {
+        sb.AppendLine("        private void MarkDirty(IReadWriteTx tx)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (_dirty) return;");
+        sb.AppendLine("            _dirty = true;");
+        sb.AppendLine("            tx.OnCommit(() => { Save(); _dirty = false; });");
+        sb.AppendLine("            tx.OnRollback(() => { Load(); _dirty = false; });");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+    }
+
     #endregion
 
     public static string EmitInterface(EntityInfo entity)
@@ -108,7 +124,7 @@ internal static class RepositoryEmitter
             var keyParamName = GetKeyParamName(entity);
 
             // Keyed Entity: CRUD operations
-            sb.AppendLine($"        {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName});");
+            sb.AppendLine($"        {entityFullName} Read(IReadOnlyTx tx, {keyTypeName} {keyParamName});");
             sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName});");
@@ -116,7 +132,7 @@ internal static class RepositoryEmitter
         else
         {
             // Singleton Entity
-            sb.AppendLine($"        {entityFullName} Read(IReadableTx tx);");
+            sb.AppendLine($"        {entityFullName} Read(IReadOnlyTx tx);");
             sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Delete(IReadWriteTx tx);");
@@ -174,7 +190,7 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName})");
+            sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _storage.TryGetValue({keyParamName}, out var entity);");
             sb.AppendLine("            return entity;");
@@ -208,7 +224,7 @@ internal static class RepositoryEmitter
             sb.AppendLine();
 
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx)");
+            sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx)");
             sb.AppendLine("        {");
             sb.AppendLine("            return _entity;");
             sb.AppendLine("        }");
@@ -274,6 +290,7 @@ internal static class RepositoryEmitter
         sb.AppendLine($"    public class Json{entity.ClassName}Repository : I{entity.ClassName}Repository");
         sb.AppendLine("    {");
         sb.AppendLine($"        private readonly string _filePath;");
+        sb.AppendLine($"        private bool _dirty;");
 
         if (entity.HasKey)
         {
@@ -314,8 +331,11 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // MarkDirty
+            EmitMarkDirty(sb);
+
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName})");
+            sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (!_cache.TryGetValue({keyParamName}, out var dto))");
             sb.AppendLine("            {");
@@ -330,7 +350,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -339,7 +359,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -347,7 +367,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache.Remove({keyParamName});");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -386,7 +406,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("                var wrapper = new StorageWrapper();");
             sb.AppendLine("                wrapper.Items.AddRange(_cache.Values);");
             sb.AppendLine("                var json = JsonUtility.ToJson(wrapper, true);");
-            sb.AppendLine("                File.WriteAllText(_filePath, json);");
+            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllText(_filePath, json);");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -408,8 +428,11 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // MarkDirty
+            EmitMarkDirty(sb);
+
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx)");
+            sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_cache == null)");
             sb.AppendLine("            {");
@@ -423,7 +446,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -431,7 +454,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -439,10 +462,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Delete(IReadWriteTx tx)");
             sb.AppendLine("        {");
             sb.AppendLine("            _cache = null;");
-            sb.AppendLine("            if (File.Exists(_filePath))");
-            sb.AppendLine("            {");
-            sb.AppendLine("                File.Delete(_filePath);");
-            sb.AppendLine("            }");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -471,7 +491,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine("                var json = JsonUtility.ToJson(_cache, true);");
-            sb.AppendLine("                File.WriteAllText(_filePath, json);");
+            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllText(_filePath, json);");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -527,6 +547,7 @@ internal static class RepositoryEmitter
         sb.AppendLine("    {");
         sb.AppendLine($"        private readonly string _filePath;");
         sb.AppendLine($"        private readonly MessagePackSerializerOptions _options;");
+        sb.AppendLine($"        private bool _dirty;");
 
         if (entity.HasKey)
         {
@@ -561,8 +582,11 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // MarkDirty
+            EmitMarkDirty(sb);
+
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx, {keyTypeName} {keyParamName})");
+            sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (!_cache.TryGetValue({keyParamName}, out var dto))");
             sb.AppendLine("            {");
@@ -577,7 +601,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -586,7 +610,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            var dto = {entity.ClassName}.ToDto(entity);");
             sb.AppendLine("            _cache[GetKeyFromDto(dto)] = dto;");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -594,7 +618,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache.Remove({keyParamName});");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -632,7 +656,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("            {");
             sb.AppendLine($"                var list = new List<{dtoFullName}>(_cache.Values);");
             sb.AppendLine("                var bytes = MessagePackSerializer.Serialize(list, _options);");
-            sb.AppendLine("                File.WriteAllBytes(_filePath, bytes);");
+            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllBytes(_filePath, bytes);");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -656,8 +680,11 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            // MarkDirty
+            EmitMarkDirty(sb);
+
             // Read
-            sb.AppendLine($"        public {entityFullName} Read(IReadableTx tx)");
+            sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_cache == null)");
             sb.AppendLine("            {");
@@ -671,7 +698,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Create(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -679,7 +706,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Update(IReadWriteTx tx, {entityFullName} entity)");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = {entity.ClassName}.ToDto(entity);");
-            sb.AppendLine("            Save();");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -687,10 +714,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Delete(IReadWriteTx tx)");
             sb.AppendLine("        {");
             sb.AppendLine("            _cache = null;");
-            sb.AppendLine("            if (File.Exists(_filePath))");
-            sb.AppendLine("            {");
-            sb.AppendLine("                File.Delete(_filePath);");
-            sb.AppendLine("            }");
+            sb.AppendLine("            MarkDirty(tx);");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -719,7 +743,7 @@ internal static class RepositoryEmitter
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine("                var bytes = MessagePackSerializer.Serialize(_cache, _options);");
-            sb.AppendLine("                File.WriteAllBytes(_filePath, bytes);");
+            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllBytes(_filePath, bytes);");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
