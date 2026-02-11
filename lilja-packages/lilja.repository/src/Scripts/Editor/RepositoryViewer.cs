@@ -39,7 +39,7 @@ namespace Lilja.Repository.Editor
             // Load USS
             var styleSheet =
                 AssetDatabase.LoadAssetAtPath<StyleSheet>(
-                    "Packages/com.kamahir0.lilja.repository/Scripts/Editor/RepositoryDataViewer.uss");
+                    "Packages/com.kamahir0.lilja.repository/Scripts/Editor/RepositoryViewer.uss");
             if (styleSheet != null)
             {
                 root.styleSheets.Add(styleSheet);
