@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bda3718b-2b38-45aa-a35e-26d194046c0a" name="変更" comment="">
-      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Analyzer.dll" beforeDir="false" afterPath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Analyzer.dll" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Editor/TestSceneGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Editor/TestSceneGenerator.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/Entities/TestEntity.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/Entities/TestEntity.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/RepositoryTestController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/RepositoryTestController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/packages-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/ProjectSettings/PackageManagerSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/ProjectSettings/PackageManagerSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Sandbox-Unity6.3/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Sandbox-Unity6.3/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/Analyzer/Lilja.Repository.Analyzer/Emitters/RepositoryEmitter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/Analyzer/Lilja.Repository.Analyzer/Emitters/RepositoryEmitter.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/.idea/.idea.Lilja.Repository-Test/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/.idea/.idea.Lilja.Repository-Test/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,23 +59,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "repository-viewer",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;repository-viewer&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Unity エディターにアタッチ.Unity エディターにアタッチ">
     <configuration name="ユニットテスト (バッチモード)" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe" />
