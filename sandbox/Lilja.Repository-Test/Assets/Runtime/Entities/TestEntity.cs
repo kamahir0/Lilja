@@ -1,6 +1,6 @@
 using Lilja.Repository;
 
-namespace Lilja.Repository.Test
+namespace RepositoryTest
 {
     public struct TestValueObject
     {
