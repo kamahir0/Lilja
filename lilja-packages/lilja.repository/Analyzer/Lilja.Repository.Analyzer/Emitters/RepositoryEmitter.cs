@@ -178,7 +178,14 @@ internal static class RepositoryEmitter
             var keyParamName = GetKeyParamName(entity);
 
             // Dictionary storage
-            sb.AppendLine($"        private readonly Dictionary<{keyTypeName}, {entityFullName}> _storage = new Dictionary<{keyTypeName}, {entityFullName}>();");
+            sb.AppendLine($"        private readonly Dictionary<{keyTypeName}, {entityFullName}> _storage = new Dictionary<{keyTypeName}, {entityFullName}>();
+
+        public InMemory{entity.ClassName}Repository()
+        {{
+#if UNITY_EDITOR
+            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory);
+#endif
+        }}");
             sb.AppendLine();
 
             // Read
@@ -212,7 +219,14 @@ internal static class RepositoryEmitter
         else
         {
             // Singleton: single field storage
-            sb.AppendLine($"        private {entityFullName} _entity;");
+            sb.AppendLine($"        private {entityFullName} _entity;
+
+        public InMemory{entity.ClassName}Repository()
+        {{
+#if UNITY_EDITOR
+            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory);
+#endif
+        }}");
             sb.AppendLine();
 
             // Read
@@ -308,6 +322,9 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.json\");");
             sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.Json);");
+            sb.AppendLine("#endif");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -429,6 +446,9 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public Json{entity.ClassName}Repository()");
             sb.AppendLine("        {");
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.json\");");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.Json);");
+            sb.AppendLine("#endif");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -591,6 +611,9 @@ internal static class RepositoryEmitter
             sb.AppendLine($"            var resolver = CompositeResolver.Create(new IMessagePackFormatter[] {{ new {formatterFullName}() }}, new IFormatterResolver[] {{ StandardResolver.Instance }});");
             sb.AppendLine("            _options = MessagePackSerializerOptions.Standard.WithResolver(resolver);");
             sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.MessagePack);");
+            sb.AppendLine("#endif");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -715,6 +738,9 @@ internal static class RepositoryEmitter
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.msgpack\");");
             sb.AppendLine($"            var resolver = CompositeResolver.Create(new IMessagePackFormatter[] {{ new {formatterFullName}() }}, new IFormatterResolver[] {{ StandardResolver.Instance }});");
             sb.AppendLine("            _options = MessagePackSerializerOptions.Standard.WithResolver(resolver);");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.MessagePack);");
+            sb.AppendLine("#endif");
             sb.AppendLine("        }");
             sb.AppendLine();
 
