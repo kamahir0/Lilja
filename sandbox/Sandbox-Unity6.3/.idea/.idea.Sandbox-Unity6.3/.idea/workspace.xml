@@ -5,13 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bda3718b-2b38-45aa-a35e-26d194046c0a" name="変更" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/RepositoryTest/SerializeTester.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Analyzer.dll" beforeDir="false" afterPath="$PROJECT_DIR$/../../lilja-packages/lilja.repository/src/Plugins/Lilja.Repository.Analyzer.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Editor/TestSceneGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Editor/TestSceneGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/Entities/TestEntity.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/Entities/TestEntity.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/RepositoryTestController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Assets/Runtime/RepositoryTestController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/Packages/packages-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Lilja.Repository-Test/ProjectSettings/PackageManagerSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../Lilja.Repository-Test/ProjectSettings/PackageManagerSettings.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Sandbox-Unity6.3/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Sandbox-Unity6.3/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/Coordinate.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/Coordinate.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/Item.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/Item.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/NewEmptyCSharpScript.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RepositoryTest/NewEmptyCSharpScript.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RepositoryTest/SerializeTester.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/packages.config" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/packages.config" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,7 +20,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="3" />
+    <option name="cachedIndexableFilesCount" value="21" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -44,8 +45,10 @@
     <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/Item.Converter.g.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/ItemDto.g.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/ItemDtoFormatter.g.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/JsonItemRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/DA9F29643DEA8BB5FCC8B267/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/MessagePackItemRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/FBE7C5B3CEAFD75767C815E9/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/ItemDto.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/FBE7C5B3CEAFD75767C815E9/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/ItemDtoFormatter.g.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/FBE7C5B3CEAFD75767C815E9/Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.RepositoryGenerator/MessagePackItemRepository.g.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/c3d9aff5e3fdccd651792c434abe9be8bb373429fbab4d64b4df4fc276e6/Attributes.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RepositoryTest/PlayerData.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
@@ -62,23 +65,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;repository&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "repository-viewer",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Unity エディターにアタッチ.Unity エディターにアタッチ">
     <configuration name="ユニットテスト (バッチモード)" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="C:\Program Files\Unity\Hub\Editor\6000.3.6f1\Editor\Unity.exe" />
@@ -129,6 +132,7 @@
       <workItem from="1770134020580" duration="2919000" />
       <workItem from="1770216062363" duration="253000" />
       <workItem from="1770216363885" duration="4180000" />
+      <workItem from="1770819158094" duration="754000" />
     </task>
     <servers />
   </component>
