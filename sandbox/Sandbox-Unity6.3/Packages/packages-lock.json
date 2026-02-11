@@ -32,7 +32,9 @@
       "version": "file:../../../lilja-packages/lilja.repository/src",
       "depth": 0,
       "source": "local",
-      "dependencies": {}
+      "dependencies": {
+        "com.cysharp.unitask": "2.5.10"
+      }
     },
     "com.kamahir0.lilja.screen-management": {
       "version": "file:../../../lilja-packages/lilja.screen-management/src",
