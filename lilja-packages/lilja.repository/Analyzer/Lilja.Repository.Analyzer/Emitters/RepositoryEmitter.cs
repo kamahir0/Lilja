@@ -178,14 +178,14 @@ internal static class RepositoryEmitter
             var keyParamName = GetKeyParamName(entity);
 
             // Dictionary storage
-            sb.AppendLine($"        private readonly Dictionary<{keyTypeName}, {entityFullName}> _storage = new Dictionary<{keyTypeName}, {entityFullName}>();
-
-        public InMemory{entity.ClassName}Repository()
-        {{
-#if UNITY_EDITOR
-            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory);
-#endif
-        }}");
+            sb.AppendLine($"        private readonly Dictionary<{keyTypeName}, {entityFullName}> _storage = new Dictionary<{keyTypeName}, {entityFullName}>();");
+            sb.AppendLine();
+            sb.AppendLine($"        public InMemory{entity.ClassName}Repository()");
+            sb.AppendLine("        {");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory);");
+            sb.AppendLine("#endif");
+            sb.AppendLine("        }");
             sb.AppendLine();
 
             // Read
@@ -219,14 +219,14 @@ internal static class RepositoryEmitter
         else
         {
             // Singleton: single field storage
-            sb.AppendLine($"        private {entityFullName} _entity;
-
-        public InMemory{entity.ClassName}Repository()
-        {{
-#if UNITY_EDITOR
-            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory);
-#endif
-        }}");
+            sb.AppendLine($"        private {entityFullName} _entity;");
+            sb.AppendLine();
+            sb.AppendLine($"        public InMemory{entity.ClassName}Repository()");
+            sb.AppendLine("        {");
+            sb.AppendLine("#if UNITY_EDITOR");
+            sb.AppendLine("            Lilja.Repository.Diagnostics.RepositoryTracker.Track(this, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory);");
+            sb.AppendLine("#endif");
+            sb.AppendLine("        }");
             sb.AppendLine();
 
             // Read
