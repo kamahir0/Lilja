@@ -41,7 +41,7 @@ namespace Lilja.Repository.Editor
             {
                 new MultiColumnHeaderState.Column() 
                 { 
-                    headerContent = new GUIContent("Repository/Key"), 
+                    headerContent = new GUIContent("Entity/Key"), 
                     width = 250,
                     minWidth = 100,
                     autoResize = true
@@ -78,6 +78,10 @@ namespace Lilja.Repository.Editor
             rowHeight = 20;
             showAlternatingRowBackgrounds = true;
             showBorder = true;
+            
+            // Enable foldout functionality
+            useScrollView = true;
+            
             header.sortingChanged += Header_sortingChanged;
 
             header.ResizeToFit();
@@ -269,16 +273,18 @@ namespace Lilja.Repository.Editor
                     int idx = 0;
                     foreach (var item in items)
                     {
+                        var keyStr = ExtractKeyFromDto(item, dtoType, idx);
                         var preview = GetValuePreview(item);
                         itemChildren.Add(new RepositoryTrackerViewItem(++id)
                         {
-                            Key = $"Item {idx++}",
+                            Key = keyStr,
                             Type = dtoType.Name,
                             ValuePreview = preview,
                             FullValue = item,
                             IsRepository = false,
                             ItemCount = 0
                         });
+                        idx++;
                     }
                 }
             }
@@ -348,16 +354,18 @@ namespace Lilja.Repository.Editor
                     int idx = 0;
                     foreach (var item in listItems)
                     {
+                        var keyStr = ExtractKeyFromDto(item, dtoType, idx);
                         var preview = GetValuePreview(item);
                         itemChildren.Add(new RepositoryTrackerViewItem(++id)
                         {
-                            Key = $"Item {idx++}",
+                            Key = keyStr,
                             Type = dtoType.Name,
                             ValuePreview = preview,
                             FullValue = item,
                             IsRepository = false,
                             ItemCount = 0
                         });
+                        idx++;
                     }
                 }
                 else
@@ -398,6 +406,40 @@ namespace Lilja.Repository.Editor
         private static T DeserializeMsgPack<T>(byte[] bytes, MessagePackSerializerOptions options)
         {
             return MessagePackSerializer.Deserialize<T>(bytes, options);
+        }
+
+        private string ExtractKeyFromDto(object dto, Type dtoType, int fallbackIndex)
+        {
+            if (dto == null) return $"Item {fallbackIndex}";
+
+            // Try common key field names
+            var keyFieldNames = new[] { "Id", "Key", "Name", "key", "id", "name" };
+            
+            foreach (var fieldName in keyFieldNames)
+            {
+                var field = dtoType.GetField(fieldName);
+                if (field != null)
+                {
+                    var value = field.GetValue(dto);
+                    if (value != null)
+                    {
+                        return value.ToString();
+                    }
+                }
+                
+                var property = dtoType.GetProperty(fieldName);
+                if (property != null)
+                {
+                    var value = property.GetValue(dto);
+                    if (value != null)
+                    {
+                        return value.ToString();
+                    }
+                }
+            }
+            
+            // Fallback to index
+            return $"Item {fallbackIndex}";
         }
 
         private static Type GetTypeByName(string typeName)
@@ -556,25 +598,43 @@ namespace Lilja.Repository.Editor
                 var labelStyle = args.selected ? EditorStyles.whiteLabel : EditorStyles.label;
                 labelStyle.alignment = TextAnchor.MiddleLeft;
 
-                // Add indent for non-repository items
-                if (!item.IsRepository && columnIndex == 0)
-                {
-                    rect.x += 20;
-                    rect.width -= 20;
-                }
-
                 switch (columnIndex)
                 {
                     case 0:
-                        var displayName = item.IsRepository ? item.RepositoryName : item.Key;
+                        // First column - show foldout for repositories
                         if (item.IsRepository)
                         {
+                            var displayName = item.RepositoryName;
+                            // Remove "Repository" suffix if present
+                            if (displayName.EndsWith("Repository"))
+                            {
+                                displayName = displayName.Substring(0, displayName.Length - "Repository".Length);
+                            }
+                            
+                            // Make entire row clickable for expand/collapse
+                            var toggleRect = rect;
+                            var wasExpanded = IsExpanded(item.id);
+                            
+                            // Check if clicked anywhere in the row
+                            if (Event.current.type == EventType.MouseDown && toggleRect.Contains(Event.current.mousePosition))
+                            {
+                                SetExpanded(item.id, !wasExpanded);
+                                Event.current.Use();
+                            }
+                            
+                            // Draw the foldout triangle
+                            var foldoutRect = new Rect(rect.x, rect.y, 12, rect.height);
+                            EditorGUI.Foldout(foldoutRect, wasExpanded, GUIContent.none, true);
+                            
+                            // Draw the label after the foldout
+                            var labelRect = new Rect(rect.x + 14, rect.y, rect.width - 14, rect.height);
                             var boldStyle = new GUIStyle(labelStyle) { fontStyle = FontStyle.Bold };
-                            EditorGUI.LabelField(rect, displayName, boldStyle);
+                            EditorGUI.LabelField(labelRect, displayName, boldStyle);
                         }
                         else
                         {
-                            EditorGUI.LabelField(rect, displayName, labelStyle);
+                            // Child items - just show the key
+                            EditorGUI.LabelField(rect, item.Key, labelStyle);
                         }
                         break;
                     case 1:
