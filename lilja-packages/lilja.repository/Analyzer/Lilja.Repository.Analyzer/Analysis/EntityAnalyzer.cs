@@ -89,12 +89,6 @@ internal static class EntityAnalyzer
             }
         }
 
-        // PersistフィールドもKeyフィールドもない場合はスキップ
-        if (fields.Count == 0 && keyFields.Count == 0)
-        {
-            return null;
-        }
-
         // インデックス順にソート
         fields.Sort((a, b) => a.Index.CompareTo(b.Index));
 

@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 
 namespace Lilja.Repository
 {
@@ -8,15 +9,15 @@ namespace Lilja.Repository
     public interface IReadWriteTx : IReadOnlyTx
     {
         /// <summary>
-        /// コミット時に実行するアクションを登録する。
+        /// コミット時に実行する非同期アクションを登録する。
         /// </summary>
-        /// <param name="action">コミット時に実行するアクション。</param>
-        void OnCommit(Action action);
+        /// <param name="asyncAction">コミット時に実行する非同期アクション。</param>
+        void OnCommit(Func<UniTask> asyncAction);
 
         /// <summary>
-        /// ロールバック時に実行するアクションを登録する。
+        /// ロールバック時に実行する非同期アクションを登録する。
         /// </summary>
-        /// <param name="action">ロールバック時に実行するアクション。</param>
-        void OnRollback(Action action);
+        /// <param name="asyncAction">ロールバック時に実行する非同期アクション。</param>
+        void OnRollback(Func<UniTask> asyncAction);
     }
 }

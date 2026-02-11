@@ -79,7 +79,32 @@ namespace Lilja.Repository
     public class ToPrimitiveAttribute : System.Attribute { }
 
     public interface IReadOnlyTx{}
-    public interface IReadWriteTx{}
+    public interface IReadWriteTx
+    {
+        void OnCommit(System.Func<Cysharp.Threading.Tasks.UniTask> asyncAction);
+        void OnRollback(System.Func<Cysharp.Threading.Tasks.UniTask> asyncAction);
+    }
+
+    public static class AtomicFileWriter
+    {
+        public static void WriteAllText(string filePath, string content) {}
+        public static void WriteAllBytes(string filePath, byte[] bytes) {}
+    }
+}
+
+namespace Cysharp.Threading.Tasks
+{
+    public struct UniTask
+    {
+        public static UniTask CompletedTask => default;
+
+        public static UniTask RunOnThreadPool(System.Action action) => default;
+        public static UniTask<T> RunOnThreadPool<T>(System.Func<T> func) => default;
+    }
+
+    public struct UniTask<T>
+    {
+    }
 }
 
 namespace UnityEngine
@@ -88,7 +113,7 @@ namespace UnityEngine
     {
         public static string persistentDataPath => "";
     }
-    
+
     public static class Debug
     {
         public static void Log(string message){}
@@ -113,7 +138,20 @@ namespace MessagePack
     }
 }
 
-namespace MessagePack.Resolvers { }
+namespace MessagePack.Resolvers
+{
+    public static class CompositeResolver
+    {
+        public static MessagePack.Formatters.IFormatterResolver Create(
+            MessagePack.Formatters.IMessagePackFormatter[] formatters,
+            MessagePack.Formatters.IFormatterResolver[] resolvers) => null;
+    }
+
+    public static class StandardResolver
+    {
+        public static MessagePack.Formatters.IFormatterResolver Instance => null;
+    }
+}
 
 namespace MessagePack.Formatters
 {
@@ -132,10 +170,14 @@ namespace MessagePack.Formatters
         public string ReadString() => "";
     }
 
-    public interface IMessagePackFormatter<T>
+    public interface IMessagePackFormatter {}
+
+    public interface IFormatterResolver {}
+
+    public interface IMessagePackFormatter<T> : IMessagePackFormatter
     {
-        int Serialize(ref MessagePackWriter writer, T value, MessagePackSerializerOptions options);
-        T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options);
+        int Serialize(ref MessagePackWriter writer, T value, MessagePack.MessagePackSerializerOptions options);
+        T Deserialize(ref MessagePackReader reader, MessagePack.MessagePackSerializerOptions options);
     }
 }
 #endregion

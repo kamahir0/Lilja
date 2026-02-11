@@ -77,18 +77,19 @@ internal static class RepositoryEmitter
         }
     }
 
+
     /// <summary>
-    /// MarkDirtyメソッドを生成する共通ヘルパー。
-    /// トランザクションにOnCommit/OnRollbackアクションを登録し、重複登録を防止する。
+    /// 非同期版MarkDirtyメソッドを生成する。
+    /// Func&lt;UniTask&gt;を直接登録する。
     /// </summary>
-    private static void EmitMarkDirty(StringBuilder sb)
+    private static void EmitMarkDirtyAsync(StringBuilder sb)
     {
         sb.AppendLine("        private void MarkDirty(IReadWriteTx tx)");
         sb.AppendLine("        {");
         sb.AppendLine("            if (_dirty) return;");
         sb.AppendLine("            _dirty = true;");
-        sb.AppendLine("            tx.OnCommit(() => { Save(); _dirty = false; });");
-        sb.AppendLine("            tx.OnRollback(() => { Load(); _dirty = false; });");
+        sb.AppendLine("            tx.OnCommit(async () => { await SaveAsync(); _dirty = false; });");
+        sb.AppendLine("            tx.OnRollback(async () => { await LoadAsync(); _dirty = false; });");
         sb.AppendLine("        }");
         sb.AppendLine();
     }
@@ -270,7 +271,9 @@ internal static class RepositoryEmitter
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.IO;");
+        sb.AppendLine("using System.Threading;");
         sb.AppendLine("using UnityEngine;");
+        sb.AppendLine("using Cysharp.Threading.Tasks;");
         sb.AppendLine("using Lilja.Repository;");
         sb.AppendLine();
         sb.AppendLine($"namespace {repoNamespace}");
@@ -304,20 +307,29 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public Json{entity.ClassName}Repository()");
             sb.AppendLine("        {");
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.json\");");
-            sb.AppendLine("            Load();");
+            sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // InitializeAsync
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// 永続化データを非同期に読み込んで初期化する。");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine($"        public async UniTask InitializeAsync(CancellationToken ct = default)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            await LoadAsync();");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // GetKeyFromDto helper
-
             sb.AppendLine($"        private static {keyTypeName} GetKeyFromDto({dtoFullName} dto)");
             sb.AppendLine("        {");
             sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // MarkDirty
-            EmitMarkDirty(sb);
+            // MarkDirty (async)
+            EmitMarkDirtyAsync(sb);
 
             // Read
             sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx, {keyTypeName} {keyParamName})");
@@ -356,18 +368,22 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Load
-            sb.AppendLine("        private void Load()");
+            // LoadAsync
+            sb.AppendLine("        private async UniTask LoadAsync()");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
-            sb.AppendLine("            if (!File.Exists(_filePath))");
+            sb.AppendLine("            var filePath = _filePath;");
+            sb.AppendLine("            if (!File.Exists(filePath))");
             sb.AppendLine("            {");
             sb.AppendLine("                return;");
             sb.AppendLine("            }");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                var json = File.ReadAllText(_filePath);");
-            sb.AppendLine("                var wrapper = JsonUtility.FromJson<StorageWrapper>(json);");
+            sb.AppendLine($"                var wrapper = await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var json = File.ReadAllText(filePath);");
+            sb.AppendLine("                    return JsonUtility.FromJson<StorageWrapper>(json);");
+            sb.AppendLine("                });");
             sb.AppendLine("                if (wrapper?.Items != null)");
             sb.AppendLine("                {");
             sb.AppendLine("                    foreach (var dto in wrapper.Items)");
@@ -383,15 +399,19 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Save
-            sb.AppendLine("        private void Save()");
+            // SaveAsync
+            sb.AppendLine("        private async UniTask SaveAsync()");
             sb.AppendLine("        {");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine("                var wrapper = new StorageWrapper();");
             sb.AppendLine("                wrapper.Items.AddRange(_cache.Values);");
-            sb.AppendLine("                var json = JsonUtility.ToJson(wrapper, true);");
-            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllText(_filePath, json);");
+            sb.AppendLine("                var filePath = _filePath;");
+            sb.AppendLine("                await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var json = JsonUtility.ToJson(wrapper, true);");
+            sb.AppendLine("                    Lilja.Repository.AtomicFileWriter.WriteAllText(filePath, json);");
+            sb.AppendLine("                });");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -409,12 +429,21 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public Json{entity.ClassName}Repository()");
             sb.AppendLine("        {");
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.json\");");
-            sb.AppendLine("            Load();");
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // MarkDirty
-            EmitMarkDirty(sb);
+            // InitializeAsync
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// 永続化データを非同期に読み込んで初期化する。");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine($"        public async UniTask InitializeAsync(CancellationToken ct = default)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            await LoadAsync();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // MarkDirty (async)
+            EmitMarkDirtyAsync(sb);
 
             // Read
             sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx)");
@@ -451,17 +480,22 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Load
-            sb.AppendLine("        private void Load()");
+            // LoadAsync
+            sb.AppendLine("        private async UniTask LoadAsync()");
             sb.AppendLine("        {");
-            sb.AppendLine("            if (!File.Exists(_filePath))");
+            sb.AppendLine("            _cache = null;");
+            sb.AppendLine("            var filePath = _filePath;");
+            sb.AppendLine("            if (!File.Exists(filePath))");
             sb.AppendLine("            {");
             sb.AppendLine("                return;");
             sb.AppendLine("            }");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                var json = File.ReadAllText(_filePath);");
-            sb.AppendLine($"                _cache = JsonUtility.FromJson<{dtoFullName}>(json);");
+            sb.AppendLine($"                _cache = await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var json = File.ReadAllText(filePath);");
+            sb.AppendLine($"                    return JsonUtility.FromJson<{dtoFullName}>(json);");
+            sb.AppendLine("                });");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -470,13 +504,18 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Save
-            sb.AppendLine("        private void Save()");
+            // SaveAsync
+            sb.AppendLine("        private async UniTask SaveAsync()");
             sb.AppendLine("        {");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                var json = JsonUtility.ToJson(_cache, true);");
-            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllText(_filePath, json);");
+            sb.AppendLine("                var cache = _cache;");
+            sb.AppendLine("                var filePath = _filePath;");
+            sb.AppendLine("                await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var json = JsonUtility.ToJson(cache, true);");
+            sb.AppendLine("                    Lilja.Repository.AtomicFileWriter.WriteAllText(filePath, json);");
+            sb.AppendLine("                });");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -517,7 +556,9 @@ internal static class RepositoryEmitter
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.IO;");
+        sb.AppendLine("using System.Threading;");
         sb.AppendLine("using UnityEngine;");
+        sb.AppendLine("using Cysharp.Threading.Tasks;");
         sb.AppendLine("using MessagePack;");
         sb.AppendLine("using MessagePack.Formatters;");
         sb.AppendLine("using MessagePack.Resolvers;");
@@ -549,20 +590,29 @@ internal static class RepositoryEmitter
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.msgpack\");");
             sb.AppendLine($"            var resolver = CompositeResolver.Create(new IMessagePackFormatter[] {{ new {formatterFullName}() }}, new IFormatterResolver[] {{ StandardResolver.Instance }});");
             sb.AppendLine("            _options = MessagePackSerializerOptions.Standard.WithResolver(resolver);");
-            sb.AppendLine("            Load();");
+            sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // InitializeAsync
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// 永続化データを非同期に読み込んで初期化する。");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine($"        public async UniTask InitializeAsync(CancellationToken ct = default)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            await LoadAsync();");
             sb.AppendLine("        }");
             sb.AppendLine();
 
             // GetKeyFromDto helper
-
             sb.AppendLine($"        private static {keyTypeName} GetKeyFromDto({dtoFullName} dto)");
             sb.AppendLine("        {");
             sb.AppendLine($"            return {GetKeyReturnExpression(entity, entity.ClassName, "dto")};");
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // MarkDirty
-            EmitMarkDirty(sb);
+            // MarkDirty (async)
+            EmitMarkDirtyAsync(sb);
 
             // Read
             sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx, {keyTypeName} {keyParamName})");
@@ -601,18 +651,23 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Load
-            sb.AppendLine("        private void Load()");
+            // LoadAsync
+            sb.AppendLine("        private async UniTask LoadAsync()");
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache = new Dictionary<{keyTypeName}, {dtoFullName}>();");
-            sb.AppendLine("            if (!File.Exists(_filePath))");
+            sb.AppendLine("            var filePath = _filePath;");
+            sb.AppendLine("            if (!File.Exists(filePath))");
             sb.AppendLine("            {");
             sb.AppendLine("                return;");
             sb.AppendLine("            }");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                var bytes = File.ReadAllBytes(_filePath);");
-            sb.AppendLine($"                var list = MessagePackSerializer.Deserialize<List<{dtoFullName}>>(bytes, _options);");
+            sb.AppendLine("                var options = _options;");
+            sb.AppendLine($"                var list = await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var bytes = File.ReadAllBytes(filePath);");
+            sb.AppendLine($"                    return MessagePackSerializer.Deserialize<List<{dtoFullName}>>(bytes, options);");
+            sb.AppendLine("                });");
             sb.AppendLine("                if (list != null)");
             sb.AppendLine("                {");
             sb.AppendLine("                    foreach (var dto in list)");
@@ -628,14 +683,19 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Save
-            sb.AppendLine("        private void Save()");
+            // SaveAsync
+            sb.AppendLine("        private async UniTask SaveAsync()");
             sb.AppendLine("        {");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine($"                var list = new List<{dtoFullName}>(_cache.Values);");
-            sb.AppendLine("                var bytes = MessagePackSerializer.Serialize(list, _options);");
-            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllBytes(_filePath, bytes);");
+            sb.AppendLine("                var filePath = _filePath;");
+            sb.AppendLine("                var options = _options;");
+            sb.AppendLine("                await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var bytes = MessagePackSerializer.Serialize(list, options);");
+            sb.AppendLine("                    Lilja.Repository.AtomicFileWriter.WriteAllBytes(filePath, bytes);");
+            sb.AppendLine("                });");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -655,12 +715,21 @@ internal static class RepositoryEmitter
             sb.AppendLine($"            _filePath = Path.Combine(Application.persistentDataPath, \"{entity.ClassName}.msgpack\");");
             sb.AppendLine($"            var resolver = CompositeResolver.Create(new IMessagePackFormatter[] {{ new {formatterFullName}() }}, new IFormatterResolver[] {{ StandardResolver.Instance }});");
             sb.AppendLine("            _options = MessagePackSerializerOptions.Standard.WithResolver(resolver);");
-            sb.AppendLine("            Load();");
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // MarkDirty
-            EmitMarkDirty(sb);
+            // InitializeAsync
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// 永続化データを非同期に読み込んで初期化する。");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine($"        public async UniTask InitializeAsync(CancellationToken ct = default)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            await LoadAsync();");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // MarkDirty (async)
+            EmitMarkDirtyAsync(sb);
 
             // Read
             sb.AppendLine($"        public {entityFullName} Read(IReadOnlyTx tx)");
@@ -697,17 +766,23 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Load
-            sb.AppendLine("        private void Load()");
+            // LoadAsync
+            sb.AppendLine("        private async UniTask LoadAsync()");
             sb.AppendLine("        {");
-            sb.AppendLine("            if (!File.Exists(_filePath))");
+            sb.AppendLine("            _cache = null;");
+            sb.AppendLine("            var filePath = _filePath;");
+            sb.AppendLine("            if (!File.Exists(filePath))");
             sb.AppendLine("            {");
             sb.AppendLine("                return;");
             sb.AppendLine("            }");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                var bytes = File.ReadAllBytes(_filePath);");
-            sb.AppendLine($"                _cache = MessagePackSerializer.Deserialize<{dtoFullName}>(bytes, _options);");
+            sb.AppendLine("                var options = _options;");
+            sb.AppendLine($"                _cache = await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var bytes = File.ReadAllBytes(filePath);");
+            sb.AppendLine($"                    return MessagePackSerializer.Deserialize<{dtoFullName}>(bytes, options);");
+            sb.AppendLine("                });");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");
@@ -716,13 +791,19 @@ internal static class RepositoryEmitter
             sb.AppendLine("        }");
             sb.AppendLine();
 
-            // Save
-            sb.AppendLine("        private void Save()");
+            // SaveAsync
+            sb.AppendLine("        private async UniTask SaveAsync()");
             sb.AppendLine("        {");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                var bytes = MessagePackSerializer.Serialize(_cache, _options);");
-            sb.AppendLine("                Lilja.Repository.AtomicFileWriter.WriteAllBytes(_filePath, bytes);");
+            sb.AppendLine("                var cache = _cache;");
+            sb.AppendLine("                var filePath = _filePath;");
+            sb.AppendLine("                var options = _options;");
+            sb.AppendLine("                await UniTask.RunOnThreadPool(() =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var bytes = MessagePackSerializer.Serialize(cache, options);");
+            sb.AppendLine("                    Lilja.Repository.AtomicFileWriter.WriteAllBytes(filePath, bytes);");
+            sb.AppendLine("                });");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (Exception ex)");
             sb.AppendLine("            {");

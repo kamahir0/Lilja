@@ -26,6 +26,7 @@ namespace Lilja.Repository
         /// <summary>
         /// 読み書きトランザクションを開始する（同期Lambda）。
         /// Lambda正常完了でコミット、例外発生でロールバックされる。
+        /// コミット/ロールバック時の非同期アクション（ファイルIO等）はawaitされる。
         /// </summary>
         /// <param name="action">トランザクション内で実行するアクション。</param>
         /// <param name="ct">キャンセルトークン。</param>
@@ -38,11 +39,11 @@ namespace Lilja.Repository
                 try
                 {
                     action(tx);
-                    tx.ExecuteCommit();
+                    await tx.ExecuteCommitAsync();
                 }
                 catch
                 {
-                    tx.ExecuteRollback();
+                    await tx.ExecuteRollbackAsync();
                     throw;
                 }
             }
@@ -76,41 +77,41 @@ namespace Lilja.Repository
         /// </summary>
         private sealed class ReadWriteTxImpl : IReadWriteTx
         {
-            private readonly List<Action> _commitActions = new List<Action>();
-            private readonly List<Action> _rollbackActions = new List<Action>();
+            private readonly List<Func<UniTask>> _commitActions = new List<Func<UniTask>>();
+            private readonly List<Func<UniTask>> _rollbackActions = new List<Func<UniTask>>();
             private bool _disposed;
 
             /// <inheritdoc />
-            public void OnCommit(Action action)
+            public void OnCommit(Func<UniTask> asyncAction)
             {
-                _commitActions.Add(action);
+                _commitActions.Add(asyncAction);
             }
 
             /// <inheritdoc />
-            public void OnRollback(Action action)
+            public void OnRollback(Func<UniTask> asyncAction)
             {
-                _rollbackActions.Add(action);
+                _rollbackActions.Add(asyncAction);
             }
 
             /// <summary>
             /// 登録されたコミットアクションを順次実行する。
             /// </summary>
-            internal void ExecuteCommit()
+            internal async UniTask ExecuteCommitAsync()
             {
                 foreach (var action in _commitActions)
                 {
-                    action();
+                    await action();
                 }
             }
 
             /// <summary>
             /// 登録されたロールバックアクションを順次実行する。
             /// </summary>
-            internal void ExecuteRollback()
+            internal async UniTask ExecuteRollbackAsync()
             {
                 foreach (var action in _rollbackActions)
                 {
-                    action();
+                    await action();
                 }
             }
 
