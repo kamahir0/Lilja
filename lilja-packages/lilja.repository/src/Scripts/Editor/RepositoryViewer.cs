@@ -14,12 +14,12 @@ using MessagePack.Formatters;
 
 namespace Lilja.Repository.Editor
 {
-    public class RepositoryDataViewer : EditorWindow
+    public class RepositoryViewer : EditorWindow
     {
-        [MenuItem("Lilja/Repository Viewer")]
+        [MenuItem("Lilja/Repository/Repository Viewer")]
         public static void ShowWindow()
         {
-            var wnd = GetWindow<RepositoryDataViewer>();
+            var wnd = GetWindow<RepositoryViewer>();
             wnd.titleContent = new GUIContent("Repository Viewer");
         }
 
@@ -357,7 +357,7 @@ namespace Lilja.Repository.Editor
                             // Try List (Keyed)
                             var listType = typeof(List<>).MakeGenericType(dtoType);
                             // Invoke helper: DeserializeMsgPack<List<Dto>>(bytes, options)
-                            var method = typeof(RepositoryDataViewer).GetMethod("DeserializeMsgPack",
+                            var method = typeof(RepositoryViewer).GetMethod("DeserializeMsgPack",
                                     BindingFlags.NonPublic | BindingFlags.Static)
                                 .MakeGenericMethod(listType);
 
@@ -378,7 +378,7 @@ namespace Lilja.Repository.Editor
                             // Try Singleton
                             try
                             {
-                                var method = typeof(RepositoryDataViewer).GetMethod("DeserializeMsgPack",
+                                var method = typeof(RepositoryViewer).GetMethod("DeserializeMsgPack",
                                         BindingFlags.NonPublic | BindingFlags.Static)
                                     .MakeGenericMethod(dtoType);
 
