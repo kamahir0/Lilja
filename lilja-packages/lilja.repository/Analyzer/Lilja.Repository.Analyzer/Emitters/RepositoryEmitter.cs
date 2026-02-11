@@ -105,6 +105,7 @@ internal static class RepositoryEmitter
 
         sb.AppendLine("#nullable disable");
         sb.AppendLine();
+        sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using Lilja.Repository;");
         sb.AppendLine();
         sb.AppendLine($"namespace {repoNamespace}");
@@ -129,6 +130,7 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        void Create(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Update(IReadWriteTx tx, {entityFullName} entity);");
             sb.AppendLine($"        void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName});");
+            sb.AppendLine($"        IReadOnlyList<{entityFullName}> All(IReadOnlyTx tx);");
         }
         else
         {
@@ -214,6 +216,13 @@ internal static class RepositoryEmitter
             sb.AppendLine($"        public void Delete(IReadWriteTx tx, {keyTypeName} {keyParamName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            _storage.Remove({keyParamName});");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // All
+            sb.AppendLine($"        public IReadOnlyList<{entityFullName}> All(IReadOnlyTx tx)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            return new List<{entityFullName}>(_storage.Values);");
             sb.AppendLine("        }");
         }
         else
@@ -382,6 +391,18 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache.Remove({keyParamName});");
             sb.AppendLine("            MarkDirty(tx);");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // All
+            sb.AppendLine($"        public IReadOnlyList<{entityFullName}> All(IReadOnlyTx tx)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            var list = new List<{entityFullName}>(_cache.Count);");
+            sb.AppendLine("            foreach (var dto in _cache.Values)");
+            sb.AppendLine("            {");
+            sb.AppendLine($"                list.Add({entity.ClassName}.FromDto(dto));");
+            sb.AppendLine("            }");
+            sb.AppendLine("            return list;");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -671,6 +692,18 @@ internal static class RepositoryEmitter
             sb.AppendLine("        {");
             sb.AppendLine($"            _cache.Remove({keyParamName});");
             sb.AppendLine("            MarkDirty(tx);");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
+            // All
+            sb.AppendLine($"        public IReadOnlyList<{entityFullName}> All(IReadOnlyTx tx)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            var list = new List<{entityFullName}>(_cache.Count);");
+            sb.AppendLine("            foreach (var dto in _cache.Values)");
+            sb.AppendLine("            {");
+            sb.AppendLine($"                list.Add({entity.ClassName}.FromDto(dto));");
+            sb.AppendLine("            }");
+            sb.AppendLine("            return list;");
             sb.AppendLine("        }");
             sb.AppendLine();
 
