@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using Lilja.Repository;
-using Lilja.Repository.Test.Repositories;
+using RepositoryTest.Repositories;
 
-namespace Lilja.Repository.Test
+namespace RepositoryTest
 {
     public class RepositoryTestController : MonoBehaviour
     {
@@ -18,13 +18,13 @@ namespace Lilja.Repository.Test
         [SerializeField] private Button _deleteButton;
         [SerializeField] private Text _logText;
 
-        private JsonTestEntityRepository _repository;
+        private MessagePackTestEntityRepository _repository;
         private TxManager _txManager;
 
         private void Start()
         {
             _txManager = new TxManager();
-            _repository = new JsonTestEntityRepository();
+            _repository = new MessagePackTestEntityRepository();
 
             _saveButton.onClick.AddListener(() => SaveAsync().Forget());
             _loadButton.onClick.AddListener(() => LoadAsync().Forget());
