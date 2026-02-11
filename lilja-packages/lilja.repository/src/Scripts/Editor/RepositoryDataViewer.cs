@@ -140,67 +140,24 @@ namespace Lilja.Repository.Editor
         {
             var repositories = RepositoryTracker.GetAll(_currentType).ToList();
             var id = 0;
-            // ... (rest of LoadFromTracker)
 
             foreach (var repo in repositories)
             {
                 var repoType = repo.GetType();
                 var children = new List<TreeViewItemData<object>>();
 
-                // Reflection to get internal storage
-                // InMemory: _storage (Dictionary) or _entity (Single)
-                // Json/MessagePack: _cache (Dictionary or Single Dto)
-
                 try
                 {
-                    if (_currentType == RepositoryTracker.RepositoryType.InMemory)
+                    // All メソッドをリフレクションで探す
+                    var allMethod = repoType.GetMethod("All");
+                    if (allMethod != null)
                     {
-                        var storageField =
-                            repoType.GetField("_storage", BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (storageField != null)
-                        {
-                            var dict = storageField.GetValue(repo) as System.Collections.IDictionary;
-                            if (dict != null)
-                            {
-                                foreach (System.Collections.DictionaryEntry entry in dict)
-                                {
-                                    children.Add(new TreeViewItemData<object>(++id,
-                                        new DataItem { Key = entry.Key.ToString(), Value = entry.Value }));
-                                }
-                            }
-                        }
-                        else
-                        {
-                            var entityField =
-                                repoType.GetField("_entity", BindingFlags.NonPublic | BindingFlags.Instance);
-                            if (entityField != null)
-                            {
-                                var val = entityField.GetValue(repo);
-                                children.Add(new TreeViewItemData<object>(++id,
-                                    new DataItem { Key = "Singleton", Value = val }));
-                            }
-                        }
+                        LoadFromAllMethod(repo, allMethod, children, ref id);
                     }
-                    else // Json or MessagePack
+                    else
                     {
-                        var cacheField = repoType.GetField("_cache", BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (cacheField != null)
-                        {
-                            var cache = cacheField.GetValue(repo);
-                            if (cache is System.Collections.IDictionary dict)
-                            {
-                                foreach (System.Collections.DictionaryEntry entry in dict)
-                                {
-                                    children.Add(new TreeViewItemData<object>(++id,
-                                        new DataItem { Key = entry.Key.ToString(), Value = entry.Value }));
-                                }
-                            }
-                            else if (cache != null)
-                            {
-                                children.Add(new TreeViewItemData<object>(++id,
-                                    new DataItem { Key = "Singleton", Value = cache }));
-                            }
-                        }
+                        // All メソッドが無い場合（Singleton等）: フィールドからフォールバック取得
+                        LoadFromFields(repo, repoType, children, ref id);
                     }
                 }
                 catch (Exception e)
@@ -210,6 +167,102 @@ namespace Lilja.Repository.Editor
 
                 _treeData.Add(new TreeViewItemData<object>(++id,
                     new DataItem { Key = repoType.Name, Value = $"Items: {children.Count}" }, children));
+            }
+        }
+
+        /// <summary>
+        /// All メソッドを呼び出して全エンティティを取得する。
+        /// </summary>
+        private void LoadFromAllMethod(object repo, MethodInfo allMethod,
+            List<TreeViewItemData<object>> children, ref int id)
+        {
+            var result = allMethod.Invoke(repo, new object[] { null });
+            if (result is not System.Collections.IEnumerable enumerable)
+            {
+                return;
+            }
+
+            // エンティティ型からGetKey/ToDtoメソッドを取得
+            var entityType = allMethod.ReturnType.GetGenericArguments()[0];
+            var getKeyMethod = entityType.GetMethod("GetKey",
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var toDtoMethod = entityType.GetMethod("ToDto",
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+            foreach (var entity in enumerable)
+            {
+                var keyStr = getKeyMethod != null
+                    ? getKeyMethod.Invoke(null, new[] { entity })?.ToString() ?? "?"
+                    : "?";
+
+                // ToDto が使えればDTO経由で表示、無ければエンティティ直接表示
+                object displayValue = toDtoMethod != null
+                    ? toDtoMethod.Invoke(null, new[] { entity })
+                    : entity;
+
+                children.Add(new TreeViewItemData<object>(++id,
+                    new DataItem { Key = keyStr, Value = displayValue }));
+            }
+        }
+
+        /// <summary>
+        /// フィールドへの直接アクセスによるフォールバック取得。
+        /// All メソッドが無い場合（Singleton Entity等）に使用する。
+        /// </summary>
+        private void LoadFromFields(object repo, Type repoType,
+            List<TreeViewItemData<object>> children, ref int id)
+        {
+            if (_currentType == RepositoryTracker.RepositoryType.InMemory)
+            {
+                var storageField = repoType.GetField("_storage",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (storageField != null)
+                {
+                    if (storageField.GetValue(repo) is System.Collections.IDictionary dict)
+                    {
+                        foreach (System.Collections.DictionaryEntry entry in dict)
+                        {
+                            children.Add(new TreeViewItemData<object>(++id,
+                                new DataItem { Key = entry.Key.ToString(), Value = entry.Value }));
+                        }
+                    }
+                }
+                else
+                {
+                    var entityField = repoType.GetField("_entity",
+                        BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (entityField != null)
+                    {
+                        var val = entityField.GetValue(repo);
+                        if (val != null)
+                        {
+                            children.Add(new TreeViewItemData<object>(++id,
+                                new DataItem { Key = "Singleton", Value = val }));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var cacheField = repoType.GetField("_cache",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (cacheField != null)
+                {
+                    var cache = cacheField.GetValue(repo);
+                    if (cache is System.Collections.IDictionary dict)
+                    {
+                        foreach (System.Collections.DictionaryEntry entry in dict)
+                        {
+                            children.Add(new TreeViewItemData<object>(++id,
+                                new DataItem { Key = entry.Key.ToString(), Value = entry.Value }));
+                        }
+                    }
+                    else if (cache != null)
+                    {
+                        children.Add(new TreeViewItemData<object>(++id,
+                            new DataItem { Key = "Singleton", Value = cache }));
+                    }
+                }
             }
         }
 
