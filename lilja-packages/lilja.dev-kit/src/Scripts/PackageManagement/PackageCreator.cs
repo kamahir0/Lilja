@@ -38,8 +38,6 @@ namespace Lilja.DevKit.PackageManagement
                 ? parameters.DisplayNameOverride
                 : GenerateDisplayName(parameters.PackageBaseName);
 
-            string kebabName = ConvertToKebabCase(parameters.PackageBaseName);
-
             string packageName = !string.IsNullOrEmpty(parameters.PackageNameOverride)
                 ? parameters.PackageNameOverride
                 : GeneratePackageName(parameters.OrganizationName, parameters.PackageBaseName);
