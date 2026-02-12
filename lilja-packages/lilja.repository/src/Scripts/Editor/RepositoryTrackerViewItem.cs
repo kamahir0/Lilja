@@ -47,20 +47,6 @@ namespace Lilja.Repository.Editor
                 },
                 new MultiColumnHeaderState.Column()
                 {
-                    headerContent = new GUIContent("Type"),
-                    width = 150,
-                    minWidth = 80,
-                    autoResize = true
-                },
-                new MultiColumnHeaderState.Column()
-                {
-                    headerContent = new GUIContent("Count"),
-                    width = 60,
-                    minWidth = 40,
-                    autoResize = false
-                },
-                new MultiColumnHeaderState.Column()
-                {
                     headerContent = new GUIContent("Value Preview"),
                     width = 400,
                     minWidth = 100,
@@ -121,16 +107,6 @@ namespace Lilja.Repository.Editor
                             .ThenByDescending(item => item.RepositoryName ?? item.Key);
                     break;
                 case 1:
-                    orderedEnumerable = ascending
-                        ? items.OrderBy(item => item.Type)
-                        : items.OrderByDescending(item => item.Type);
-                    break;
-                case 2:
-                    orderedEnumerable = ascending
-                        ? items.OrderBy(item => item.ItemCount)
-                        : items.OrderByDescending(item => item.ItemCount);
-                    break;
-                case 3:
                     orderedEnumerable = ascending
                         ? items.OrderBy(item => item.ValuePreview)
                         : items.OrderByDescending(item => item.ValuePreview);
@@ -616,6 +592,8 @@ namespace Lilja.Repository.Editor
                                 displayName = displayName.Substring(0, displayName.Length - "Repository".Length);
                             }
 
+                            displayName += $" ({item.ItemCount})";
+
                             // Make entire row clickable for expand/collapse
                             var toggleRect = rect;
                             var wasExpanded = IsExpanded(item.id);
@@ -645,16 +623,6 @@ namespace Lilja.Repository.Editor
 
                         break;
                     case 1:
-                        EditorGUI.LabelField(rect, item.Type, labelStyle);
-                        break;
-                    case 2:
-                        if (item.IsRepository && item.ItemCount > 0)
-                        {
-                            EditorGUI.LabelField(rect, item.ItemCount.ToString(), labelStyle);
-                        }
-
-                        break;
-                    case 3:
                         EditorGUI.LabelField(rect, item.ValuePreview, labelStyle);
                         break;
                     default:
