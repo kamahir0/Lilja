@@ -1,9 +1,8 @@
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -14,7 +13,7 @@ using MessagePack.Formatters;
 
 namespace Lilja.Repository.Editor
 {
-    public class RepositoryTrackerViewItem : TreeViewItem
+    public class RepositoryTrackerViewItem : TreeViewItem<int>
     {
         public string RepositoryName { get; set; }
         public string Key { get; set; }
@@ -29,40 +28,40 @@ namespace Lilja.Repository.Editor
         }
     }
 
-    public class RepositoryTrackerTreeView : TreeView
+    public class RepositoryTrackerTreeView : TreeView<int>
     {
         const string sortedColumnIndexStateKey = "RepositoryTrackerTreeView_sortedColumnIndex";
 
-        public IReadOnlyList<TreeViewItem> CurrentBindingItems;
-        private RepositoryTracker.RepositoryType currentType;
+        public IReadOnlyList<TreeViewItem<int>> CurrentBindingItems;
+        private RepositoryTracker.RepositoryType _currentType;
 
         public RepositoryTrackerTreeView(RepositoryTracker.RepositoryType type)
-            : this(new TreeViewState(), new MultiColumnHeader(new MultiColumnHeaderState(new[]
+            : this(new TreeViewState<int>(), new MultiColumnHeader(new MultiColumnHeaderState(new[]
             {
-                new MultiColumnHeaderState.Column() 
-                { 
-                    headerContent = new GUIContent("Entity/Key"), 
+                new MultiColumnHeaderState.Column()
+                {
+                    headerContent = new GUIContent("Entity/Key"),
                     width = 250,
                     minWidth = 100,
                     autoResize = true
                 },
-                new MultiColumnHeaderState.Column() 
-                { 
-                    headerContent = new GUIContent("Type"), 
+                new MultiColumnHeaderState.Column()
+                {
+                    headerContent = new GUIContent("Type"),
                     width = 150,
                     minWidth = 80,
                     autoResize = true
                 },
-                new MultiColumnHeaderState.Column() 
-                { 
-                    headerContent = new GUIContent("Count"), 
+                new MultiColumnHeaderState.Column()
+                {
+                    headerContent = new GUIContent("Count"),
                     width = 60,
                     minWidth = 40,
                     autoResize = false
                 },
-                new MultiColumnHeaderState.Column() 
-                { 
-                    headerContent = new GUIContent("Value Preview"), 
+                new MultiColumnHeaderState.Column()
+                {
+                    headerContent = new GUIContent("Value Preview"),
                     width = 400,
                     minWidth = 100,
                     autoResize = true
@@ -71,17 +70,18 @@ namespace Lilja.Repository.Editor
         {
         }
 
-        RepositoryTrackerTreeView(TreeViewState state, MultiColumnHeader header, RepositoryTracker.RepositoryType type)
+        RepositoryTrackerTreeView(TreeViewState<int> state, MultiColumnHeader header,
+            RepositoryTracker.RepositoryType type)
             : base(state, header)
         {
-            currentType = type;
+            _currentType = type;
             rowHeight = 20;
             showAlternatingRowBackgrounds = true;
             showBorder = true;
-            
+
             // Enable foldout functionality
             useScrollView = true;
-            
+
             header.sortingChanged += Header_sortingChanged;
 
             header.ResizeToFit();
@@ -92,7 +92,7 @@ namespace Lilja.Repository.Editor
 
         public void SetRepositoryType(RepositoryTracker.RepositoryType type)
         {
-            currentType = type;
+            _currentType = type;
         }
 
         public void ReloadAndSort()
@@ -103,11 +103,11 @@ namespace Lilja.Repository.Editor
             this.state.selectedIDs = currentSelected;
         }
 
-        private void Header_sortingChanged(MultiColumnHeader multiColumnHeader)
+        private void Header_sortingChanged(MultiColumnHeader mch)
         {
-            SessionState.SetInt(sortedColumnIndexStateKey, multiColumnHeader.sortedColumnIndex);
-            var index = multiColumnHeader.sortedColumnIndex;
-            var ascending = multiColumnHeader.IsSortedAscending(multiColumnHeader.sortedColumnIndex);
+            SessionState.SetInt(sortedColumnIndexStateKey, mch.sortedColumnIndex);
+            var index = mch.sortedColumnIndex;
+            var ascending = mch.IsSortedAscending(mch.sortedColumnIndex);
 
             var items = rootItem.children.Cast<RepositoryTrackerViewItem>();
 
@@ -115,37 +115,38 @@ namespace Lilja.Repository.Editor
             switch (index)
             {
                 case 0:
-                    orderedEnumerable = ascending 
+                    orderedEnumerable = ascending
                         ? items.OrderBy(item => item.IsRepository).ThenBy(item => item.RepositoryName ?? item.Key)
-                        : items.OrderByDescending(item => item.IsRepository).ThenByDescending(item => item.RepositoryName ?? item.Key);
+                        : items.OrderByDescending(item => item.IsRepository)
+                            .ThenByDescending(item => item.RepositoryName ?? item.Key);
                     break;
                 case 1:
-                    orderedEnumerable = ascending 
-                        ? items.OrderBy(item => item.Type) 
+                    orderedEnumerable = ascending
+                        ? items.OrderBy(item => item.Type)
                         : items.OrderByDescending(item => item.Type);
                     break;
                 case 2:
-                    orderedEnumerable = ascending 
-                        ? items.OrderBy(item => item.ItemCount) 
+                    orderedEnumerable = ascending
+                        ? items.OrderBy(item => item.ItemCount)
                         : items.OrderByDescending(item => item.ItemCount);
                     break;
                 case 3:
-                    orderedEnumerable = ascending 
-                        ? items.OrderBy(item => item.ValuePreview) 
+                    orderedEnumerable = ascending
+                        ? items.OrderBy(item => item.ValuePreview)
                         : items.OrderByDescending(item => item.ValuePreview);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(index), index, null);
             }
 
-            CurrentBindingItems = rootItem.children = orderedEnumerable.Cast<TreeViewItem>().ToList();
+            CurrentBindingItems = rootItem.children = orderedEnumerable.Cast<TreeViewItem<int>>().ToList();
             BuildRows(rootItem);
         }
 
-        protected override TreeViewItem BuildRoot()
+        protected override TreeViewItem<int> BuildRoot()
         {
-            var root = new TreeViewItem { depth = -1 };
-            var children = new List<TreeViewItem>();
+            var root = new TreeViewItem<int> { depth = -1 };
+            var children = new List<TreeViewItem<int>>();
             var id = 0;
 
             if (Application.isPlaying)
@@ -154,7 +155,7 @@ namespace Lilja.Repository.Editor
             }
             else
             {
-                if (currentType == RepositoryTracker.RepositoryType.InMemory)
+                if (_currentType == RepositoryTracker.RepositoryType.InMemory)
                 {
                     // InMemory is only available in play mode
                 }
@@ -169,11 +170,11 @@ namespace Lilja.Repository.Editor
             return root;
         }
 
-        private void LoadFromFiles(List<TreeViewItem> children, ref int id)
+        private void LoadFromFiles(List<TreeViewItem<int>> children, ref int id)
         {
             var path = Application.persistentDataPath;
-            var pattern = currentType == RepositoryTracker.RepositoryType.Json ? "*.json" : "*.msgpack";
-            
+            var pattern = _currentType == RepositoryTracker.RepositoryType.Json ? "*.json" : "*.msgpack";
+
             if (!Directory.Exists(path))
             {
                 return;
@@ -191,7 +192,7 @@ namespace Lilja.Repository.Editor
                 {
                     // Fallback to raw text if DTO not found
                     var rawContent = "Binary Data";
-                    if (currentType == RepositoryTracker.RepositoryType.Json)
+                    if (_currentType == RepositoryTracker.RepositoryType.Json)
                     {
                         try
                         {
@@ -216,11 +217,11 @@ namespace Lilja.Repository.Editor
                     continue;
                 }
 
-                var itemChildren = new List<TreeViewItem>();
+                var itemChildren = new List<TreeViewItem<int>>();
 
                 try
                 {
-                    if (currentType == RepositoryTracker.RepositoryType.Json)
+                    if (_currentType == RepositoryTracker.RepositoryType.Json)
                     {
                         LoadJsonFile(file, dtoType, itemChildren, ref id);
                     }
@@ -256,10 +257,10 @@ namespace Lilja.Repository.Editor
             }
         }
 
-        private void LoadJsonFile(string file, Type dtoType, List<TreeViewItem> itemChildren, ref int id)
+        private void LoadJsonFile(string file, Type dtoType, List<TreeViewItem<int>> itemChildren, ref int id)
         {
             var json = File.ReadAllText(file);
-            
+
             if (json.Contains("\"Items\":"))
             {
                 // Keyed repository
@@ -267,7 +268,7 @@ namespace Lilja.Repository.Editor
                 var wrapper = JsonUtility.FromJson(json, wrapperType);
                 var itemsField = wrapperType.GetField("Items");
                 var items = itemsField.GetValue(wrapper) as System.Collections.IList;
-                
+
                 if (items != null)
                 {
                     int idx = 0;
@@ -305,7 +306,9 @@ namespace Lilja.Repository.Editor
             }
         }
 
-        private void LoadMessagePackFile(string file, string entityName, Type dtoType, List<TreeViewItem> itemChildren, ref int id)
+        private void LoadMessagePackFile(string file, string entityName, Type dtoType,
+            List<TreeViewItem<int>> itemChildren,
+            ref int id)
         {
             var bytes = File.ReadAllBytes(file);
             var options = MessagePackSerializerOptions.Standard;
@@ -335,14 +338,14 @@ namespace Lilja.Repository.Editor
                 // Try List (Keyed)
                 var listType = typeof(List<>).MakeGenericType(dtoType);
                 object list = null;
-                
+
                 try
                 {
                     // Use the helper method via reflection
-                    var method = typeof(RepositoryTrackerTreeView).GetMethod("DeserializeMsgPack",
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                        .MakeGenericMethod(listType);
-                    list = method.Invoke(null, new object[] { bytes, options });
+                    var method = typeof(RepositoryTrackerTreeView)
+                        .GetMethod("DeserializeMsgPack", BindingFlags.NonPublic | BindingFlags.Static)
+                        ?.MakeGenericMethod(listType);
+                    list = method!.Invoke(null, new object[] { bytes, options });
                 }
                 catch (Exception ex)
                 {
@@ -373,11 +376,11 @@ namespace Lilja.Repository.Editor
                     // Try Singleton
                     try
                     {
-                        var method = typeof(RepositoryTrackerTreeView).GetMethod("DeserializeMsgPack",
-                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                            .MakeGenericMethod(dtoType);
-                        var singleton = method.Invoke(null, new object[] { bytes, options });
-                        
+                        var method = typeof(RepositoryTrackerTreeView)
+                            .GetMethod("DeserializeMsgPack", BindingFlags.NonPublic | BindingFlags.Static)
+                            ?.MakeGenericMethod(dtoType);
+                        var singleton = method!.Invoke(null, new object[] { bytes, options });
+
                         var preview = GetValuePreview(singleton);
                         itemChildren.Add(new RepositoryTrackerViewItem(++id)
                         {
@@ -391,7 +394,8 @@ namespace Lilja.Repository.Editor
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning($"Failed to deserialize MessagePack Singleton {Path.GetFileName(file)}: {ex.InnerException?.Message ?? ex.Message}\nStack: {ex.StackTrace}");
+                        Debug.LogWarning(
+                            $"Failed to deserialize MessagePack Singleton {Path.GetFileName(file)}: {ex.InnerException?.Message ?? ex.Message}\nStack: {ex.StackTrace}");
                         throw;
                     }
                 }
@@ -414,7 +418,7 @@ namespace Lilja.Repository.Editor
 
             // Try common key field names
             var keyFieldNames = new[] { "Id", "Key", "Name", "key", "id", "name" };
-            
+
             foreach (var fieldName in keyFieldNames)
             {
                 var field = dtoType.GetField(fieldName);
@@ -426,7 +430,7 @@ namespace Lilja.Repository.Editor
                         return value.ToString();
                     }
                 }
-                
+
                 var property = dtoType.GetProperty(fieldName);
                 if (property != null)
                 {
@@ -437,7 +441,7 @@ namespace Lilja.Repository.Editor
                     }
                 }
             }
-            
+
             // Fallback to index
             return $"Item {fallbackIndex}";
         }
@@ -462,9 +466,9 @@ namespace Lilja.Repository.Editor
             public List<T> Items = new List<T>();
         }
 
-        private void LoadFromTracker(List<TreeViewItem> children, ref int id)
+        private void LoadFromTracker(List<TreeViewItem<int>> children, ref int id)
         {
-            var repositories = RepositoryTracker.GetAll(currentType).ToList();
+            var repositories = RepositoryTracker.GetAll(_currentType).ToList();
 
             foreach (var repo in repositories)
             {
@@ -478,7 +482,7 @@ namespace Lilja.Repository.Editor
                     ItemCount = 0
                 };
 
-                var itemChildren = new List<TreeViewItem>();
+                var itemChildren = new List<TreeViewItem<int>>();
 
                 try
                 {
@@ -490,13 +494,13 @@ namespace Lilja.Repository.Editor
                         {
                             var entityType = allMethod.ReturnType.GetGenericArguments()[0];
                             var getKeyMethod = entityType.GetMethod("GetKey",
-                                System.Reflection.BindingFlags.Static | 
-                                System.Reflection.BindingFlags.NonPublic | 
-                                System.Reflection.BindingFlags.Public);
+                                BindingFlags.Static |
+                                BindingFlags.NonPublic |
+                                BindingFlags.Public);
                             var toDtoMethod = entityType.GetMethod("ToDto",
-                                System.Reflection.BindingFlags.Static | 
-                                System.Reflection.BindingFlags.NonPublic | 
-                                System.Reflection.BindingFlags.Public);
+                                BindingFlags.Static |
+                                BindingFlags.NonPublic |
+                                BindingFlags.Public);
 
                             var count = 0;
                             foreach (var entity in enumerable)
@@ -522,14 +526,14 @@ namespace Lilja.Repository.Editor
                                     ItemCount = 0
                                 });
                             }
+
                             repoItem.ItemCount = count;
                         }
                     }
                     else
                     {
                         // Singleton repository
-                        var cacheField = repoType.GetField("cache",
-                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        var cacheField = repoType.GetField("cache", BindingFlags.NonPublic | BindingFlags.Instance);
                         if (cacheField != null)
                         {
                             var cache = cacheField.GetValue(repo);
@@ -572,6 +576,7 @@ namespace Lilja.Repository.Editor
                 {
                     json = json.Substring(0, 200) + "...";
                 }
+
                 return json;
             }
             catch
@@ -580,7 +585,7 @@ namespace Lilja.Repository.Editor
             }
         }
 
-        protected override bool CanMultiSelect(TreeViewItem item)
+        protected override bool CanMultiSelect(TreeViewItem<int> item)
         {
             return false;
         }
@@ -610,22 +615,23 @@ namespace Lilja.Repository.Editor
                             {
                                 displayName = displayName.Substring(0, displayName.Length - "Repository".Length);
                             }
-                            
+
                             // Make entire row clickable for expand/collapse
                             var toggleRect = rect;
                             var wasExpanded = IsExpanded(item.id);
-                            
+
                             // Check if clicked anywhere in the row
-                            if (Event.current.type == EventType.MouseDown && toggleRect.Contains(Event.current.mousePosition))
+                            if (Event.current.type == EventType.MouseDown &&
+                                toggleRect.Contains(Event.current.mousePosition))
                             {
                                 SetExpanded(item.id, !wasExpanded);
                                 Event.current.Use();
                             }
-                            
+
                             // Draw the foldout triangle
                             var foldoutRect = new Rect(rect.x, rect.y, 12, rect.height);
                             EditorGUI.Foldout(foldoutRect, wasExpanded, GUIContent.none, true);
-                            
+
                             // Draw the label after the foldout
                             var labelRect = new Rect(rect.x + 14, rect.y, rect.width - 14, rect.height);
                             var boldStyle = new GUIStyle(labelStyle) { fontStyle = FontStyle.Bold };
@@ -636,6 +642,7 @@ namespace Lilja.Repository.Editor
                             // Child items - just show the key
                             EditorGUI.LabelField(rect, item.Key, labelStyle);
                         }
+
                         break;
                     case 1:
                         EditorGUI.LabelField(rect, item.Type, labelStyle);
@@ -645,6 +652,7 @@ namespace Lilja.Repository.Editor
                         {
                             EditorGUI.LabelField(rect, item.ItemCount.ToString(), labelStyle);
                         }
+
                         break;
                     case 3:
                         EditorGUI.LabelField(rect, item.ValuePreview, labelStyle);

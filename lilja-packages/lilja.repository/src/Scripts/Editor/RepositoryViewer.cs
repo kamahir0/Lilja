@@ -1,54 +1,46 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Lilja.Repository.Diagnostics;
-using MessagePack;
-using MessagePack.Resolvers;
-using MessagePack.Formatters;
 
 namespace Lilja.Repository.Editor
 {
     public class RepositoryViewer : EditorWindow
     {
-        const string EnableAutoReloadKey = "RepositoryViewer_EnableAutoReload";
-        const string RepositoryTypeKey = "RepositoryViewer_RepositoryType";
+        private const string EnableAutoReloadKey = "RepositoryViewer_EnableAutoReload";
+        private const string RepositoryTypeKey = "RepositoryViewer_RepositoryType";
 
-        static int interval;
-        static RepositoryViewer window;
+        private static int _interval;
+        private static RepositoryViewer _window;
 
         [MenuItem("Lilja/Repository/Repository Viewer")]
         public static void ShowWindow()
         {
-            if (window != null)
+            if (_window != null)
             {
-                window.Close();
+                _window.Close();
             }
 
             GetWindow<RepositoryViewer>("Repository Viewer").Show();
         }
 
-        static readonly GUILayoutOption[] EmptyLayoutOption = new GUILayoutOption[0];
+        private static readonly GUILayoutOption[] EmptyLayoutOption = new GUILayoutOption[0];
 
-        RepositoryTrackerTreeView treeView;
-        object splitterState;
-        RepositoryTracker.RepositoryType currentType;
-        bool enableAutoReload;
-        bool isDirty = true;
+        private RepositoryTrackerTreeView _treeView;
+        private object _splitterState;
+        private RepositoryTracker.RepositoryType _currentType;
+        private bool _enableAutoReload;
+        private bool _isDirty = true;
 
         void OnEnable()
         {
-            window = this;
-            splitterState =
-                SplitterGUILayout.CreateSplitterState(new float[] { 70f, 30f }, new int[] { 100, 100 }, null);
+            _window = this;
+            _splitterState = SplitterGUILayout.CreateSplitterState(new[] { 70f, 30f }, new[] { 100, 100 }, null);
 
-            currentType = (RepositoryTracker.RepositoryType)EditorPrefs.GetInt(RepositoryTypeKey, 0);
-            enableAutoReload = EditorPrefs.GetBool(EnableAutoReloadKey, false);
+            _currentType = (RepositoryTracker.RepositoryType)EditorPrefs.GetInt(RepositoryTypeKey, 0);
+            _enableAutoReload = EditorPrefs.GetBool(EnableAutoReloadKey, false);
 
-            treeView = new RepositoryTrackerTreeView(currentType);
+            _treeView = new RepositoryTrackerTreeView(_currentType);
         }
 
         void OnGUI()
@@ -56,12 +48,12 @@ namespace Lilja.Repository.Editor
             RenderToolbar();
 
             // Status message
-            if (!Application.isPlaying && currentType == RepositoryTracker.RepositoryType.InMemory)
+            if (!Application.isPlaying && _currentType == RepositoryTracker.RepositoryType.InMemory)
             {
                 EditorGUILayout.HelpBox("InMemory repositories are only available in Play Mode.", MessageType.Info);
             }
 
-            SplitterGUILayout.BeginVerticalSplit(this.splitterState, EmptyLayoutOption);
+            SplitterGUILayout.BeginVerticalSplit(this._splitterState, EmptyLayoutOption);
             {
                 RenderTable();
                 RenderDetailsPanel();
@@ -72,13 +64,13 @@ namespace Lilja.Repository.Editor
         #region Toolbar
 
         static readonly GUIContent EnableAutoReloadContent =
-            EditorGUIUtility.TrTextContent("Auto Reload", "Reload automatically every 2 seconds.", (Texture)null);
+            EditorGUIUtility.TrTextContent("Auto Reload", "Reload automatically every 2 seconds.");
 
         static readonly GUIContent ReloadContent =
-            EditorGUIUtility.TrTextContent("Reload", "Reload repositories now.", (Texture)null);
+            EditorGUIUtility.TrTextContent("Reload", "Reload repositories now.");
 
         static readonly GUIContent RepositoryTypeContent =
-            EditorGUIUtility.TrTextContent("Repository Type", "Select repository storage type.", (Texture)null);
+            EditorGUIUtility.TrTextContent("Repository Type", "Select repository storage type.");
 
         void RenderToolbar()
         {
@@ -86,31 +78,31 @@ namespace Lilja.Repository.Editor
 
             // Repository Type Dropdown
             var newType = (RepositoryTracker.RepositoryType)EditorGUILayout.EnumPopup(
-                currentType,
+                _currentType,
                 EditorStyles.toolbarDropDown,
                 GUILayout.Width(120)
             );
 
-            if (newType != currentType)
+            if (newType != _currentType)
             {
-                currentType = newType;
-                EditorPrefs.SetInt(RepositoryTypeKey, (int)currentType);
-                treeView.SetRepositoryType(currentType);
-                isDirty = true;
+                _currentType = newType;
+                EditorPrefs.SetInt(RepositoryTypeKey, (int)_currentType);
+                _treeView.SetRepositoryType(_currentType);
+                _isDirty = true;
             }
 
             // Auto Reload Toggle
             var newAutoReload = GUILayout.Toggle(
-                enableAutoReload,
+                _enableAutoReload,
                 EnableAutoReloadContent,
                 EditorStyles.toolbarButton,
                 EmptyLayoutOption
             );
 
-            if (newAutoReload != enableAutoReload)
+            if (newAutoReload != _enableAutoReload)
             {
-                enableAutoReload = newAutoReload;
-                EditorPrefs.SetBool(EnableAutoReloadKey, enableAutoReload);
+                _enableAutoReload = newAutoReload;
+                EditorPrefs.SetBool(EnableAutoReloadKey, _enableAutoReload);
             }
 
             GUILayout.FlexibleSpace();
@@ -118,15 +110,15 @@ namespace Lilja.Repository.Editor
             // Reload Button
             if (GUILayout.Button(ReloadContent, EditorStyles.toolbarButton, EmptyLayoutOption))
             {
-                isDirty = true;
+                _isDirty = true;
             }
 
             // Item Count
-            var itemCount = treeView?.CurrentBindingItems?.Count ?? 0;
+            var itemCount = _treeView?.CurrentBindingItems?.Count ?? 0;
             var totalItems = 0;
-            if (treeView?.CurrentBindingItems != null)
+            if (_treeView?.CurrentBindingItems != null)
             {
-                foreach (var item in treeView.CurrentBindingItems)
+                foreach (var item in _treeView.CurrentBindingItems)
                 {
                     if (item is RepositoryTrackerViewItem repoItem && repoItem.IsRepository)
                     {
@@ -144,33 +136,30 @@ namespace Lilja.Repository.Editor
 
         #region Table
 
-        Vector2 tableScroll;
-        GUIStyle tableListStyle;
+        private Vector2 _tableScroll;
+        private GUIStyle _tableListStyle;
 
         void RenderTable()
         {
-            if (tableListStyle == null)
+            if (_tableListStyle == null)
             {
-                tableListStyle = new GUIStyle("CN Box");
-                tableListStyle.margin.top = 0;
-                tableListStyle.padding.left = 3;
+                _tableListStyle = new GUIStyle("CN Box");
+                _tableListStyle.margin.top = 0;
+                _tableListStyle.padding.left = 3;
             }
 
-            EditorGUILayout.BeginVertical(tableListStyle, EmptyLayoutOption);
+            EditorGUILayout.BeginVertical(_tableListStyle, EmptyLayoutOption);
 
-            this.tableScroll = EditorGUILayout.BeginScrollView(this.tableScroll, new GUILayoutOption[]
-            {
+            this._tableScroll = EditorGUILayout.BeginScrollView(
+                _tableScroll,
                 GUILayout.ExpandWidth(true),
-                GUILayout.MaxWidth(2000f)
-            });
+                GUILayout.MaxWidth(2000f));
 
-            var controlRect = EditorGUILayout.GetControlRect(new GUILayoutOption[]
-            {
+            var controlRect = EditorGUILayout.GetControlRect(
                 GUILayout.ExpandHeight(true),
-                GUILayout.ExpandWidth(true)
-            });
+                GUILayout.ExpandWidth(true));
 
-            treeView?.OnGUI(controlRect);
+            _treeView?.OnGUI(controlRect);
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
@@ -178,18 +167,18 @@ namespace Lilja.Repository.Editor
 
         void Update()
         {
-            if (enableAutoReload && Application.isPlaying)
+            if (_enableAutoReload && Application.isPlaying)
             {
-                if (interval++ % 120 == 0) // Every 2 seconds at 60fps
+                if (_interval++ % 120 == 0) // Every 2 seconds at 60fps
                 {
-                    isDirty = true;
+                    _isDirty = true;
                 }
             }
 
-            if (isDirty)
+            if (_isDirty)
             {
-                isDirty = false;
-                treeView.ReloadAndSort();
+                _isDirty = false;
+                _treeView.ReloadAndSort();
                 Repaint();
             }
         }
@@ -198,46 +187,46 @@ namespace Lilja.Repository.Editor
 
         #region Details Panel
 
-        static GUIStyle detailsStyle;
-        static GUIStyle detailsHeaderStyle;
-        Vector2 detailsScroll;
+        private static GUIStyle _detailsStyle;
+        private static GUIStyle _detailsHeaderStyle;
+        private Vector2 _detailsScroll;
 
         void RenderDetailsPanel()
         {
-            if (detailsStyle == null)
+            if (_detailsStyle == null)
             {
-                detailsStyle = new GUIStyle("CN Message");
-                detailsStyle.wordWrap = true;
-                detailsStyle.stretchHeight = true;
-                detailsStyle.margin.right = 15;
-                detailsStyle.padding = new RectOffset(10, 10, 10, 10);
+                _detailsStyle = new GUIStyle("CN Message");
+                _detailsStyle.wordWrap = true;
+                _detailsStyle.stretchHeight = true;
+                _detailsStyle.margin.right = 15;
+                _detailsStyle.padding = new RectOffset(10, 10, 10, 10);
             }
 
-            if (detailsHeaderStyle == null)
+            if (_detailsHeaderStyle == null)
             {
-                detailsHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
-                detailsHeaderStyle.padding = new RectOffset(10, 10, 5, 5);
+                _detailsHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+                _detailsHeaderStyle.padding = new RectOffset(10, 10, 5, 5);
             }
 
             EditorGUILayout.BeginVertical(EmptyLayoutOption);
 
             string headerText = "Details";
             string detailsText = "Select an item to view details.";
-            object selectedValue = null;
+            object selectedValue;
 
-            var selected = treeView.state.selectedIDs;
+            var selected = _treeView.state.selectedIDs;
             if (selected.Count > 0)
             {
                 var first = selected[0];
                 var item =
-                    treeView.CurrentBindingItems?.FirstOrDefault(x => x.id == first) as RepositoryTrackerViewItem;
+                    _treeView.CurrentBindingItems?.FirstOrDefault(x => x.id == first) as RepositoryTrackerViewItem;
                 if (item != null)
                 {
                     if (item.IsRepository)
                     {
                         headerText = $"{item.RepositoryName} - {item.ItemCount} items";
                         detailsText =
-                            $"Repository Type: {item.Type}\nStorage Type: {currentType}\n\nSelect a child item to view its data.";
+                            $"Repository Type: {item.Type}\nStorage Type: {_currentType}\n\nSelect a child item to view its data.";
                     }
                     else
                     {
@@ -264,19 +253,20 @@ namespace Lilja.Repository.Editor
             }
 
             // Header
-            EditorGUILayout.LabelField(headerText, detailsHeaderStyle);
+            EditorGUILayout.LabelField(headerText, _detailsHeaderStyle);
 
             // Scrollable details
-            detailsScroll = EditorGUILayout.BeginScrollView(this.detailsScroll, EmptyLayoutOption);
+            _detailsScroll = EditorGUILayout.BeginScrollView(this._detailsScroll, EmptyLayoutOption);
 
-            var vector = detailsStyle.CalcSize(new GUIContent(detailsText));
-            EditorGUILayout.SelectableLabel(detailsText, detailsStyle, new GUILayoutOption[]
-            {
+            var vector = _detailsStyle.CalcSize(new GUIContent(detailsText));
+            EditorGUILayout.SelectableLabel(
+                detailsText,
+                _detailsStyle,
                 GUILayout.ExpandHeight(true),
                 GUILayout.ExpandWidth(true),
                 GUILayout.MinWidth(vector.x),
                 GUILayout.MinHeight(vector.y)
-            });
+            );
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
