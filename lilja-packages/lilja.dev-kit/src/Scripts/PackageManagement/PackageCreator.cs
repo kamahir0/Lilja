@@ -44,8 +44,8 @@ namespace Lilja.DevKit.PackageManagement
                 ? parameters.PackageNameOverride
                 : GeneratePackageName(parameters.OrganizationName, parameters.PackageBaseName);
 
-            // ディレクトリ名: lilja.package-name (kebab-case)
-            string directoryName = $"lilja.{kebabName}";
+            // ディレクトリ名: lilja.package-name (kebab-case) または Overrideに基づく
+            string directoryName = GetDirectoryName(parameters.PackageBaseName, parameters.PackageNameOverride);
 
             // 出力先パス (パッケージルート)
             string packageRoot = Path.Combine(parameters.LiljaPackagesDirectory, directoryName);
@@ -107,6 +107,27 @@ namespace Lilja.DevKit.PackageManagement
         {
             string kebabName = ConvertToKebabCase(packageBaseName);
             return $"com.{organizationName}.lilja.{kebabName}";
+        }
+
+        /// <summary>
+        /// ディレクトリ名を生成
+        /// </summary>
+        public static string GetDirectoryName(string packageBaseName, string packageNameOverride)
+        {
+            string suffix;
+            if (!string.IsNullOrEmpty(packageNameOverride))
+            {
+                // Overrideがある場合は末尾のセグメントを使用
+                var parts = packageNameOverride.Split('.');
+                suffix = parts.Length > 0 ? parts[parts.Length - 1] : packageNameOverride;
+            }
+            else
+            {
+                // Overrideがない場合はkebab-case
+                suffix = ConvertToKebabCase(packageBaseName);
+            }
+
+            return $"lilja.{suffix}";
         }
 
         #region Private Methods

@@ -311,8 +311,13 @@ namespace Lilja.DevKit.PackageManagement
             };
 
             // 出力先パス計算
-            string kebabName = PackageCreator.ConvertToKebabCase(_settings.packageBaseName);
-            string directoryName = $"lilja.{kebabName}";
+            // PackageBaseName ベースでディレクトリ名を決めていたが、PackageNameOverrideがある場合どうするか？
+            // 命名規則によると「lilja.{package-name}」。
+            // PackageNameが "com.org.lilja.foo-bar" なら "lilja.foo-bar"。
+
+            // PackageCreator側のGetDirectoryNameを使用するように変更
+            string directoryName =
+                PackageCreator.GetDirectoryName(_settings.packageBaseName, _settings.packageNameOverride);
             string targetPath = Path.Combine(_settings.liljaPackagesDirectory, directoryName);
 
             // ディレクトリ存在チェック
