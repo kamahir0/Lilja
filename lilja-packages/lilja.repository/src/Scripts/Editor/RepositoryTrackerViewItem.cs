@@ -618,7 +618,9 @@ namespace Lilja.Repository.Editor
                         else
                         {
                             // Child items - just show the key
-                            EditorGUI.LabelField(rect, item.Key, labelStyle);
+                            var indentRect = rect;
+                            indentRect.xMin += 15f;
+                            EditorGUI.LabelField(indentRect, item.Key, labelStyle);
                         }
 
                         break;
