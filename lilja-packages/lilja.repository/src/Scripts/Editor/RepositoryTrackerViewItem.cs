@@ -30,8 +30,6 @@ namespace Lilja.Repository.Editor
 
     public class RepositoryTrackerTreeView : TreeView<int>
     {
-        const string sortedColumnIndexStateKey = "RepositoryTrackerTreeView_sortedColumnIndex";
-
         public IReadOnlyList<TreeViewItem<int>> CurrentBindingItems;
         private RepositoryTracker.RepositoryType _currentType;
 
@@ -43,14 +41,16 @@ namespace Lilja.Repository.Editor
                     headerContent = new GUIContent("Entity/Key"),
                     width = 250,
                     minWidth = 100,
-                    autoResize = true
+                    autoResize = true,
+                    canSort = false
                 },
                 new MultiColumnHeaderState.Column()
                 {
                     headerContent = new GUIContent("Value Preview"),
                     width = 400,
                     minWidth = 100,
-                    autoResize = true
+                    autoResize = true,
+                    canSort = false
                 },
             })), type)
         {
@@ -68,12 +68,8 @@ namespace Lilja.Repository.Editor
             // Enable foldout functionality
             useScrollView = true;
 
-            header.sortingChanged += Header_sortingChanged;
-
             header.ResizeToFit();
             Reload();
-
-            header.sortedColumnIndex = SessionState.GetInt(sortedColumnIndexStateKey, 0);
         }
 
         public void SetRepositoryType(RepositoryTracker.RepositoryType type)
@@ -85,38 +81,7 @@ namespace Lilja.Repository.Editor
         {
             var currentSelected = this.state.selectedIDs;
             Reload();
-            Header_sortingChanged(this.multiColumnHeader);
             this.state.selectedIDs = currentSelected;
-        }
-
-        private void Header_sortingChanged(MultiColumnHeader mch)
-        {
-            SessionState.SetInt(sortedColumnIndexStateKey, mch.sortedColumnIndex);
-            var index = mch.sortedColumnIndex;
-            var ascending = mch.IsSortedAscending(mch.sortedColumnIndex);
-
-            var items = rootItem.children.Cast<RepositoryTrackerViewItem>();
-
-            IOrderedEnumerable<RepositoryTrackerViewItem> orderedEnumerable;
-            switch (index)
-            {
-                case 0:
-                    orderedEnumerable = ascending
-                        ? items.OrderBy(item => item.IsRepository).ThenBy(item => item.RepositoryName ?? item.Key)
-                        : items.OrderByDescending(item => item.IsRepository)
-                            .ThenByDescending(item => item.RepositoryName ?? item.Key);
-                    break;
-                case 1:
-                    orderedEnumerable = ascending
-                        ? items.OrderBy(item => item.ValuePreview)
-                        : items.OrderByDescending(item => item.ValuePreview);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(index), index, null);
-            }
-
-            CurrentBindingItems = rootItem.children = orderedEnumerable.Cast<TreeViewItem<int>>().ToList();
-            BuildRows(rootItem);
         }
 
         protected override TreeViewItem<int> BuildRoot()
