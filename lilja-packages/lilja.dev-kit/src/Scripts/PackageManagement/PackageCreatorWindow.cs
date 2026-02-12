@@ -42,6 +42,8 @@ namespace Lilja.DevKit.PackageManagement
             // Local Settings (EditorPrefs管理対象 - Git管理外)
             public string liljaPackagesDirectory = string.Empty;
             public string packageBaseName = "NewPackage";
+            public string displayNameOverride = string.Empty;
+            public string packageNameOverride = string.Empty;
 
             // Author情報（任意）
             public string authorName = string.Empty;
@@ -195,15 +197,55 @@ namespace Lilja.DevKit.PackageManagement
                 SaveSettings();
             }
 
-            // 自動生成される名前のプレビュー（編集不可）
-            string displayName = PackageCreator.GenerateDisplayName(_settings.packageBaseName);
-            string packageName =
+            // 自動生成される名前
+            string autoDisplayName = PackageCreator.GenerateDisplayName(_settings.packageBaseName);
+            string autoPackageName =
                 PackageCreator.GeneratePackageName(_settings.organizationName, _settings.packageBaseName);
 
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.TextField("DisplayName (Auto)", displayName);
-            EditorGUILayout.TextField("Package Name (Auto)", packageName);
-            EditorGUI.EndDisabledGroup();
+            // DisplayName (Override可能)
+            DrawOverrideTextField("DisplayName", autoDisplayName, ref _settings.displayNameOverride);
+
+            // PackageName (Override可能)
+            DrawOverrideTextField("Package Name", autoPackageName, ref _settings.packageNameOverride);
+        }
+
+        private void DrawOverrideTextField(string label, string autoValue, ref string overrideValue)
+        {
+            bool isOverridden = !string.IsNullOrEmpty(overrideValue);
+            string displayValue = isOverridden ? overrideValue : autoValue;
+
+            Color originalColor = GUI.color;
+            if (!isOverridden)
+            {
+                // Auto値表示時は少し透過させてDisabledっぽく見せる
+                GUI.color = new Color(1f, 1f, 1f, 0.7f);
+            }
+
+            string newValue = EditorGUILayout.TextField(label, displayValue);
+
+            GUI.color = originalColor;
+
+            if (newValue != displayValue)
+            {
+                // 変更があった場合
+                if (string.IsNullOrEmpty(newValue))
+                {
+                    // 空にされた -> Autoに戻す
+                    overrideValue = string.Empty;
+                }
+                else if (newValue == autoValue)
+                {
+                    // Auto値と同じ -> Override不要
+                    overrideValue = string.Empty;
+                }
+                else
+                {
+                    // 変更あり -> Override設定
+                    overrideValue = newValue;
+                }
+
+                SaveSettings();
+            }
         }
 
         private void DrawAuthorField()
@@ -263,7 +305,9 @@ namespace Lilja.DevKit.PackageManagement
                 AuthorName = _settings.authorName,
                 AuthorUrl = _settings.authorUrl,
                 AuthorEmail = _settings.authorEmail,
-                UseAnalyzer = _settings.useAnalyzer
+                UseAnalyzer = _settings.useAnalyzer,
+                DisplayNameOverride = _settings.displayNameOverride,
+                PackageNameOverride = _settings.packageNameOverride
             };
 
             // 出力先パス計算
@@ -337,6 +381,8 @@ namespace Lilja.DevKit.PackageManagement
             _settings.authorEmail = EditorPrefs.GetString(KeyAuthorEmail, "");
             _settings.withImport = EditorPrefs.GetBool(KeyWithImport, true);
             _settings.useAnalyzer = EditorPrefs.GetBool(KeyUseAnalyzer, false);
+            _settings.displayNameOverride = EditorPrefs.GetString(KeyPrefix + "DisplayNameOverride", "");
+            _settings.packageNameOverride = EditorPrefs.GetString(KeyPrefix + "PackageNameOverride", "");
         }
 
         private void SaveSettings()
@@ -369,6 +415,8 @@ namespace Lilja.DevKit.PackageManagement
             EditorPrefs.SetString(KeyAuthorEmail, _settings.authorEmail);
             EditorPrefs.SetBool(KeyWithImport, _settings.withImport);
             EditorPrefs.SetBool(KeyUseAnalyzer, _settings.useAnalyzer);
+            EditorPrefs.SetString(KeyPrefix + "DisplayNameOverride", _settings.displayNameOverride);
+            EditorPrefs.SetString(KeyPrefix + "PackageNameOverride", _settings.packageNameOverride);
         }
 
         #endregion

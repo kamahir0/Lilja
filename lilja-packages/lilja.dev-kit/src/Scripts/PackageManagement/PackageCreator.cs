@@ -33,9 +33,16 @@ namespace Lilja.DevKit.PackageManagement
             }
 
             // 命名規則に従って各名前を生成
-            string displayName = $"Lilja.{parameters.PackageBaseName}";
+            // 命名規則に従って各名前を生成
+            string displayName = !string.IsNullOrEmpty(parameters.DisplayNameOverride)
+                ? parameters.DisplayNameOverride
+                : GenerateDisplayName(parameters.PackageBaseName);
+
             string kebabName = ConvertToKebabCase(parameters.PackageBaseName);
-            string packageName = $"com.{parameters.OrganizationName}.lilja.{kebabName}";
+
+            string packageName = !string.IsNullOrEmpty(parameters.PackageNameOverride)
+                ? parameters.PackageNameOverride
+                : GeneratePackageName(parameters.OrganizationName, parameters.PackageBaseName);
 
             // ディレクトリ名: lilja.package-name (kebab-case)
             string directoryName = $"lilja.{kebabName}";

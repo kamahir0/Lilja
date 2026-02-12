@@ -44,5 +44,15 @@ namespace Lilja.DevKit.PackageManagement
         /// Roslyn Analyzer ソリューションを作成するかどうか
         /// </summary>
         public bool UseAnalyzer { get; set; } = false;
+
+        /// <summary>
+        /// DisplayNameの上書き（任意）
+        /// </summary>
+        public string DisplayNameOverride { get; set; } = string.Empty;
+
+        /// <summary>
+        /// PackageNameの上書き（任意）
+        /// </summary>
+        public string PackageNameOverride { get; set; } = string.Empty;
     }
 }
