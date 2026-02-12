@@ -1,465 +1,284 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Lilja.Repository.Diagnostics;
-using MessagePack;
-using MessagePack.Resolvers;
-using MessagePack.Formatters;
 
 namespace Lilja.Repository.Editor
 {
     public class RepositoryViewer : EditorWindow
     {
+        private const string EnableAutoReloadKey = "RepositoryViewer_EnableAutoReload";
+        private const string RepositoryTypeKey = "RepositoryViewer_RepositoryType";
+
+        private static int _interval;
+        private static RepositoryViewer _window;
+
         [MenuItem("Lilja/Repository/Repository Viewer")]
         public static void ShowWindow()
         {
-            var wnd = GetWindow<RepositoryViewer>();
-            wnd.titleContent = new GUIContent("Repository Viewer");
+            if (_window != null)
+            {
+                _window.Close();
+            }
+
+            GetWindow<RepositoryViewer>("Repository Viewer").Show();
         }
 
-        private RepositoryTracker.RepositoryType _currentType = RepositoryTracker.RepositoryType.InMemory;
-        private MultiColumnTreeView _treeView;
-        private List<TreeViewItemData<object>> _treeData;
-        private bool _autoReload;
+        private static readonly GUILayoutOption[] EmptyLayoutOption = new GUILayoutOption[0];
 
-        // Visual Elements
-        private ToolbarMenu _typeMenu;
-        private Label _statusLabel;
+        private RepositoryTrackerTreeView _treeView;
+        private object _splitterState;
+        private RepositoryTracker.RepositoryType _currentType;
+        private bool _enableAutoReload;
+        private bool _isDirty = true;
 
-        public void CreateGUI()
+        void OnEnable()
         {
-            var root = rootVisualElement;
+            _window = this;
+            _splitterState = SplitterGUILayout.CreateSplitterState(new[] { 70f, 30f }, new[] { 100, 100 }, null);
 
-            // Load USS
-            var styleSheet =
-                AssetDatabase.LoadAssetAtPath<StyleSheet>(
-                    "Packages/com.kamahir0.lilja.repository/Scripts/Editor/RepositoryViewer.uss");
-            if (styleSheet != null)
-            {
-                root.styleSheets.Add(styleSheet);
-            }
+            _currentType = (RepositoryTracker.RepositoryType)EditorPrefs.GetInt(RepositoryTypeKey, 0);
+            _enableAutoReload = EditorPrefs.GetBool(EnableAutoReloadKey, false);
 
-            // Toolbar
-            var toolbar = new Toolbar();
-            toolbar.AddToClassList("toolbar");
-
-            _typeMenu = new ToolbarMenu();
-            _typeMenu.text = _currentType.ToString();
-            foreach (RepositoryTracker.RepositoryType type in Enum.GetValues(typeof(RepositoryTracker.RepositoryType)))
-            {
-                _typeMenu.menu.AppendAction(type.ToString(), a =>
-                {
-                    _currentType =
-                        (RepositoryTracker.RepositoryType)Enum.Parse(typeof(RepositoryTracker.RepositoryType), a.name);
-                    _typeMenu.text = _currentType.ToString();
-                    Reload();
-                });
-            }
-
-            toolbar.Add(_typeMenu);
-
-            var reloadBtn = new ToolbarButton(Reload) { text = "Reload" };
-            toolbar.Add(reloadBtn);
-
-            var autoReloadToggle = new ToolbarToggle { text = "Auto Reload" };
-            autoReloadToggle.RegisterValueChangedCallback(evt => _autoReload = evt.newValue);
-            toolbar.Add(autoReloadToggle);
-
-            root.Add(toolbar);
-
-            // Status Label
-            _statusLabel = new Label();
-            _statusLabel.AddToClassList("status-label");
-            root.Add(_statusLabel);
-
-            // TreeView
-            _treeView = new MultiColumnTreeView();
-            _treeView.AddToClassList("tree-view");
-
-            var nameColumn = new Column { title = "Name/Key", width = 200 };
-            nameColumn.makeCell = () => new Label();
-            nameColumn.bindCell = (e, i) => (e as Label).text = GetName(GetItem(i));
-
-            var valueColumn = new Column { title = "Value", width = 400 };
-            valueColumn.makeCell = () => new Label();
-            valueColumn.bindCell = (e, i) => (e as Label).text = GetValue(GetItem(i));
-
-            _treeView.columns.Add(nameColumn);
-            _treeView.columns.Add(valueColumn);
-
-            _treeView.SetRootItems(new List<TreeViewItemData<object>>());
-            root.Add(_treeView);
-
-            Reload();
+            _treeView = new RepositoryTrackerTreeView(_currentType);
         }
 
-        private void Update()
+        void OnGUI()
         {
-            if (_autoReload && Application.isPlaying)
+            RenderToolbar();
+
+            // Status message
+            if (!Application.isPlaying && _currentType == RepositoryTracker.RepositoryType.InMemory)
             {
-                // Simple throttling or check could be added here
-                if (Time.frameCount % 60 == 0)
-                {
-                    Reload();
-                }
+                EditorGUILayout.HelpBox("InMemory repositories are only available in Play Mode.", MessageType.Info);
             }
+
+            SplitterGUILayout.BeginVerticalSplit(this._splitterState, EmptyLayoutOption);
+            {
+                RenderTable();
+                RenderDetailsPanel();
+            }
+            SplitterGUILayout.EndVerticalSplit();
         }
 
-        private void Reload()
+        #region Toolbar
+
+        static readonly GUIContent EnableAutoReloadContent =
+            EditorGUIUtility.TrTextContent("Auto Reload", "Reload automatically every 2 seconds.");
+
+        static readonly GUIContent ReloadContent =
+            EditorGUIUtility.TrTextContent("Reload", "Reload repositories now.");
+
+        static readonly GUIContent RepositoryTypeContent =
+            EditorGUIUtility.TrTextContent("Repository Type", "Select repository storage type.");
+
+        void RenderToolbar()
         {
-            _treeData = new List<TreeViewItemData<object>>();
-            _statusLabel.text = "";
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, EmptyLayoutOption);
 
-            if (Application.isPlaying)
+            // Repository Type Dropdown
+            var newType = (RepositoryTracker.RepositoryType)EditorGUILayout.EnumPopup(
+                _currentType,
+                EditorStyles.toolbarDropDown,
+                GUILayout.Width(120)
+            );
+
+            if (newType != _currentType)
             {
-                LoadFromTracker();
-            }
-            else
-            {
-                if (_currentType == RepositoryTracker.RepositoryType.InMemory)
-                {
-                    _statusLabel.text = "InMemory repositories are only available in Play Mode.";
-                }
-                else
-                {
-                    LoadFromFiles();
-                }
+                _currentType = newType;
+                EditorPrefs.SetInt(RepositoryTypeKey, (int)_currentType);
+                _treeView.SetRepositoryType(_currentType);
+                _isDirty = true;
             }
 
-            _treeView.SetRootItems(_treeData);
-            _treeView.Rebuild();
-        }
+            // Auto Reload Toggle
+            var newAutoReload = GUILayout.Toggle(
+                _enableAutoReload,
+                EnableAutoReloadContent,
+                EditorStyles.toolbarButton,
+                EmptyLayoutOption
+            );
 
-        private void LoadFromTracker()
-        {
-            var repositories = RepositoryTracker.GetAll(_currentType).ToList();
-            var id = 0;
-
-            foreach (var repo in repositories)
+            if (newAutoReload != _enableAutoReload)
             {
-                var repoType = repo.GetType();
-                var children = new List<TreeViewItemData<object>>();
+                _enableAutoReload = newAutoReload;
+                EditorPrefs.SetBool(EnableAutoReloadKey, _enableAutoReload);
+            }
 
-                try
+            GUILayout.FlexibleSpace();
+
+            // Reload Button
+            if (GUILayout.Button(ReloadContent, EditorStyles.toolbarButton, EmptyLayoutOption))
+            {
+                _isDirty = true;
+            }
+
+            // Item Count
+            var itemCount = _treeView?.CurrentBindingItems?.Count ?? 0;
+            var totalItems = 0;
+            if (_treeView?.CurrentBindingItems != null)
+            {
+                foreach (var item in _treeView.CurrentBindingItems)
                 {
-                    // All メソッドをリフレクションで探す
-                    var allMethod = repoType.GetMethod("All");
-                    if (allMethod != null)
+                    if (item is RepositoryTrackerViewItem repoItem && repoItem.IsRepository)
                     {
-                        LoadFromAllMethod(repo, allMethod, children, ref id);
+                        totalItems += repoItem.ItemCount;
+                    }
+                }
+            }
+
+            GUILayout.Label($"Repositories: {itemCount} | Items: {totalItems}", EditorStyles.toolbarButton);
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        #endregion
+
+        #region Table
+
+        private Vector2 _tableScroll;
+        private GUIStyle _tableListStyle;
+
+        void RenderTable()
+        {
+            if (_tableListStyle == null)
+            {
+                _tableListStyle = new GUIStyle("CN Box");
+                _tableListStyle.margin.top = 0;
+                _tableListStyle.padding.left = 3;
+            }
+
+            EditorGUILayout.BeginVertical(_tableListStyle, EmptyLayoutOption);
+
+            this._tableScroll = EditorGUILayout.BeginScrollView(
+                _tableScroll,
+                GUILayout.ExpandWidth(true),
+                GUILayout.MaxWidth(2000f));
+
+            var controlRect = EditorGUILayout.GetControlRect(
+                GUILayout.ExpandHeight(true),
+                GUILayout.ExpandWidth(true));
+
+            _treeView?.OnGUI(controlRect);
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
+        void Update()
+        {
+            if (_enableAutoReload && Application.isPlaying)
+            {
+                if (_interval++ % 120 == 0) // Every 2 seconds at 60fps
+                {
+                    _isDirty = true;
+                }
+            }
+
+            if (_isDirty)
+            {
+                _isDirty = false;
+                _treeView.ReloadAndSort();
+                Repaint();
+            }
+        }
+
+        #endregion
+
+        #region Details Panel
+
+        private static GUIStyle _detailsStyle;
+        private static GUIStyle _detailsHeaderStyle;
+        private Vector2 _detailsScroll;
+
+        void RenderDetailsPanel()
+        {
+            if (_detailsStyle == null)
+            {
+                _detailsStyle = new GUIStyle("CN Message");
+                _detailsStyle.wordWrap = true;
+                _detailsStyle.stretchHeight = true;
+                _detailsStyle.margin.right = 15;
+                _detailsStyle.padding = new RectOffset(10, 10, 10, 10);
+            }
+
+            if (_detailsHeaderStyle == null)
+            {
+                _detailsHeaderStyle = new GUIStyle(EditorStyles.boldLabel);
+                _detailsHeaderStyle.padding = new RectOffset(10, 10, 5, 5);
+            }
+
+            EditorGUILayout.BeginVertical(EmptyLayoutOption);
+
+            string headerText = "Details";
+            string detailsText = "Select an item to view details.";
+            object selectedValue;
+
+            var selected = _treeView.state.selectedIDs;
+            if (selected.Count > 0)
+            {
+                var first = selected[0];
+                var item =
+                    _treeView.CurrentBindingItems?.FirstOrDefault(x => x.id == first) as RepositoryTrackerViewItem;
+                if (item != null)
+                {
+                    if (item.IsRepository)
+                    {
+                        headerText = $"{item.RepositoryName} - {item.ItemCount} items";
+                        detailsText =
+                            $"Repository Type: {item.Type}\nStorage Type: {_currentType}\n\nSelect a child item to view its data.";
                     }
                     else
                     {
-                        // All メソッドが無い場合（Singleton等）: フィールドからフォールバック取得
-                        LoadFromFields(repo, repoType, children, ref id);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"Failed to read repository {repoType.Name}: {e.Message}");
-                }
+                        headerText = $"{item.Key} ({item.Type})";
+                        selectedValue = item.FullValue;
 
-                _treeData.Add(new TreeViewItemData<object>(++id,
-                    new DataItem { Key = repoType.Name, Value = $"Items: {children.Count}" }, children));
-            }
-        }
-
-        /// <summary>
-        /// All メソッドを呼び出して全エンティティを取得する。
-        /// </summary>
-        private void LoadFromAllMethod(object repo, MethodInfo allMethod,
-            List<TreeViewItemData<object>> children, ref int id)
-        {
-            var result = allMethod.Invoke(repo, new object[] { null });
-            if (result is not System.Collections.IEnumerable enumerable)
-            {
-                return;
-            }
-
-            // エンティティ型からGetKey/ToDtoメソッドを取得
-            var entityType = allMethod.ReturnType.GetGenericArguments()[0];
-            var getKeyMethod = entityType.GetMethod("GetKey",
-                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            var toDtoMethod = entityType.GetMethod("ToDto",
-                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-
-            foreach (var entity in enumerable)
-            {
-                var keyStr = getKeyMethod != null
-                    ? getKeyMethod.Invoke(null, new[] { entity })?.ToString() ?? "?"
-                    : "?";
-
-                // ToDto が使えればDTO経由で表示、無ければエンティティ直接表示
-                object displayValue = toDtoMethod != null
-                    ? toDtoMethod.Invoke(null, new[] { entity })
-                    : entity;
-
-                children.Add(new TreeViewItemData<object>(++id,
-                    new DataItem { Key = keyStr, Value = displayValue }));
-            }
-        }
-
-        /// <summary>
-        /// フィールドへの直接アクセスによるフォールバック取得。
-        /// All メソッドが無い場合（Singleton Entity等）に使用する。
-        /// </summary>
-        private void LoadFromFields(object repo, Type repoType,
-            List<TreeViewItemData<object>> children, ref int id)
-        {
-            if (_currentType == RepositoryTracker.RepositoryType.InMemory)
-            {
-                var storageField = repoType.GetField("_storage",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (storageField != null)
-                {
-                    if (storageField.GetValue(repo) is System.Collections.IDictionary dict)
-                    {
-                        foreach (System.Collections.DictionaryEntry entry in dict)
+                        if (selectedValue != null)
                         {
-                            children.Add(new TreeViewItemData<object>(++id,
-                                new DataItem { Key = entry.Key.ToString(), Value = entry.Value }));
-                        }
-                    }
-                }
-                else
-                {
-                    var entityField = repoType.GetField("_entity",
-                        BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (entityField != null)
-                    {
-                        var val = entityField.GetValue(repo);
-                        if (val != null)
-                        {
-                            children.Add(new TreeViewItemData<object>(++id,
-                                new DataItem { Key = "Singleton", Value = val }));
-                        }
-                    }
-                }
-            }
-            else
-            {
-                var cacheField = repoType.GetField("_cache",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (cacheField != null)
-                {
-                    var cache = cacheField.GetValue(repo);
-                    if (cache is System.Collections.IDictionary dict)
-                    {
-                        foreach (System.Collections.DictionaryEntry entry in dict)
-                        {
-                            children.Add(new TreeViewItemData<object>(++id,
-                                new DataItem { Key = entry.Key.ToString(), Value = entry.Value }));
-                        }
-                    }
-                    else if (cache != null)
-                    {
-                        children.Add(new TreeViewItemData<object>(++id,
-                            new DataItem { Key = "Singleton", Value = cache }));
-                    }
-                }
-            }
-        }
-
-        private void LoadFromFiles()
-        {
-            var path = Application.persistentDataPath;
-            var pattern = _currentType == RepositoryTracker.RepositoryType.Json ? "*.json" : "*.msgpack";
-            var files = Directory.GetFiles(path, pattern);
-            var id = 0;
-
-            foreach (var file in files)
-            {
-                var fileName = Path.GetFileName(file);
-                var entityName = Path.GetFileNameWithoutExtension(file);
-                var dtoType = GetTypeByName(entityName + "Dto");
-
-                if (dtoType == null)
-                {
-                    // Fallback to raw text if DTO not found
-                    var rawContent = "Binary Data";
-                    if (_currentType == RepositoryTracker.RepositoryType.Json)
-                    {
-                        rawContent = File.ReadAllText(file);
-                        // Single line for display
-                        rawContent = rawContent.Replace("\r", "").Replace("\n", " ");
-                        if (rawContent.Length > 5000) rawContent = rawContent.Substring(0, 5000) + "...";
-                    }
-
-                    _treeData.Add(new TreeViewItemData<object>(++id,
-                        new DataItem { Key = fileName, Value = rawContent }));
-                    continue;
-                }
-
-                var children = new List<TreeViewItemData<object>>();
-
-                try
-                {
-                    if (_currentType == RepositoryTracker.RepositoryType.Json)
-                    {
-                        var json = File.ReadAllText(file);
-                        // Heuristic: Check if keyed (wrapped) or singleton
-                        if (json.Contains("\"Items\":"))
-                        {
-                            var wrapperType = typeof(JsonStorageWrapper<>).MakeGenericType(dtoType);
-                            var wrapper = JsonUtility.FromJson(json, wrapperType);
-                            var itemsField = wrapperType.GetField("Items");
-                            var items = itemsField.GetValue(wrapper) as System.Collections.IList;
-                            if (items != null)
+                            try
                             {
-                                int idx = 0;
-                                foreach (var item in items)
-                                {
-                                    children.Add(new TreeViewItemData<object>(++id,
-                                        new DataItem { Key = $"Item {idx++}", Value = item }));
-                                }
+                                detailsText = JsonUtility.ToJson(selectedValue, true);
+                            }
+                            catch
+                            {
+                                detailsText = selectedValue.ToString();
                             }
                         }
                         else
                         {
-                            var singleton = JsonUtility.FromJson(json, dtoType);
-                            children.Add(new TreeViewItemData<object>(++id,
-                                new DataItem { Key = "Singleton", Value = singleton }));
+                            detailsText = "null";
                         }
                     }
-                    else // MessagePack
-                    {
-                        var bytes = File.ReadAllBytes(file);
-                        var options = MessagePackSerializerOptions.Standard;
-
-                        // Try to find generated formatter
-                        var formatterType = GetTypeByName(entityName + "DtoFormatter");
-                        if (formatterType != null)
-                        {
-                            try
-                            {
-                                var formatter = Activator.CreateInstance(formatterType) as IMessagePackFormatter;
-                                if (formatter != null)
-                                {
-                                    var resolver = CompositeResolver.Create(new[] { formatter },
-                                        new[] { StandardResolver.Instance });
-                                    options = options.WithResolver(resolver);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.LogWarning($"Failed to create formatter {formatterType.Name}: {ex.Message}");
-                            }
-                        }
-
-                        try
-                        {
-                            // Try List (Keyed)
-                            var listType = typeof(List<>).MakeGenericType(dtoType);
-                            // Invoke helper: DeserializeMsgPack<List<Dto>>(bytes, options)
-                            var method = typeof(RepositoryViewer).GetMethod("DeserializeMsgPack",
-                                    BindingFlags.NonPublic | BindingFlags.Static)
-                                .MakeGenericMethod(listType);
-
-                            var list = method.Invoke(null, new object[] { bytes, options }) as System.Collections.IList;
-
-                            if (list != null)
-                            {
-                                int idx = 0;
-                                foreach (var item in list)
-                                {
-                                    children.Add(new TreeViewItemData<object>(++id,
-                                        new DataItem { Key = $"Item {idx++}", Value = item }));
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // Try Singleton
-                            try
-                            {
-                                var method = typeof(RepositoryViewer).GetMethod("DeserializeMsgPack",
-                                        BindingFlags.NonPublic | BindingFlags.Static)
-                                    .MakeGenericMethod(dtoType);
-
-                                var singleton = method.Invoke(null, new object[] { bytes, options });
-                                children.Add(new TreeViewItemData<object>(++id,
-                                    new DataItem { Key = "Singleton", Value = singleton }));
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.LogWarning(
-                                    $"Failed to deserialize MessagePack Singleton {fileName}: {ex.Message} Inner: {ex.InnerException?.Message}");
-                                throw;
-                            }
-                        }
-                    }
-
-                    _treeData.Add(new TreeViewItemData<object>(++id,
-                        new DataItem { Key = fileName, Value = $"Items: {children.Count}" }, children));
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"Failed to deserialize {fileName}: {e.Message}");
-                    _treeData.Add(new TreeViewItemData<object>(++id,
-                        new DataItem { Key = fileName, Value = $"Error: {e.Message}" }));
-                }
-            }
-        }
-
-        private object GetItem(int index)
-        {
-            return _treeView.GetItemDataForIndex<object>(index);
-        }
-
-        private string GetName(object item)
-        {
-            if (item is DataItem d) return d.Key;
-            return item?.ToString();
-        }
-
-        private string GetValue(object item)
-        {
-            if (item is DataItem d)
-            {
-                if (d.Value == null) return "null";
-                if (d.Value is string s) return s;
-                // Simple JSON serialization for preview
-                return JsonUtility.ToJson(d.Value);
-            }
-
-            return "";
-        }
-
-        [Serializable]
-        private class JsonStorageWrapper<T>
-        {
-            public List<T> Items = new List<T>();
-        }
-
-        private class DataItem
-        {
-            public string Key;
-            public object Value;
-        }
-
-        private static Type GetTypeByName(string typeName)
-        {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                foreach (var type in assembly.GetTypes())
-                {
-                    if (type.Name == typeName)
-                        return type;
                 }
             }
 
-            return null;
+            // Header
+            EditorGUILayout.LabelField(headerText, _detailsHeaderStyle);
+
+            // Scrollable details
+            _detailsScroll = EditorGUILayout.BeginScrollView(this._detailsScroll, EmptyLayoutOption);
+
+            var vector = _detailsStyle.CalcSize(new GUIContent(detailsText));
+            EditorGUILayout.SelectableLabel(
+                detailsText,
+                _detailsStyle,
+                GUILayout.ExpandHeight(true),
+                GUILayout.ExpandWidth(true),
+                GUILayout.MinWidth(vector.x),
+                GUILayout.MinHeight(vector.y)
+            );
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
         }
 
-        private static T DeserializeMsgPack<T>(byte[] bytes, MessagePackSerializerOptions options)
-        {
-            return MessagePackSerializer.Deserialize<T>(bytes, options);
-        }
+        #endregion
+
+        #region File Loading (for Edit Mode)
+
+        // This section can be expanded later to support file-based loading in Edit Mode
+        // similar to the original implementation's LoadFromFiles method
+
+        #endregion
     }
 }
