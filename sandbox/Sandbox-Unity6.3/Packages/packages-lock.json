@@ -28,6 +28,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.kamahir0.lilja.mcp": {
+      "version": "file:../../../lilja-packages/lilja.mcp/src",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.kamahir0.lilja.repository": {
       "version": "file:../../../lilja-packages/lilja.repository/src",
       "depth": 0,
