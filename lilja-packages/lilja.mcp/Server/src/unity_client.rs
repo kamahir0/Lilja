@@ -1,43 +1,83 @@
 // ---------------------------------------------------------------
-// unity_client.rs — Unity HTTPブリッジとの通信
+// unity_client.rs — Unity との通信 (ファイルベース)
 //
-// Unity側で起動している localhost:8080 のHTTPサーバーへ
-// コマンドをPOSTし、結果を受け取る。
+// HTTPの代わりに、特定のディレクトリにファイルを書き出し、
+// Unity側が書き出すレスポンスファイルを監視して結果を受け取る。
 // ---------------------------------------------------------------
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde_json::{json, Value};
+use std::path::PathBuf;
+use std::time::Duration;
+use tokio::fs;
 
-/// UnityブリッジサーバーのURL
-const UNITY_URL: &str = "http://localhost:8080/";
+/// 通信に使用するベースディレクトリ (プロジェクトルートからの相対パス)
+const COMM_DIR: &str = "mcp_comm";
 
-/// Unityにコマンドを送信し、レスポンスボディを返す
+/// Unityにコマンドを送信し、レスポンスをファイル経由で受け取る
 ///
 /// # 引数
-/// - `command` — 実行するコマンド名（例: "get_hierarchy"）
-/// - `args` — コマンドに渡す引数（JSON値、なければ None）
+/// - `command` — 実行するコマンド名
+/// - `args` — コマンドに渡す引数
 ///
 /// # 戻り値
-/// - Unity側の応答をそのまま `serde_json::Value` として返す
+/// - Unity側の応答を `serde_json::Value` として返す
 pub async fn send_command(command: &str, args: Option<Value>) -> Result<Value> {
-    // Unityが期待するリクエストボディの形式
+    // 1. ディレクトリの準備
+    let base_path = PathBuf::from(COMM_DIR);
+    let req_dir = base_path.join("requests");
+    let res_dir = base_path.join("responses");
+
+    fs::create_dir_all(&req_dir)
+        .await
+        .context("リクエストディレクトリの作成に失敗しました")?;
+    fs::create_dir_all(&res_dir)
+        .await
+        .context("レスポンスディレクトリの作成に失敗しました")?;
+
+    // 2. リクエストIDの生成 (簡易的にタイムスタンプを使用)
+    let request_id = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_nanos();
+
+    let req_file = req_dir.join(format!("req_{}.json", request_id));
+    let res_file = res_dir.join(format!("res_{}.json", request_id));
+
+    // 3. リクエストの書き込み
     let payload = json!({
+        "id": request_id.to_string(), // 数値が大きすぎる可能性を考慮して文字列化
         "command": command,
         "args": args
     });
+    fs::write(&req_file, serde_json::to_string(&payload)?).await?;
 
-    let client = reqwest::Client::new();
-    let response = client.post(UNITY_URL).json(&payload).send().await?;
+    // 4. レスポンスの待機 (ポーリング)
+    // 最大 10 秒間、0.1 秒間隔でファイルの出現をチェック
+    let mut attempts = 0;
+    let max_attempts = 100;
+    let delay = Duration::from_millis(100);
 
-    // HTTPステータスの確認
-    let status = response.status();
-    let body = response.text().await?;
+    while attempts < max_attempts {
+        if fs::metadata(&res_file).await.is_ok() {
+            // ファイルが見つかったら読み取り
+            let content = fs::read_to_string(&res_file).await?;
+            let value: Value =
+                serde_json::from_str(&content).unwrap_or_else(|_| Value::String(content.clone()));
 
-    if !status.is_success() {
-        anyhow::bail!("Unity returned HTTP {}: {}", status.as_u16(), body);
+            // 後処理: リクエストとレスポンスファイルを削除
+            let _ = fs::remove_file(&req_file).await;
+            let _ = fs::remove_file(&res_file).await;
+
+            return Ok(value);
+        }
+        tokio::time::sleep(delay).await;
+        attempts += 1;
     }
 
-    // JSONとしてパースを試み、失敗した場合は文字列として返す
-    let value: Value = serde_json::from_str(&body).unwrap_or(Value::String(body));
-    Ok(value)
+    // タイムアウトした場合はリクエストファイルを削除
+    let _ = fs::remove_file(&req_file).await;
+    anyhow::bail!(
+        "Unityからのレスポンス待ちでタイムアウトしました: {}",
+        command
+    );
 }

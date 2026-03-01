@@ -21,7 +21,7 @@ use protocol::JsonRpcRequest;
 #[tokio::main]
 async fn main() -> Result<()> {
     let stdin = io::stdin();
-    let mut stdout = io::stdout();
+    let mut stdout = io::stdout().lock();
 
     eprintln!("[MCP] Lilja MCP Server を起動しました");
 
