@@ -65,6 +65,11 @@ pub fn method_not_found() -> Message {
     Message::Response(Response::error(Value::Null, -32601, "Method Not Found".into()))
 }
 
+/// 内部エラーの場合のエラーレスポンスを生成する
+pub fn internal_error(message: String) -> Message {
+    Message::Response(Response::error(Value::Null, -32603, message))
+}
+
 impl Response {
     const JSON_RPC: &str = "2.0";
 
