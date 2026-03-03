@@ -6,6 +6,7 @@ pub const METHOD: &str = "tools/list";
 
 // 3. ListTools Params (空の場合が多いが構造体として定義)
 #[derive(Deserialize, Debug)]
+#[allow(dead_code)]
 pub struct Params {
     pub cursor: Option<String>,
 }
@@ -17,6 +18,7 @@ pub struct Result {
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Tool {
     pub name: ToolName,
     pub description: String,

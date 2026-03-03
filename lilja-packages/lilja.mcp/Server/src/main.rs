@@ -9,7 +9,7 @@ use std::io::{self, BufRead};
 #[tokio::main]
 async fn main() -> Result<()> {
     let stdin = io::stdin().lock();
-    let mut stdout = io::stdout().lock();
+    let mut _stdout = io::stdout().lock();
 
     for line in stdin.lines() {
         let line = line?;
