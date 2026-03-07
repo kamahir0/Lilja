@@ -1,5 +1,6 @@
 mod json_rpc;
 mod mcp;
+mod tools;
 
 use anyhow::Result;
 use json_rpc::Message;
@@ -69,6 +70,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+/// 初期化
 fn handle_initialize(params: Option<Value>) -> std::result::Result<Value, String> {
     // パラメータのパース（必須ではないが、クライアントが求めるバージョンを確認できる）
     let req_params: Option<mcp::schema::initialize::Params> = params
@@ -83,9 +85,7 @@ fn handle_initialize(params: Option<Value>) -> std::result::Result<Value, String
 
     let result = mcp::schema::initialize::Result {
         protocol_version,
-        capabilities: mcp::schema::initialize::ServerCapabilities {
-            tools: Some(serde_json::json!({})),
-        },
+        capabilities: mcp::schema::initialize::ServerCapabilities { tools: Some(serde_json::json!({})) },
         server_info: mcp::schema::initialize::Implementation {
             name: "lilja-mcp-server".to_string(),
             version: "0.1.0".to_string(),
@@ -95,93 +95,31 @@ fn handle_initialize(params: Option<Value>) -> std::result::Result<Value, String
     Ok(serde_json::to_value(result).unwrap())
 }
 
+/// ツール一覧
 fn handle_tools_list() -> Value {
     let tools = vec![
-        mcp::schema::tools_list::Tool {
-            name: "add".into(),
-            description: "Adds two numbers".to_string(),
-            input_schema: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "a": { "type": "number", "description": "First number" },
-                    "b": { "type": "number", "description": "Second number" }
-                },
-                "required": ["a", "b"]
-            }),
-        },
-        mcp::schema::tools_list::Tool {
-            name: "subtract".into(),
-            description: "Subtracts second number from first number".to_string(),
-            input_schema: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "a": { "type": "number", "description": "First number" },
-                    "b": { "type": "number", "description": "Second number" }
-                },
-                "required": ["a", "b"]
-            }),
-        },
-        mcp::schema::tools_list::Tool {
-            name: "multiply".into(),
-            description: "Multiplies two numbers".to_string(),
-            input_schema: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "a": { "type": "number", "description": "First number" },
-                    "b": { "type": "number", "description": "Second number" }
-                },
-                "required": ["a", "b"]
-            }),
-        },
-        mcp::schema::tools_list::Tool {
-            name: "divide".into(),
-            description: "Divides first number by second number".to_string(),
-            input_schema: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "a": { "type": "number", "description": "First number" },
-                    "b": { "type": "number", "description": "Second number" }
-                },
-                "required": ["a", "b"]
-            }),
-        },
+        tools::tool_to_schema(tools::math::AddTool),
+        tools::tool_to_schema(tools::math::SubtractTool),
+        tools::tool_to_schema(tools::math::MultiplyTool),
+        tools::tool_to_schema(tools::math::DivideTool),
     ];
     let result = mcp::schema::tools_list::Result { tools };
     serde_json::to_value(result).unwrap()
 }
 
+/// ツールを実行
 fn handle_tools_call(params: Option<Value>) -> std::result::Result<Value, String> {
-    let params: mcp::schema::tools_call::Params =
-        serde_json::from_value(params.ok_or_else(|| "Missing parameters".to_string())?).map_err(|e| format!("Invalid parameters: {}", e))?;
+    let params: mcp::schema::tools_call::Params = serde_json::from_value(params.ok_or_else(|| "Missing parameters".to_string())?).map_err(|e| format!("Invalid parameters: {}", e))?;
 
-    let args = params.arguments.ok_or_else(|| "Missing arguments".to_string())?;
+    let args_value = params
+        .arguments
+        .unwrap_or_else(|| serde_json::json!({}));
 
-    let a = args
-        .get("a")
-        .and_then(|v| v.as_f64())
-        .ok_or_else(|| "Missing or invalid argument 'a'".to_string())?;
-    let b = args
-        .get("b")
-        .and_then(|v| v.as_f64())
-        .ok_or_else(|| "Missing or invalid argument 'b'".to_string())?;
-
-    let result_value = match params.name.as_str() {
-        "add" => format!("{}", a + b),
-        "subtract" => format!("{}", a - b),
-        "multiply" => format!("{}", a * b),
-        "divide" => {
-            if b == 0.0 {
-                return Err("Division by zero".to_string());
-            }
-            format!("{}", a / b)
-        }
-        _ => return Err(format!("Unknown tool: {}", params.name.as_str())),
-    };
-
-    let result = mcp::schema::tools_call::Result {
-        content: vec![mcp::schema::tools_call::Content::Text { text: result_value }],
-        is_error: false,
-    };
-
-    Ok(serde_json::to_value(result).unwrap())
+    match params.name.as_str() {
+        "add" => tools::execute_tool(tools::math::AddTool, args_value),
+        "subtract" => tools::execute_tool(tools::math::SubtractTool, args_value),
+        "multiply" => tools::execute_tool(tools::math::MultiplyTool, args_value),
+        "divide" => tools::execute_tool(tools::math::DivideTool, args_value),
+        _ => Err(format!("Unknown tool: {}", params.name.as_str())),
+    }
 }
