@@ -77,6 +77,35 @@ namespace Lilja.Repository.Editor
             _currentType = type;
         }
 
+        public RepositoryTrackerViewItem FindItemById(int id)
+        {
+            return FindItemRecursive(CurrentBindingItems, id);
+        }
+
+        private RepositoryTrackerViewItem FindItemRecursive(IEnumerable<TreeViewItem<int>> items, int id)
+        {
+            if (items == null) return null;
+
+            foreach (var item in items)
+            {
+                if (item.id == id)
+                {
+                    return item as RepositoryTrackerViewItem;
+                }
+
+                if (item.hasChildren)
+                {
+                    var found = FindItemRecursive(item.children, id);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public void ReloadAndSort()
         {
             var currentSelected = this.state.selectedIDs;

@@ -1,4 +1,4 @@
-using System.Linq;
+
 using UnityEditor;
 using UnityEngine;
 using Lilja.Repository.Diagnostics;
@@ -211,8 +211,7 @@ namespace Lilja.Repository.Editor
             if (selected.Count > 0)
             {
                 var first = selected[0];
-                var item =
-                    _treeView.CurrentBindingItems?.FirstOrDefault(x => x.id == first) as RepositoryTrackerViewItem;
+                var item = _treeView.FindItemById(first);
                 if (item != null)
                 {
                     if (item.IsRepository)
