@@ -113,21 +113,14 @@ namespace Lilja.Repository.Editor
                 _isDirty = true;
             }
 
-            // Item Count
-            var itemCount = _treeView?.CurrentBindingItems?.Count ?? 0;
-            var totalItems = 0;
-            if (_treeView?.CurrentBindingItems != null)
+            // Item Count -> Open Directory Button
+            if (_currentType != RepositoryTracker.RepositoryType.InMemory)
             {
-                foreach (var item in _treeView.CurrentBindingItems)
+                if (GUILayout.Button("Open Directory", EditorStyles.toolbarButton, EmptyLayoutOption))
                 {
-                    if (item is RepositoryTrackerViewItem repoItem && repoItem.IsRepository)
-                    {
-                        totalItems += repoItem.ItemCount;
-                    }
+                    EditorUtility.RevealInFinder(Application.persistentDataPath);
                 }
             }
-
-            GUILayout.Label($"Repositories: {itemCount} | Items: {totalItems}", EditorStyles.toolbarButton);
 
             EditorGUILayout.EndHorizontal();
         }
