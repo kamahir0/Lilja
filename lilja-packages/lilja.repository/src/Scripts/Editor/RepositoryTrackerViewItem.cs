@@ -474,7 +474,9 @@ namespace Lilja.Repository.Editor
                     else
                     {
                         // Singleton repository
-                        var cacheField = repoType.GetField("cache", BindingFlags.NonPublic | BindingFlags.Instance);
+                        // InMemory uses _entity, Json/MessagePack uses _cache
+                        var cacheField = repoType.GetField("_cache", BindingFlags.NonPublic | BindingFlags.Instance) ??
+                                         repoType.GetField("_entity", BindingFlags.NonPublic | BindingFlags.Instance);
                         if (cacheField != null)
                         {
                             var cache = cacheField.GetValue(repo);
