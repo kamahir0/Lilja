@@ -1,0 +1,57 @@
+:root {
+    /* --- 1. Global / Base Surface --- */
+    --color-on-surface: #e0e0e0;
+    --color-surface:    #1e1e1e64;
+
+    /* --- 2. Action Colors (Buttons) --- */
+    /* Primary */
+    --color-on-primary:     #FFFFFF;
+    --color-primary:        #2196f3;
+    --color-primary-active: #1565C0;
+    --color-primary-border: #1565c0;
+    --color-primary-hover:  #42A5F5;
+
+    /* Secondary */
+    --color-on-secondary:     #e0e0e0;
+    --color-secondary:        #6b6b6b;
+    --color-secondary-active: #595959;
+    --color-secondary-border: #555555;
+    --color-secondary-hover:  #767676;
+
+    /* Danger */
+    --color-on-danger:     #FFFFFF;
+    --color-danger:        #ef5350;
+    --color-danger-active: #B71C1C;
+    --color-danger-border: #b71c1c;
+    --color-danger-hover:  #E57373;
+
+    /* --- 3. Navigation --- */
+    --color-nav-active:           #222222;
+    --color-nav-button-separator: #444444;
+    --color-nav-hover:            #2d2d2d;
+    --color-nav-icon:             #FFFFFF;
+
+    /* --- 4. Input & Form Controls --- */
+    --color-input:        #2c2c2c;
+    --color-input-border: #555555;
+    --color-on-input:     #e0e0e0;
+
+    /* --- 5. Window & Page Structure --- */
+    --color-header-button-active: #2a2a2a;
+    --color-header-button-hover:  #383838;
+    --color-on-surface-header:    #b0b0b0;
+    --color-surface-header:       #2a2a2a;
+
+    /* --- 6. Scrollbar --- */
+    --color-on-scrollbar-button:     #e0e0e0;
+    --color-scrollbar-button:        #272727;
+    --color-scrollbar-button-active: #333333;
+    --color-scrollbar-button-border: rgba(0, 0, 0, 0.3);
+    --color-scrollbar-button-hover:  #4a4a4a;
+    --color-scrollbar-handle:        #343434;
+    --color-scrollbar-handle-active: #333333;
+    --color-scrollbar-handle-border: rgb(0, 0, 0);
+    --color-scrollbar-handle-hover:  #404040;
+    --color-scrollbar-track:         rgba(0, 0, 0, 0.5);
+    --color-scrollbar-track-hover:   rgba(0, 0, 0, 0.5);
+}

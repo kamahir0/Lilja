@@ -1,0 +1,775 @@
+/* DebugMenuEditorTheme.uss
+ * DebugMenu コントロールをエディタウィンドウで使用するためのテーマ。
+ * .editor-debug-window クラスのスコープ内で CSS 変数をオーバーライドする。
+ * --unity-colors-* 変数は Unity エディタのデフォルトテーマから提供される。
+ */
+
+.editor-debug-window {
+    /* --- 1. Dimensions & Typography --- */
+    --font-size-standard:        12px;
+    --font-size-title:           12px;
+    --size-control-height:       22px;
+    --size-control-margin:       2px;
+    --size-control-margin-half:  1px;
+    --size-foldout-checkbox:     14px;
+    --size-item-gap:             2px;
+    --size-label-width:          40%;
+    --size-nav-button-height:    24px;
+    --size-nav-button-padding-h: 6px;
+    --size-nav-icon:             16px;
+    --size-page-padding:         4px;
+    --size-page-padding-bottom:  2px;
+    --size-page-padding-top:     2px;
+    --size-scrollbar-button-gap: 0px;
+    --size-scrollbar-margin-h:   0px;
+    --size-scrollbar-margin-v:   0px;
+    --size-toggle-checkbox:      14px;
+    --size-composite-label-min-width: 18px;
+    --size-composite-label-gap:       4px;
+
+    /* --- 2. Border Radii --- */
+    --radius-button: 3px;
+    --radius-window: 0px;
+
+    /* --- 3. Base Colors --- */
+    --color-on-surface:        var(--unity-colors-default-text-color);
+    --color-on-surface-header: var(--unity-colors-default-text-color);
+    --color-surface:           var(--unity-colors-window-background);
+    --color-surface-header:    var(--unity-colors-toolbar-background);
+
+    /* --- 4. Action Colors (Buttons) --- */
+    /* Primary (Green) */
+    --color-on-primary:     #ffffff;
+    --color-primary:        #388e3c;
+    --color-primary-active: #2e7d32;
+    --color-primary-border: #1b5e20;
+    --color-primary-hover:  #43a047;
+
+    /* Secondary (Standard) */
+    --color-on-secondary:     var(--unity-colors-default-text-color);
+    --color-secondary:        var(--unity-colors-button-background);
+    --color-secondary-active: var(--unity-colors-button-background-pressed);
+    --color-secondary-border: var(--unity-colors-input-field-border);
+    --color-secondary-hover:  var(--unity-colors-button-background-hover);
+
+    /* Danger (Red) */
+    --color-on-danger:     #ffffff;
+    --color-danger:        #c0392b;
+    --color-danger-active: #922b21;
+    --color-danger-border: #922b21;
+    --color-danger-hover:  #e74c3c;
+
+    /* --- 5. Input & Form Controls --- */
+    --color-input:        var(--unity-colors-input_field-background);
+    --color-input-border: var(--unity-colors-input_field-border);
+    --color-on-input:     var(--unity-colors-default-text-color);
+    --color-input-editor-background: var(--unity-colors-input_field-background);
+    --color-input-editor-border:     var(--unity-colors-input_field-border);
+    --color-input-editor-border-hover: var(--unity-colors-input_field-border-hover);
+    --color-input-editor-border-focus: var(--unity-colors-input_field-border-focus);
+    --color-enum-editor-background: var(--unity-colors-button-background);
+    --color-enum-editor-background-hover: var(--unity-colors-button-background-hover);
+    --color-enum-editor-background-active: var(--unity-colors-button-background-pressed);
+    --color-enum-editor-border: var(--unity-colors-input_field-border);
+    --color-enum-editor-border-hover: var(--unity-colors-input_field-border-hover);
+    --color-enum-editor-border-focus: var(--unity-colors-highlight-background);
+
+    /* --- 6. Navigation --- */
+    --color-nav-active:           var(--unity-colors-button-background-pressed);
+    --color-nav-button-separator: var(--unity-colors-input-field-border);
+    --color-nav-hover:            var(--unity-colors-button-background-hover);
+    --color-nav-icon:             #9E9E9E;
+
+    /* --- 7. Header Buttons --- */
+    --color-header-button-active: var(--unity-colors-button-background-pressed);
+    --color-header-button-hover:  var(--unity-colors-button-background-hover);
+
+    /* --- 8. Scrollbar --- */
+    --color-scrollbar-handle:        var(--unity-colors-scrollbar-thumb);
+    --color-scrollbar-handle-active: var(--unity-colors-button-background-pressed);
+    --color-scrollbar-handle-border: var(--unity-colors-input-field-border);
+    --color-scrollbar-handle-hover:  var(--unity-colors-button-background-hover);
+    --color-scrollbar-track:         var(--unity-colors-scrollbar-background);
+}
+
+/* ── Common Layout ────────────────────────────────────────────────────────── */
+.editor-debug-window .c-control-size {
+    height: auto;
+    min-height: var(--size-control-height);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
+    font-size: var(--font-size-standard);
+}
+
+.editor-debug-window .c-foldout,
+.editor-debug-window .c-radio-group,
+.editor-debug-window .c-toggle-group {
+    height: auto;
+}
+
+/* ── Button ───────────────────────────────────────────────────────────────── */
+.editor-debug-window .c-button {
+    padding: 4px 12px;
+    background-image: none;
+    border-radius: var(--radius-button);
+    border-width: 1px;
+    -unity-font-style: bold;
+}
+
+.editor-debug-window .c-button--primary {
+    --hover-color:  var(--color-primary-hover);
+    --active-color: var(--color-primary-active);
+}
+
+.editor-debug-window .c-button--secondary {
+    --hover-color:  var(--color-secondary-hover);
+    --active-color: var(--color-secondary-active);
+}
+
+.editor-debug-window .c-button--danger {
+    --hover-color:  var(--color-danger-hover);
+    --active-color: var(--color-danger-active);
+}
+
+.editor-debug-window .c-button:focus {
+    border-color: var(--unity-colors-highlight-background);
+}
+
+/* ── NavigationButton ─────────────────────────────────────────────────────── */
+.editor-debug-window .c-nav-button {
+    margin-top: 0;
+    margin-bottom: 1px;
+    padding: 0 6px;
+    background-color: var(--unity-colors-button-background);
+    border-color: var(--unity-colors-input-field-border);
+    border-radius: 3px;
+    border-width: 1px;
+    --hover-color:  var(--color-nav-hover);
+    --active-color: var(--color-nav-active);
+}
+
+.editor-debug-window .c-nav-button:hover {
+    background-color: var(--unity-colors-button-background-hover) !important;
+}
+
+.editor-debug-window .c-nav-button:active {
+    background-color: var(--unity-colors-button-background-pressed) !important;
+}
+
+.editor-debug-window .c-nav-button:focus {
+    border-color: var(--unity-colors-highlight-background);
+    border-width: 1px;
+}
+
+/* ── InputField ───────────────────────────────────────────────────────────── */
+.editor-debug-window .c-input .unity-base-field__label {
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.editor-debug-window .c-input .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-input) !important;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+.editor-debug-window .c-input .unity-composite-field__input,
+.editor-debug-window .c-input .unity-bounds-field__input,
+.editor-debug-window .c-input .unity-bounds-int-field__input {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input .unity-composite-field__input:hover,
+.editor-debug-window .c-input .unity-composite-field__input:focus,
+.editor-debug-window .c-input .unity-bounds-field__input:hover,
+.editor-debug-window .c-input .unity-bounds-field__input:focus,
+.editor-debug-window .c-input .unity-bounds-int-field__input:hover,
+.editor-debug-window .c-input .unity-bounds-int-field__input:focus {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input .unity-composite-field__field,
+.editor-debug-window .c-input .unity-composite-field__field-group,
+.editor-debug-window .c-input .unity-composite-field__field-spacer,
+.editor-debug-window .c-input.unity-composite-field .unity-base-field,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-base-field,
+.editor-debug-window .c-input.unity-bounds-field .unity-base-field,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-base-field {
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.editor-debug-window .c-input .unity-composite-field__field:hover,
+.editor-debug-window .c-input .unity-composite-field__field:focus,
+.editor-debug-window .c-input .unity-composite-field__field-group:hover,
+.editor-debug-window .c-input .unity-composite-field__field-group:focus,
+.editor-debug-window .c-input.unity-composite-field .unity-base-field:hover,
+.editor-debug-window .c-input.unity-composite-field .unity-base-field:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-base-field:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-base-field:focus,
+.editor-debug-window .c-input.unity-bounds-field .unity-base-field:hover,
+.editor-debug-window .c-input.unity-bounds-field .unity-base-field:focus,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-base-field:hover,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-base-field:focus {
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field,
+.editor-debug-window .c-input.unity-composite-field--multi-line,
+.editor-debug-window .c-input.unity-vector2-field,
+.editor-debug-window .c-input.unity-vector2-int-field,
+.editor-debug-window .c-input.unity-vector3-field,
+.editor-debug-window .c-input.unity-vector3-int-field,
+.editor-debug-window .c-input.unity-vector4-field,
+.editor-debug-window .c-input.unity-rect-field,
+.editor-debug-window .c-input.unity-rect-int-field,
+.editor-debug-window .c-input.unity-bounds-field,
+.editor-debug-window .c-input.unity-bounds-int-field {
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field:hover,
+.editor-debug-window .c-input.unity-composite-field:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line:focus,
+.editor-debug-window .c-input.unity-vector2-field:hover,
+.editor-debug-window .c-input.unity-vector2-field:focus,
+.editor-debug-window .c-input.unity-vector2-int-field:hover,
+.editor-debug-window .c-input.unity-vector2-int-field:focus,
+.editor-debug-window .c-input.unity-vector3-field:hover,
+.editor-debug-window .c-input.unity-vector3-field:focus,
+.editor-debug-window .c-input.unity-vector3-int-field:hover,
+.editor-debug-window .c-input.unity-vector3-int-field:focus,
+.editor-debug-window .c-input.unity-vector4-field:hover,
+.editor-debug-window .c-input.unity-vector4-field:focus,
+.editor-debug-window .c-input.unity-rect-field:hover,
+.editor-debug-window .c-input.unity-rect-field:focus,
+.editor-debug-window .c-input.unity-rect-int-field:hover,
+.editor-debug-window .c-input.unity-rect-int-field:focus,
+.editor-debug-window .c-input.unity-bounds-field:hover,
+.editor-debug-window .c-input.unity-bounds-field:focus,
+.editor-debug-window .c-input.unity-bounds-int-field:hover,
+.editor-debug-window .c-input.unity-bounds-int-field:focus {
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__center-field,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__extents-field,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__position-field,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__size-field,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__center-field:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__center-field:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__extents-field:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__extents-field:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__position-field:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__position-field:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__size-field:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__size-field:focus,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field:hover,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field:focus,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field:hover,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field:focus,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field:hover,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field:focus,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field:hover,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field:focus {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:focus > .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-input) !important;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-label,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__center-field > .unity-label,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__extents-field > .unity-label,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__position-field > .unity-label,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__size-field > .unity-label,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field > .unity-label,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field > .unity-label,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field > .unity-label,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field > .unity-label {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-label:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-label:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__center-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__center-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__extents-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-field__extents-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__position-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__position-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__size-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-bounds-int-field__size-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field > .unity-label:focus,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field > .unity-label:hover,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field > .unity-label:focus {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input.unity-composite-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector2-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector2-int-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector3-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector3-int-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector4-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-rect-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-rect-int-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector2-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector2-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector2-int-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector2-int-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector3-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector3-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector3-int-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector3-int-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector4-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-vector4-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-rect-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-rect-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-rect-int-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-rect-int-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:focus > .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__label {
+    width: auto;
+    min-width: var(--size-composite-label-min-width);
+    flex-shrink: 0;
+    margin-right: var(--size-composite-label-gap) !important;
+}
+
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__label:hover,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__label:focus {
+    margin-top: 0 !important;
+    margin-right: var(--size-composite-label-gap) !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+}
+
+.editor-debug-window .c-input #unity-text-input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-input) !important;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+.editor-debug-window .c-input .unity-base-text-field__input,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line,
+.editor-debug-window .c-input .unity-text-field__input,
+.editor-debug-window .c-input .unity-integer-field__input,
+.editor-debug-window .c-input .unity-float-field__input,
+.editor-debug-window .c-input .unity-long-field__input,
+.editor-debug-window .c-input .unity-double-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-input) !important;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+.editor-debug-window .c-input:hover .unity-base-field__label,
+.editor-debug-window .c-input:focus .unity-base-field__label,
+.editor-debug-window .c-input .unity-composite-field__field:hover > .unity-base-field__label,
+.editor-debug-window .c-input .unity-composite-field__field:focus > .unity-base-field__label {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+.editor-debug-window .c-input .unity-base-field__input:hover,
+.editor-debug-window .c-input .unity-base-field__input:focus,
+.editor-debug-window .c-input .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:hover,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:focus,
+.editor-debug-window .c-input .unity-composite-field__field:hover > .unity-base-field__input,
+.editor-debug-window .c-input .unity-composite-field__field:focus > .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+}
+
+.editor-debug-window .c-input .unity-base-field__input:hover,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:hover,
+.editor-debug-window .c-input .unity-composite-field__field:hover > .unity-base-field__input {
+    border-color: var(--color-input-editor-border-hover) !important;
+}
+
+.editor-debug-window .c-input .unity-base-field__input:focus,
+.editor-debug-window .c-input .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:focus,
+.editor-debug-window .c-input .unity-composite-field__field:focus > .unity-base-field__input {
+    border-color: var(--color-input-editor-border-focus) !important;
+}
+
+.editor-debug-window .c-input .unity-base-field__label:hover,
+.editor-debug-window .c-input .unity-base-field__label:focus {
+    margin-top: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+}
+
+.editor-debug-window .c-input #unity-text-input:hover,
+.editor-debug-window .c-input #unity-text-input:focus,
+.editor-debug-window .c-input #unity-text-input:focus:hover,
+.editor-debug-window .c-input .unity-composite-field__field:hover #unity-text-input,
+.editor-debug-window .c-input .unity-composite-field__field:focus #unity-text-input,
+.editor-debug-window .c-input .unity-composite-field__field #unity-text-input:hover,
+.editor-debug-window .c-input .unity-composite-field__field #unity-text-input:focus {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border-hover) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-input) !important;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+.editor-debug-window .c-input #unity-text-input:focus,
+.editor-debug-window .c-input #unity-text-input:focus:hover,
+.editor-debug-window .c-input .unity-composite-field__field #unity-text-input:focus,
+.editor-debug-window .c-input .unity-composite-field__field #unity-text-input:focus:hover {
+    border-color: var(--color-input-editor-border-focus) !important;
+}
+
+.editor-debug-window .c-input .unity-base-text-field__input:hover,
+.editor-debug-window .c-input .unity-base-text-field__input:focus,
+.editor-debug-window .c-input .unity-base-text-field__input:focus:hover,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line:hover,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line:focus,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line:focus:hover,
+.editor-debug-window .c-input .unity-text-field__input:hover,
+.editor-debug-window .c-input .unity-text-field__input:focus,
+.editor-debug-window .c-input .unity-text-field__input:focus:hover,
+.editor-debug-window .c-input .unity-integer-field__input:hover,
+.editor-debug-window .c-input .unity-integer-field__input:focus,
+.editor-debug-window .c-input .unity-integer-field__input:focus:hover,
+.editor-debug-window .c-input .unity-float-field__input:hover,
+.editor-debug-window .c-input .unity-float-field__input:focus,
+.editor-debug-window .c-input .unity-float-field__input:focus:hover,
+.editor-debug-window .c-input .unity-long-field__input:hover,
+.editor-debug-window .c-input .unity-long-field__input:focus,
+.editor-debug-window .c-input .unity-long-field__input:focus:hover,
+.editor-debug-window .c-input .unity-double-field__input:hover,
+.editor-debug-window .c-input .unity-double-field__input:focus,
+.editor-debug-window .c-input .unity-double-field__input:focus:hover {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+}
+
+.editor-debug-window .c-input .unity-base-text-field__input:hover,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line:hover,
+.editor-debug-window .c-input .unity-text-field__input:hover,
+.editor-debug-window .c-input .unity-integer-field__input:hover,
+.editor-debug-window .c-input .unity-float-field__input:hover,
+.editor-debug-window .c-input .unity-long-field__input:hover,
+.editor-debug-window .c-input .unity-double-field__input:hover {
+    border-color: var(--color-input-editor-border-hover) !important;
+}
+
+.editor-debug-window .c-input .unity-base-text-field__input:focus,
+.editor-debug-window .c-input .unity-base-text-field__input:focus:hover,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line:focus,
+.editor-debug-window .c-input .unity-base-text-field__input--single-line:focus:hover,
+.editor-debug-window .c-input .unity-text-field__input:focus,
+.editor-debug-window .c-input .unity-text-field__input:focus:hover,
+.editor-debug-window .c-input .unity-integer-field__input:focus,
+.editor-debug-window .c-input .unity-integer-field__input:focus:hover,
+.editor-debug-window .c-input .unity-float-field__input:focus,
+.editor-debug-window .c-input .unity-float-field__input:focus:hover,
+.editor-debug-window .c-input .unity-long-field__input:focus,
+.editor-debug-window .c-input .unity-long-field__input:focus:hover,
+.editor-debug-window .c-input .unity-double-field__input:focus,
+.editor-debug-window .c-input .unity-double-field__input:focus:hover {
+    border-color: var(--color-input-editor-border-focus) !important;
+}
+
+/* 実際に文字を入力する箱だけを最後に明示上書きする。
+   Text / Int の単一入力欄、Vector 系の成分欄、Rect / Bounds 系の多段ネスト内の成分欄を対象にする。 */
+.editor-debug-window .c-input.unity-text-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-integer-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-float-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-long-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-double-field > .unity-base-field__input,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-input-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-input-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-input) !important;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+.editor-debug-window .c-input.unity-text-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-text-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-integer-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-integer-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-float-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-float-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-long-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-long-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-double-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-double-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input .unity-composite-field__field:hover > .unity-base-field__input,
+.editor-debug-window .c-input .unity-composite-field__field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group:focus > .unity-base-field__input {
+    border-color: var(--color-input-editor-border-hover) !important;
+}
+
+.editor-debug-window .c-input.unity-text-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-text-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-integer-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-integer-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-float-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-float-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-long-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-long-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-double-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-double-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:focus,
+.editor-debug-window .c-input .unity-composite-field__field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-composite-field--multi-line .unity-composite-field__field-group > .unity-base-field__input:focus:hover {
+    border-color: var(--color-input-editor-border-focus) !important;
+}
+
+/* Bounds 系は hover 時も行ラッパーに箱を描かず、実入力欄だけに見た目を残す。 */
+.editor-debug-window .c-input.unity-bounds-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:hover .unity-bounds-field__center-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:focus .unity-bounds-field__center-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:hover .unity-bounds-field__extents-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field:focus .unity-bounds-field__extents-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:hover .unity-bounds-int-field__position-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:focus .unity-bounds-int-field__position-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:hover .unity-bounds-int-field__size-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field:focus .unity-bounds-int-field__size-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__center-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-field .unity-bounds-field__extents-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__position-field:focus > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-bounds-int-field .unity-bounds-int-field__size-field:focus > .unity-base-field__input {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0) !important;
+    background-image: none !important;
+    border-color: rgba(0, 0, 0, 0) !important;
+    border-width: 0 !important;
+}
+
+/* ── EnumField ────────────────────────────────────────────────────────────── */
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input {
+    margin: 0 !important;
+    padding: 0 8px !important;
+    background-color: var(--color-enum-editor-background) !important;
+    background-image: none !important;
+    border-color: var(--color-enum-editor-border) !important;
+    border-radius: 3px;
+    border-width: 1px !important;
+    color: var(--color-on-surface) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-enum-field:hover > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:hover,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:hover,
+.editor-debug-window .c-input.unity-popup-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-popup-field:hover > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:hover,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:hover,
+.editor-debug-window .c-input.unity-base-popup-field:hover > .unity-base-field__input,
+.editor-debug-window .c-input.unity-base-popup-field:hover > .unity-base-popup-field__input,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:hover,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:hover {
+    background-color: var(--color-enum-editor-background-hover) !important;
+    border-color: var(--color-enum-editor-border-hover) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:active,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:active,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:active,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:active,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:active,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:active {
+    background-color: var(--color-enum-editor-background-active) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:focus,
+.editor-debug-window .c-input.unity-enum-field > .unity-base-popup-field__input:focus:hover,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:focus,
+.editor-debug-window .c-input.unity-popup-field > .unity-base-popup-field__input:focus:hover,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:focus,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-field__input:focus:hover,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:focus,
+.editor-debug-window .c-input.unity-base-popup-field > .unity-base-popup-field__input:focus:hover {
+    border-color: var(--color-enum-editor-border-focus) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field .unity-base-popup-field__text,
+.editor-debug-window .c-input.unity-popup-field .unity-base-popup-field__text,
+.editor-debug-window .c-input.unity-base-popup-field .unity-base-popup-field__text {
+    color: var(--color-on-surface) !important;
+}
+
+.editor-debug-window .c-input.unity-enum-field .unity-base-popup-field__arrow,
+.editor-debug-window .c-input.unity-popup-field .unity-base-popup-field__arrow,
+.editor-debug-window .c-input.unity-base-popup-field .unity-base-popup-field__arrow {
+    -unity-background-image-tint-color: var(--color-on-surface);
+}
+
+/* ── Scroller ─────────────────────────────────────────────────────────────── */
+.editor-debug-window .c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
+.editor-debug-window .c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    height: 12px;
+    background-color: var(--unity-colors-window-background);
+    border-radius: 0;
+    border-width: 0;
+    --hover-color:  var(--unity-colors-button-background-hover);
+    --active-color: var(--unity-colors-button-background-pressed);
+}
+
+.editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-tracker {
+    background-color: var(--unity-colors-window-background);
+    border-radius: 0;
+    border-width: 0;
+    --hover-color: var(--unity-colors-window-background);
+}
+
+.editor-debug-window .c-scroll-view .unity-scroller--vertical #unity-dragger {
+    background-color: var(--unity-colors-button-background-hover);
+    border-radius: 6px;
+    border-width: 0;
+    --hover-color:  #707070;
+    --active-color: #696969;
+}
+

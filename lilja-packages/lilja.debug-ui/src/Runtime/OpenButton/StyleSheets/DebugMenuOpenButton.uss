@@ -1,0 +1,35 @@
+.c-open-button {
+    width: 80px;
+    height: 80px;
+    margin: 0;
+    padding: 0;
+    background-color: rgba(255, 255, 255, 0);
+    background-image: none;
+    border-radius: 0;
+    border-width: 0;
+    transition-duration: 0.1s;
+    transition-property: background-color;
+    transition-timing-function: ease-in-out;
+}
+
+.c-open-button:hover {
+    background-color: rgba(255, 255, 255, 0);
+}
+
+.c-open-button:active {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.c-open-button--pressed {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.c-open-button__overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    align-items: flex-start;
+    justify-content: flex-end;
+}

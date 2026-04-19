@@ -1,0 +1,134 @@
+:root {
+    /* --- 1. Global / Base Surface --- */
+    --color-on-surface:   #000000;
+    --color-surface:      #ffffff64;
+    --font-size-standard: 26px;
+    --font-size-title:    26px;
+    --radius-button:      4px;
+    --radius-window:      12px;
+
+    /* --- 2. General Layout --- */
+    --size-control-height:      64px;
+    --size-control-margin:      12px;
+    --size-control-margin-half: 6px;
+    --size-label-width:         35%;
+
+    /* --- 3. Action Colors (Buttons) --- */
+    /* Primary */
+    --color-on-primary:     #FFFFFF;
+    --color-primary:        #007aff;
+    --color-primary-active: #004C9E;
+    --color-primary-border: #1976D2;
+    --color-primary-hover:  #0062CC;
+
+    /* Secondary */
+    --color-on-secondary:     #333333;
+    --color-secondary:        #FFFFFF;
+    --color-secondary-active: #D0D0D0;
+    --color-secondary-border: #DDDDDD;
+    --color-secondary-hover:  #E8E8E8;
+
+    /* Danger */
+    --color-on-danger:     #FFFFFF;
+    --color-danger:        #F44336;
+    --color-danger-active: #9A0007;
+    --color-danger-border: #D32F2F;
+    --color-danger-hover:  #C62828;
+
+    /* --- 4. Navigation --- */
+    --color-nav-active:           #D5D5D5;
+    --color-nav-button-separator: #CCCCCC;
+    --color-nav-hover:            #EEEEEE;
+    --color-nav-icon:             #b4b4b4;
+    --size-nav-button-height:     76px;
+    --size-nav-icon:              32px;
+
+    /* --- 5. Input & Form Controls --- */
+    --color-input:          #F0F0F0;
+    --color-input-border:   #CCCCCC;
+    --color-on-input:       #000000;
+    --size-foldout-checkbox: 50px;
+    --size-item-gap:         8px;
+    --size-toggle-checkbox:  30px;
+    /* Vector/Rect/Bounds 等 composite field の成分ラベル (X/Y/Z...) の最小幅と
+       入力フィールドとの間の余白。min-width で揃えることで、縦に並んだとき
+       入力フィールドの開始位置が文字幅に依存せず揃う。 */
+    --size-composite-label-min-width: 28px;
+    --size-composite-label-gap:       10px;
+
+    /* --- 6. Window & Page Structure --- */
+    --color-header-button-active: #E0E0E0;
+    --color-header-button-hover:  #F0F0F0;
+    --color-on-surface-header:    #4e4e4e;
+    --color-surface-header:       #ffffff;
+    --size-page-padding:          24px;
+    --size-page-padding-bottom:   12px;
+    --size-page-padding-top:      0px;
+    --size-window-max-width:      50%;
+    --size-window-width:          50%;
+
+    /* --- 7. Scrollbar --- */
+    --color-on-scrollbar-button:         #000000;
+    --color-scrollbar-button:            #FFFFFF;
+    --color-scrollbar-button-active:     #D0D0D0;
+    --color-scrollbar-button-border:     rgba(0, 0, 0, 0);
+    --color-scrollbar-button-hover:      #E8E8E8;
+    --color-scrollbar-handle:            #FFFFFF;
+    --color-scrollbar-handle-active:     #EEEEEE;
+    --color-scrollbar-handle-border:     rgb(185, 185, 185);
+    --color-scrollbar-handle-hover:      #f6f6f6;
+    --color-scrollbar-track:             rgba(154, 154, 154, 0.5);
+    --color-scrollbar-track-border:      rgba(0, 0, 0, 0);
+    --color-scrollbar-track-hover:       rgba(154, 154, 154, 0.5);
+    --radius-scrollbar-button:           4px;
+    --radius-scrollbar-handle:           4px;
+    --size-scrollbar-bg-border-width:    1px;
+    --size-scrollbar-button-gap:         8px;
+    --size-scrollbar-handle-border-width: 1px;
+    --size-scrollbar-margin-h:           10px;
+    --size-scrollbar-margin-v:           16px;
+}
+
+/* ホバー色・アクティブ色: C# (ICustomStyle) での直接読み取り用。
+   var() 参照により、:root のセマンティック変数の変更を伝播させる。 */
+.c-button--primary {
+    --hover-color:  var(--color-primary-hover);
+    --active-color: var(--color-primary-active);
+}
+
+.c-button--secondary {
+    --hover-color:  var(--color-secondary-hover);
+    --active-color: var(--color-secondary-active);
+}
+
+.c-button--danger {
+    --hover-color:  var(--color-danger-hover);
+    --active-color: var(--color-danger-active);
+}
+
+.c-nav-button {
+    --hover-color:  var(--color-nav-hover);
+    --active-color: var(--color-nav-active);
+}
+
+.c-menu-window__back-button,
+.c-menu-window__back-to-root-button {
+    --hover-color:  var(--color-header-button-hover);
+    --active-color: var(--color-header-button-active);
+}
+
+/* スクローラー系 */
+.c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
+.c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    --hover-color:  var(--color-scrollbar-button-hover);
+    --active-color: var(--color-scrollbar-button-active);
+}
+
+.c-scroll-view .unity-scroller--vertical #unity-dragger {
+    --hover-color:  var(--color-scrollbar-handle-hover);
+    --active-color: var(--color-scrollbar-handle-active);
+}
+
+.c-scroll-view .unity-scroller--vertical #unity-tracker {
+    --hover-color: var(--color-scrollbar-track-hover);
+}

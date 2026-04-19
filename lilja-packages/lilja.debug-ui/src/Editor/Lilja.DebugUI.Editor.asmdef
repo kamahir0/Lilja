@@ -1,0 +1,18 @@
+{
+    "name": "Lilja.DebugUI.Editor",
+    "rootNamespace": "Lilja.DebugUI.Editor",
+    "references": [
+        "GUID:a9d473f5a81841d4785af519e376fbc1"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

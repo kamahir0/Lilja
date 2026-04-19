@@ -1,0 +1,421 @@
+/* ============================================================
+   Theme (t-) : 配色・フォント・視覚効果
+   ============================================================ */
+
+/* UIのルートに付与し、変数のスコープと文字色の継承を保証する */
+.t-root {
+    color: var(--color-on-surface);
+}
+
+/* 実体のある「面」に適用し、背景色と前景色をセットで適用する */
+.t-surface {
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+}
+
+/* ============================================================
+   Layout (l-) : 構造・配置
+   ============================================================ */
+
+/* 画面いっぱいに広がるコンテナ */
+.l-screen {
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================================
+   Component (c-) : 個別のUIパーツ
+   ============================================================ */
+
+/* 共通の寸法設定 (DebugControls.cs の各コントロールが付与するベースクラス)
+   垂直マージンは水平の半分（隣接すると合計が水平と同じ --size-control-margin になる）。 */
+.c-control-size {
+    height: auto;
+    min-height: var(--size-control-height);
+    font-size: var(--font-size-standard);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
+}
+
+/* ── DebugButton ────────────────────────────────────────────────────────── */
+.c-button {
+    padding: 4px 12px;
+    background-image: none;
+    border-radius: var(--radius-button);
+    border-width: 1px;
+    -unity-font-style: bold;
+}
+
+.c-button--primary {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary-border);
+}
+
+.c-button--primary:hover {
+    background-color: var(--hover-color) !important;
+}
+
+.c-button--secondary {
+    background-color: var(--color-secondary);
+    color: var(--color-on-secondary);
+    border-color: var(--color-secondary-border);
+}
+
+.c-button--secondary:hover {
+    background-color: var(--hover-color) !important;
+}
+
+.c-button--danger {
+    background-color: var(--color-danger);
+    color: var(--color-on-danger);
+    border-color: var(--color-danger-border);
+}
+
+.c-button--danger:hover {
+    background-color: var(--hover-color) !important;
+}
+
+/* DebugNavigationButton - iOS設定アプリ風ナビゲーションボタン
+   margin: 0 で高さを --size-nav-button-height（= control-height + margin-half × 2）に設定し、
+   他コントロールのスロット高さと一致させる。
+   上下の border がセパレーターとして機能する。
+   連続するナビボタン間は border-top を消して二重線を防ぐ。 */
+.c-nav-button {
+    height: var(--size-nav-button-height);
+    margin: 0;
+    padding: 0 16px;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--color-surface);
+    background-image: none;
+    border-radius: 0;
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-color: var(--color-nav-button-separator);
+    -unity-text-align: middle-left;
+}
+
+.c-nav-button:hover {
+    background-color: var(--hover-color) !important;
+}
+
+.c-nav-button__left-icon {
+    width: var(--size-nav-icon);
+    height: var(--size-nav-icon);
+    margin-right: 12px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.c-nav-button__label {
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+    font-size: var(--font-size-standard);
+    color: var(--color-on-surface);
+    -unity-text-align: middle-left;
+    -unity-font-style: normal;
+}
+
+.c-nav-button__icon {
+    width: var(--size-nav-icon);
+    height: var(--size-nav-icon);
+    flex-shrink: 0;
+    background-image: url("../Resources/DebugMenu/debug-menu-navigation.svg");
+    -unity-background-image-tint-color: var(--color-nav-icon);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* ── DebugLabel ──────────────────────────────────────────────────────────── */
+.c-label {
+    -unity-text-align: middle-left;
+}
+
+/* ── DebugInputField ─────────────────────────────────────────────────────── */
+.c-input .unity-base-field__label {
+    width: var(--size-label-width);
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-left;
+}
+
+.c-input .unity-base-field__input {
+    padding: 0 8px;
+    background-color: var(--color-input);
+    color: var(--color-on-input);
+    border-color: var(--color-input-border);
+    border-radius: 4px;
+    border-width: 1px;
+    -unity-text-align: middle-left;
+    --unity-cursor-color: var(--color-on-input);
+}
+
+/* Step-A: 複合フィールドの外側・中間ラッパーを透過に */
+.c-input .unity-composite-field__input,
+.c-input .unity-bounds-field__input,
+.c-input .unity-bounds-int-field__input {
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+/* Step-B: 複合フィールド内部の成分フィールド (X/Y/Z 等) のラベル幅を揃える。
+   width: auto のままだと文字幅で入力開始位置がズレるので、min-width で最低幅を
+   確保して揃える。flex-shrink: 0 で横並びの縮小も防ぐ。
+   (固定 width ではなく min-width を使うのは、長いラベルが収まらず消えるのを避けるため) */
+.c-input .unity-composite-field__field > .unity-base-field__label {
+    width: auto;
+    min-width: var(--size-composite-label-min-width);
+    flex-shrink: 0;
+    margin-right: var(--size-composite-label-gap);
+}
+
+/* ── DebugPage (ScrollView) ──────────────────────────────────────────────── */
+.c-scroll-view {
+    flex-grow: 1;
+}
+
+.c-scroll-view .unity-scroll-view__content-container {
+    padding-top: var(--size-page-padding-top);
+    padding-bottom: var(--size-page-padding-bottom);
+}
+
+/* スクロールバー: 全体 */
+.c-scroll-view .unity-scroller--vertical {
+    margin: var(--size-scrollbar-margin-v) var(--size-scrollbar-margin-h);
+    padding: var(--size-scrollbar-button-gap) 0;
+}
+
+/* スクロールバー: ボタン (Low/High) */
+.c-scroll-view .unity-scroller--vertical .unity-scroller__low-button,
+.c-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    background-color: var(--color-scrollbar-button);
+    border-color: var(--color-scrollbar-button-border);
+    border-radius: var(--radius-scrollbar-button);
+    border-width: 1px;
+    -unity-background-image-tint-color: var(--color-on-scrollbar-button);
+}
+
+/* スクロールバー: トラック (背景) */
+.c-scroll-view .unity-scroller--vertical #unity-tracker {
+    background-color: var(--color-scrollbar-track);
+    border-color: var(--color-scrollbar-track-border);
+    border-radius: var(--radius-scrollbar-handle);
+    border-width: var(--size-scrollbar-bg-border-width);
+}
+
+/* スクロールバー: ドラッガー (ノブ) */
+.c-scroll-view .unity-scroller--vertical #unity-dragger {
+    background-color: var(--color-scrollbar-handle);
+    border-color: var(--color-scrollbar-handle-border);
+    border-radius: var(--radius-scrollbar-handle);
+    border-width: var(--size-scrollbar-handle-border-width);
+}
+
+/* ── DebugRadioButtonGroup ───────────────────────────────────────────────── */
+.c-radio-group {
+    height: auto;
+    align-items: flex-start;
+}
+
+.c-radio-group .unity-base-field__label {
+    width: var(--size-label-width);
+    min-height: var(--size-control-height);
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-left;
+}
+
+.c-radio-group .unity-radio-button {
+    height: var(--size-control-height);
+    margin: 0;
+}
+
+.c-radio-group .unity-radio-button__checkmark-background {
+    margin-right: var(--size-item-gap);
+}
+
+/* ── DebugFoldout ────────────────────────────────────────────────────────── */
+.c-foldout {
+    height: auto;
+    margin: 0;
+}
+
+.c-foldout > .unity-foldout__toggle {
+    height: var(--size-control-height);
+    margin: var(--size-control-margin-half) var(--size-control-margin);
+    margin-left: 0;
+}
+
+.c-foldout > .unity-foldout__toggle .unity-toggle__checkmark {
+    width: var(--size-foldout-checkbox);
+    height: var(--size-foldout-checkbox);
+    -unity-background-image-tint-color: var(--color-on-surface);
+}
+
+/* ── DebugToggleGroup ────────────────────────────────────────────────────── */
+.c-toggle-group {
+    height: auto;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.c-toggle-group__label {
+    width: var(--size-label-width);
+    min-height: var(--size-control-height);
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    font-size: var(--font-size-standard);
+    -unity-text-align: middle-left;
+}
+
+.c-toggle-group__items {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.c-toggle-group-item {
+    height: var(--size-control-height);
+    padding: 0 2px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.c-toggle-group-item--checked {
+    border-radius: 4px;
+}
+
+.c-toggle-group-item:focus .c-toggle-group-item__label {
+    color: #006AA6;
+}
+
+.c-toggle-group-item__checkbox {
+    margin: 0;
+    margin-right: var(--size-item-gap);
+    flex-shrink: 0;
+}
+
+.c-toggle-group-item__checkbox .unity-base-field__label {
+    display: none;
+}
+
+.c-toggle-group-item__checkbox .unity-toggle__checkmark {
+    width: var(--size-toggle-checkbox, 36px);
+    height: var(--size-toggle-checkbox, 36px);
+}
+
+.c-toggle-group-item__label {
+    flex-grow: 1;
+    margin: 0 2px;
+    font-size: var(--font-size-standard);
+    -unity-text-align: middle-left;
+}
+
+/* ── DebugMenuWindow ─────────────────────────────────────────────────────── */
+.c-menu-window {
+    flex-direction: column;
+    border-color: var(--color-input-border);
+    border-radius: var(--radius-window);
+    border-width: 1px;
+    border-bottom-width: 3px;
+}
+
+.c-menu-window--default-size {
+    width: var(--size-window-width);
+    max-width: var(--size-window-max-width);
+}
+
+.c-menu-window__header {
+    padding: 8px 16px;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--color-surface-header);
+    color: var(--color-on-surface-header);
+    border-top-left-radius: var(--radius-window);
+    border-top-right-radius: var(--radius-window);
+}
+
+.c-menu-window__back-button {
+    width: 52px;
+    height: 52px;
+    padding: 6px;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    border-radius: 6px;
+    border-width: 0;
+}
+
+.c-menu-window__back-button:hover {
+    background-color: var(--hover-color) !important;
+}
+
+.c-menu-window__back-button-icon {
+    flex-grow: 1;
+    background-image: url("../Resources/DebugMenu/debug-menu-back.svg");
+    -unity-background-image-tint-color: var(--color-on-surface-header);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.c-menu-window__back-to-root-button {
+    width: 52px;
+    height: 52px;
+    padding: 6px;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    border-radius: 6px;
+    border-width: 0;
+}
+
+.c-menu-window__back-to-root-button:hover {
+    background-color: var(--hover-color) !important;
+}
+
+.c-menu-window__back-to-root-button-icon {
+    flex-grow: 1;
+    background-image: url("../Resources/DebugMenu/debug-menu-home.svg");
+    -unity-background-image-tint-color: var(--color-on-surface-header);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.c-menu-window__title {
+    flex-grow: 1;
+    font-size: var(--font-size-title);
+    color: var(--color-on-surface-header);
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.c-menu-window__content {
+    padding: var(--size-page-padding);
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+/* ── Other Layout Components ─────────────────────────────────────────────── */
+.c-page-stack {
+    position: relative;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.c-h-scope {
+    flex-direction: row;
+}
+
+/* ============================================================
+   Utility (u-) : 汎用的な調整
+   ============================================================ */
+
+/* 中央寄せ */
+.u-center-content {
+    justify-content: center;
+    align-items: center;
+}
+
+/* 背景を完全に透明にする（オーバーレイ用） */
+.u-bg-transparent {
+    background-color: rgba(0, 0, 0, 0);
+}

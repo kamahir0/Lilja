@@ -1,0 +1,6 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="../../StyleSheets/DebugMenuOpenButton.uss"/>
+    <ui:VisualElement class="c-open-button__overlay" picking-mode="Ignore">
+        <ui:Button name="debug-menu-open-button" class="c-open-button"/>
+    </ui:VisualElement>
+</ui:UXML>
