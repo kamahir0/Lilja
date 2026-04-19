@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Lilja.Repository.Analyzer.Models;
 
@@ -7,15 +8,11 @@ namespace Lilja.Repository.Analyzer.Models;
 /// </summary>
 internal readonly struct TupleElementInfo
 {
-    /// <summary>
-    /// 要素の型名。
-    /// </summary>
     public string TypeName { get; }
 
-    /// <summary>
-    /// 要素名。
-    /// </summary>
     public string Name { get; }
+
+    public string EscapedName => CodeGenHelpers.EscapeIdentifier(Name);
 
     public TupleElementInfo(string typeName, string name)
     {
@@ -29,31 +26,14 @@ internal readonly struct TupleElementInfo
 /// </summary>
 internal readonly struct ValueObjectInfo
 {
-    /// <summary>
-    /// ValueObjectかどうか。
-    /// </summary>
     public bool IsValueObject { get; }
 
-    /// <summary>
-    /// ToPrimitiveメソッド名。
-    /// </summary>
     public string ToPrimitiveMethodName { get; }
 
-    /// <summary>
-    /// FromPrimitiveメソッド名（staticメソッドの場合）。
-    /// nullまたは空文字列の場合はコンストラクタを使用。
-    /// </summary>
     public string FromPrimitiveMethodName { get; }
 
-    /// <summary>
-    /// FromPrimitiveがstaticメソッドかどうか。
-    /// falseの場合はコンストラクタを使用。
-    /// </summary>
     public bool IsFromPrimitiveStatic { get; }
 
-    /// <summary>
-    /// タプル要素一覧（フラット化用）。
-    /// </summary>
     public IReadOnlyList<TupleElementInfo> TupleElements { get; }
 
     public ValueObjectInfo(
@@ -70,64 +50,97 @@ internal readonly struct ValueObjectInfo
         TupleElements = tupleElements;
     }
 
-    public static ValueObjectInfo None => new(false, string.Empty, string.Empty, false, System.Array.Empty<TupleElementInfo>());
+    public static ValueObjectInfo None =>
+        new ValueObjectInfo(false, string.Empty, string.Empty, false, System.Array.Empty<TupleElementInfo>());
+}
+
+internal enum EntityMemberKind
+{
+    Field,
+    Property,
 }
 
 /// <summary>
-/// フィールド情報。
+/// Entityメンバー情報。
 /// </summary>
-internal readonly struct FieldInfo
+internal readonly struct EntityMemberInfo
 {
-    /// <summary>
-    /// フィールド名（アンダースコア含む）。
-    /// </summary>
     public string Name { get; }
 
-    /// <summary>
-    /// 型名。
-    /// </summary>
     public string TypeName { get; }
 
-    /// <summary>
-    /// 完全修飾型名。
-    /// </summary>
-    public string FullTypeName { get; }
-
-    /// <summary>
-    /// Persistインデックス。
-    /// </summary>
     public int Index { get; }
 
-    /// <summary>
-    /// Keyかどうか。
-    /// </summary>
     public bool IsKey { get; }
 
-    /// <summary>
-    /// ValueObject情報。
-    /// </summary>
+    public bool IsPersisted { get; }
+
+    public EntityMemberKind Kind { get; }
+
     public ValueObjectInfo ValueObjectInfo { get; }
 
-    public FieldInfo(string name, string typeName, string fullTypeName, int index, bool isKey, ValueObjectInfo valueObjectInfo)
+    public EntityMemberInfo(
+        string name,
+        string typeName,
+        int index,
+        bool isKey,
+        bool isPersisted,
+        EntityMemberKind kind,
+        ValueObjectInfo valueObjectInfo)
     {
         Name = name;
         TypeName = typeName;
-        FullTypeName = fullTypeName;
         Index = index;
         IsKey = isKey;
+        IsPersisted = isPersisted;
+        Kind = kind;
         ValueObjectInfo = valueObjectInfo;
     }
 
-    /// <summary>
-    /// DTO用のフィールド名（アンダースコアなし、PascalCase）。
-    /// </summary>
-    public string DtoFieldName
+    public string DtoFieldName => CodeGenHelpers.EscapeIdentifier(CodeGenHelpers.ToPascalCase(Name));
+
+    public string ParameterName => CodeGenHelpers.EscapeIdentifier(CodeGenHelpers.ToCamelCase(Name));
+
+    public string MemberName => CodeGenHelpers.EscapeIdentifier(Name);
+}
+
+internal static class CodeGenHelpers
+{
+    public static string ToPascalCase(string name)
     {
-        get
+        var trimmed = name.TrimStart('_');
+        if (trimmed.Length == 0)
         {
-            var name = Name.TrimStart('_');
-            if (name.Length == 0) return Name;
-            return char.ToUpperInvariant(name[0]) + name.Substring(1);
+            return name;
         }
+
+        return char.ToUpperInvariant(trimmed[0]) + trimmed.Substring(1);
+    }
+
+    public static string ToCamelCase(string name)
+    {
+        var pascal = ToPascalCase(name);
+        if (pascal.Length == 0)
+        {
+            return name;
+        }
+
+        if (char.IsLower(pascal[0]))
+        {
+            return pascal;
+        }
+
+        return char.ToLowerInvariant(pascal[0]) + pascal.Substring(1);
+    }
+
+    public static string EscapeIdentifier(string name)
+    {
+        if (SyntaxFacts.GetKeywordKind(name) != SyntaxKind.None ||
+            SyntaxFacts.GetContextualKeywordKind(name) != SyntaxKind.None)
+        {
+            return "@" + name;
+        }
+
+        return name;
     }
 }

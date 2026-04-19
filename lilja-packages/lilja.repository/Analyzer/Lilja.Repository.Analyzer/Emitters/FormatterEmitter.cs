@@ -1,178 +1,167 @@
-using System.Text;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Lilja.Repository.Analyzer.Models;
 
 namespace Lilja.Repository.Analyzer.Emitters;
 
 /// <summary>
-/// MessagePackFormatter生成（依存なし）。
+/// MessagePack formatter 生成。
 /// </summary>
 internal static class FormatterEmitter
 {
-    public static string Emit(EntityInfo entity)
+    public static string EmitDtoFormatter(EntityInfo entity)
     {
-        var sb = new StringBuilder();
+        var flattenedFields = entity.PersistMembers
+            .SelectMany(EnumerateFlattenedFieldDescriptors)
+            .ToArray();
+        var dtoTypeName = EmitterSupport.Qualify(entity.DtoTypeName);
+        var serializeLines = string.Join(
+            Environment.NewLine,
+            flattenedFields.Select(field =>
+                $"            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<{field.TypeName}>(options.Resolver).Serialize(ref writer, value.{field.FieldName}, options);"));
+        var deserializeAssignments = string.Join(
+            Environment.NewLine,
+            flattenedFields.Select((field, index) => $$"""
+            if (count > {{index}})
+            {
+                result.{{field.FieldName}} = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<{{field.TypeName}}>(options.Resolver).Deserialize(ref reader, options)!;
+            }
+"""));
 
-        // Entityのnamespaceを含めたDTO/Formatter namespace
-        var entityNs = entity.Namespace;
-        var dtoNamespace = string.IsNullOrEmpty(entityNs)
-            ? "Lilja.Repository.Generated.Dtos"
-            : $"Lilja.Repository.Generated.Dtos.{entityNs}";
-        var formatterNamespace = string.IsNullOrEmpty(entityNs)
-            ? "Lilja.Repository.Generated.Formatters"
-            : $"Lilja.Repository.Generated.Formatters.{entityNs}";
-        var dtoTypeName = $"{dtoNamespace}.{entity.ClassName}Dto";
+        return $$"""
+#nullable enable
 
-        sb.AppendLine("#nullable disable");
-        sb.AppendLine();
-        sb.AppendLine("using MessagePack;");
-        sb.AppendLine("using MessagePack.Formatters;");
-        sb.AppendLine();
-        sb.AppendLine($"namespace {formatterNamespace}");
-        sb.AppendLine("{");
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine($"    /// {entity.ClassName}Dto用のMessagePackFormatter。");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine($"    public sealed class {entity.ClassName}DtoFormatter : IMessagePackFormatter<{dtoTypeName}>");;
-        sb.AppendLine("    {");
-
-        // フラット化後の総フィールド数を計算
-        int fieldCount = 0;
-        foreach (var field in entity.Fields)
+namespace {{entity.FormatterNamespace}}
+{
+    /// <summary>
+    /// {{entity.ClassName}}Dto 用の MessagePack formatter。
+    /// </summary>
+    public sealed class {{entity.ClassName}}DtoFormatter : global::MessagePack.Formatters.IMessagePackFormatter<{{dtoTypeName}}>
+    {
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, {{dtoTypeName}} value, global::MessagePack.MessagePackSerializerOptions options)
         {
-            if (field.ValueObjectInfo.IsValueObject)
+            if (value is null)
             {
-                fieldCount += field.ValueObjectInfo.TupleElements.Count;
+                writer.WriteNil();
+                return;
             }
-            else
-            {
-                fieldCount++;
-            }
+
+            writer.WriteArrayHeader({{flattenedFields.Length}});
+{{serializeLines}}
         }
 
-        // Serialize
-        sb.AppendLine($"        public void Serialize(ref MessagePackWriter writer, {dtoTypeName} value, MessagePackSerializerOptions options)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (value == null)");
-        sb.AppendLine("            {");
-        sb.AppendLine("                writer.WriteNil();");
-        sb.AppendLine("                return;");
-        sb.AppendLine("            }");
-        sb.AppendLine();
-        sb.AppendLine($"            writer.WriteArrayHeader({fieldCount});");
-
-        foreach (var field in entity.Fields)
+        public {{dtoTypeName}} Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
-            if (field.ValueObjectInfo.IsValueObject)
+            if (reader.TryReadNil())
             {
-                foreach (var element in field.ValueObjectInfo.TupleElements)
-                {
-                    EmitWriteCall(sb, element.TypeName, $"value.{field.DtoFieldName}_{element.Name}");
-                }
+                return null!;
             }
-            else
+
+            var count = reader.ReadArrayHeader();
+            var result = new {{dtoTypeName}}();
+
+{{deserializeAssignments}}
+
+            for (var index = {{flattenedFields.Length}}; index < count; index++)
             {
-                EmitWriteCall(sb, field.TypeName, $"value.{field.DtoFieldName}");
+                reader.Skip();
             }
+
+            return result;
+        }
+    }
+}
+""";
+    }
+
+    public static string EmitStorageEnvelopeFormatter(EntityInfo entity)
+    {
+        var envelopeTypeName = EmitterSupport.Qualify(entity.StorageEnvelopeTypeName);
+        var dtoTypeName = EmitterSupport.Qualify(entity.DtoTypeName);
+        var serializeBody = entity.HasKey
+            ? $$"""
+            writer.WriteArrayHeader(1);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::System.Collections.Generic.List<{{dtoTypeName}}>>(options.Resolver).Serialize(ref writer, value.Items, options);
+"""
+            : $$"""
+            writer.WriteArrayHeader(2);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<bool>(options.Resolver).Serialize(ref writer, value.HasValue, options);
+            global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<{{dtoTypeName}}>(options.Resolver).Serialize(ref writer, value.Item!, options);
+""";
+        var deserializeBody = entity.HasKey
+            ? $$"""
+            if (count > 0)
+            {
+                result.Items = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<global::System.Collections.Generic.List<{{dtoTypeName}}>>(options.Resolver).Deserialize(ref reader, options) ?? new global::System.Collections.Generic.List<{{dtoTypeName}}>();
+            }
+            for (var index = 1; index < count; index++)
+            {
+                reader.Skip();
+            }
+"""
+            : $$"""
+            if (count > 0)
+            {
+                result.HasValue = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<bool>(options.Resolver).Deserialize(ref reader, options);
+            }
+            if (count > 1)
+            {
+                result.Item = global::MessagePack.FormatterResolverExtensions.GetFormatterWithVerify<{{dtoTypeName}}>(options.Resolver).Deserialize(ref reader, options);
+            }
+            for (var index = 2; index < count; index++)
+            {
+                reader.Skip();
+            }
+""";
+
+        return $$"""
+#nullable enable
+
+namespace {{entity.FormatterNamespace}}
+{
+    internal sealed class {{entity.ClassName}}StorageEnvelopeFormatter : global::MessagePack.Formatters.IMessagePackFormatter<{{envelopeTypeName}}>
+    {
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, {{envelopeTypeName}} value, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            if (value is null)
+            {
+                writer.WriteNil();
+                return;
+            }
+
+{{serializeBody}}
         }
 
-        sb.AppendLine("        }");
-        sb.AppendLine();
-
-        // Deserialize
-        sb.AppendLine($"        public {dtoTypeName} Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            if (reader.TryReadNil())");
-        sb.AppendLine("            {");
-        sb.AppendLine("                return null;");
-        sb.AppendLine("            }");
-        sb.AppendLine();
-        sb.AppendLine("            var count = reader.ReadArrayHeader();");
-        sb.AppendLine($"            var result = new {dtoTypeName}();");
-        sb.AppendLine();
-
-        int fieldIndex = 0;
-        foreach (var field in entity.Fields)
+        public {{envelopeTypeName}} Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
-            if (field.ValueObjectInfo.IsValueObject)
+            if (reader.TryReadNil())
             {
-                foreach (var element in field.ValueObjectInfo.TupleElements)
-                {
-                    sb.AppendLine($"            if (count > {fieldIndex})");
-                    sb.AppendLine("            {");
-                    EmitReadCall(sb, element.TypeName, $"result.{field.DtoFieldName}_{element.Name}");
-                    sb.AppendLine("            }");
-                    fieldIndex++;
-                }
+                return null!;
             }
-            else
-            {
-                sb.AppendLine($"            if (count > {fieldIndex})");
-                sb.AppendLine("            {");
-                EmitReadCall(sb, field.TypeName, $"result.{field.DtoFieldName}");
-                sb.AppendLine("            }");
-                fieldIndex++;
-            }
+
+            var count = reader.ReadArrayHeader();
+            var result = new {{envelopeTypeName}}();
+{{deserializeBody}}
+            return result;
+        }
+    }
+}
+""";
+    }
+
+    private static IEnumerable<(string FieldName, string TypeName)> EnumerateFlattenedFieldDescriptors(
+        EntityMemberInfo member)
+    {
+        if (!member.ValueObjectInfo.IsValueObject)
+        {
+            yield return (EmitterSupport.GetDtoFieldName(member), member.TypeName);
+            yield break;
         }
 
-        sb.AppendLine();
-        sb.AppendLine("            return result;");
-        sb.AppendLine("        }");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-
-        return sb.ToString();
-    }
-
-    private static void EmitWriteCall(StringBuilder sb, string typeName, string fieldAccess)
-    {
-        var writeMethod = GetWriteMethod(typeName);
-        sb.AppendLine($"            writer.{writeMethod}({fieldAccess});");
-    }
-
-    private static void EmitReadCall(StringBuilder sb, string typeName, string fieldAccess)
-    {
-        var readMethod = GetReadMethod(typeName);
-        sb.AppendLine($"                {fieldAccess} = reader.{readMethod}();");
-    }
-
-    private static string GetWriteMethod(string typeName)
-    {
-        return typeName switch
+        foreach (var element in member.ValueObjectInfo.TupleElements)
         {
-            "bool" => "Write",
-            "byte" => "Write",
-            "sbyte" => "Write",
-            "short" => "Write",
-            "ushort" => "Write",
-            "int" => "Write",
-            "uint" => "Write",
-            "long" => "Write",
-            "ulong" => "Write",
-            "float" => "Write",
-            "double" => "Write",
-            "string" => "Write",
-            "String" => "Write",
-            _ => "Write"
-        };
-    }
-
-    private static string GetReadMethod(string typeName)
-    {
-        return typeName switch
-        {
-            "bool" => "ReadBoolean",
-            "byte" => "ReadByte",
-            "sbyte" => "ReadSByte",
-            "short" => "ReadInt16",
-            "ushort" => "ReadUInt16",
-            "int" => "ReadInt32",
-            "uint" => "ReadUInt32",
-            "long" => "ReadInt64",
-            "ulong" => "ReadUInt64",
-            "float" => "ReadSingle",
-            "double" => "ReadDouble",
-            "string" or "String" => "ReadString",
-            _ => "ReadInt32"
-        };
+            yield return (EmitterSupport.GetDtoFieldName(member, element), element.TypeName);
+        }
     }
 }

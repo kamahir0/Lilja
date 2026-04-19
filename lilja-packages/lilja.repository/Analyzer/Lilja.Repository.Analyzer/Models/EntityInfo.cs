@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Lilja.Repository.Analyzer.Models;
 
@@ -8,53 +7,65 @@ namespace Lilja.Repository.Analyzer.Models;
 /// </summary>
 internal readonly struct EntityInfo
 {
-    /// <summary>
-    /// 名前空間。
-    /// </summary>
     public string Namespace { get; }
 
-    /// <summary>
-    /// クラス名。
-    /// </summary>
     public string ClassName { get; }
 
-    /// <summary>
-    /// フィールド一覧（Persistインデックス順）。
-    /// </summary>
-    public IReadOnlyList<FieldInfo> Fields { get; }
+    public string FullTypeName { get; }
 
-    /// <summary>
-    /// Keyフィールド一覧（Persistインデックス順）。
-    /// </summary>
-    public IReadOnlyList<FieldInfo> KeyFields { get; }
+    public IReadOnlyList<EntityMemberInfo> PersistMembers { get; }
 
-    /// <summary>
-    /// Keyフィールドが存在するかどうか。
-    /// </summary>
-    public bool HasKey => KeyFields.Count > 0;
+    public IReadOnlyList<EntityMemberInfo> KeyMembers { get; }
 
-    /// <summary>
-    /// 複合キーかどうか（Keyフィールドが2つ以上）。
-    /// </summary>
-    public bool IsCompositeKey => KeyFields.Count > 1;
+    public bool HasKey => KeyMembers.Count > 0;
 
-    /// <summary>
-    /// Persist属性フィールドが存在するかどうか。
-    /// </summary>
-    public bool HasPersistFields => Fields.Count > 0;
+    public bool IsCompositeKey => KeyMembers.Count > 1;
 
-    /// <summary>
-    /// DTO復元用のprivateコンストラクタを生成する必要があるかどうか。
-    /// 既にPersist属性フィールドを網羅したコンストラクタが存在する場合はfalse。
-    /// </summary>
+    public bool HasPersistMembers => PersistMembers.Count > 0;
+
     public bool NeedsConstructorGeneration { get; }
 
-    public EntityInfo(string @namespace, string className, IReadOnlyList<FieldInfo> fields, IReadOnlyList<FieldInfo> keyFields, bool needsConstructorGeneration)
+    public string DtoNamespace =>
+        string.IsNullOrEmpty(Namespace)
+            ? "Lilja.Repository.Generated.Dtos"
+            : $"Lilja.Repository.Generated.Dtos.{Namespace}";
+
+    public string DtoTypeName => $"{DtoNamespace}.{ClassName}Dto";
+
+    public string FormatterNamespace =>
+        string.IsNullOrEmpty(Namespace)
+            ? "Lilja.Repository.Generated.Formatters"
+            : $"Lilja.Repository.Generated.Formatters.{Namespace}";
+
+    public string FormatterTypeName => $"{FormatterNamespace}.{ClassName}DtoFormatter";
+
+    public string StorageNamespace =>
+        string.IsNullOrEmpty(Namespace)
+            ? "Lilja.Repository.Generated.Storage"
+            : $"Lilja.Repository.Generated.Storage.{Namespace}";
+
+    public string StorageEnvelopeTypeName => $"{StorageNamespace}.{ClassName}StorageEnvelope";
+
+    public string StorageEnvelopeFormatterTypeName => $"{FormatterNamespace}.{ClassName}StorageEnvelopeFormatter";
+
+    public string RepositoryNamespace =>
+        string.IsNullOrEmpty(Namespace)
+            ? "Repositories"
+            : $"{Namespace}.Repositories";
+
+    public EntityInfo(
+        string @namespace,
+        string className,
+        string fullTypeName,
+        IReadOnlyList<EntityMemberInfo> persistMembers,
+        IReadOnlyList<EntityMemberInfo> keyMembers,
+        bool needsConstructorGeneration)
     {
         Namespace = @namespace;
         ClassName = className;
-        Fields = fields;
-        KeyFields = keyFields;
+        FullTypeName = fullTypeName;
+        PersistMembers = persistMembers;
+        KeyMembers = keyMembers;
         NeedsConstructorGeneration = needsConstructorGeneration;
     }
 }

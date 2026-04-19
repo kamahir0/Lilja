@@ -1,4 +1,5 @@
-
+using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Lilja.Repository.Diagnostics;
@@ -12,6 +13,19 @@ namespace Lilja.Repository.Editor
 
         private static int _interval;
         private static RepositoryViewer _window;
+        private static readonly GUILayoutOption[] EmptyLayoutOption = new GUILayoutOption[0];
+
+        private RepositoryTrackerTreeView _treeView;
+        private object _splitterState;
+        private RepositoryTracker.RepositoryType _currentType;
+        private RepositoryTracker.RepositoryType[] _availableTypes = Array.Empty<RepositoryTracker.RepositoryType>();
+        private bool _enableAutoReload;
+        private bool _isDirty = true;
+        private Vector2 _tableScroll;
+        private GUIStyle _tableListStyle;
+        private static GUIStyle _detailsStyle;
+        private static GUIStyle _detailsHeaderStyle;
+        private Vector2 _detailsScroll;
 
         [MenuItem("Lilja/Repository/Repository Viewer")]
         public static void ShowWindow()
@@ -24,36 +38,37 @@ namespace Lilja.Repository.Editor
             GetWindow<RepositoryViewer>("Repository Viewer").Show();
         }
 
-        private static readonly GUILayoutOption[] EmptyLayoutOption = new GUILayoutOption[0];
-
-        private RepositoryTrackerTreeView _treeView;
-        private object _splitterState;
-        private RepositoryTracker.RepositoryType _currentType;
-        private bool _enableAutoReload;
-        private bool _isDirty = true;
-
-        void OnEnable()
+        private void OnEnable()
         {
             _window = this;
             _splitterState = SplitterGUILayout.CreateSplitterState(new[] { 70f, 30f }, new[] { 100, 100 }, null);
 
+            _availableTypes = RepositoryTrackerTreeView.GetAvailableRepositoryTypes();
             _currentType = (RepositoryTracker.RepositoryType)EditorPrefs.GetInt(RepositoryTypeKey, 0);
-            _enableAutoReload = EditorPrefs.GetBool(EnableAutoReloadKey, false);
+            if (_availableTypes.Length == 0)
+            {
+                _availableTypes = new[] { RepositoryTracker.RepositoryType.InMemory, RepositoryTracker.RepositoryType.Json };
+            }
 
+            if (!_availableTypes.Contains(_currentType))
+            {
+                _currentType = _availableTypes[0];
+            }
+
+            _enableAutoReload = EditorPrefs.GetBool(EnableAutoReloadKey, false);
             _treeView = new RepositoryTrackerTreeView(_currentType);
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             RenderToolbar();
 
-            // Status message
             if (!Application.isPlaying && _currentType == RepositoryTracker.RepositoryType.InMemory)
             {
                 EditorGUILayout.HelpBox("InMemory repositories are only available in Play Mode.", MessageType.Info);
             }
 
-            SplitterGUILayout.BeginVerticalSplit(this._splitterState, EmptyLayoutOption);
+            SplitterGUILayout.BeginVerticalSplit(_splitterState, EmptyLayoutOption);
             {
                 RenderTable();
                 RenderDetailsPanel();
@@ -61,28 +76,19 @@ namespace Lilja.Repository.Editor
             SplitterGUILayout.EndVerticalSplit();
         }
 
-        #region Toolbar
-
-        static readonly GUIContent EnableAutoReloadContent =
-            EditorGUIUtility.TrTextContent("Auto Reload", "Reload automatically every 2 seconds.");
-
-        static readonly GUIContent ReloadContent =
-            EditorGUIUtility.TrTextContent("Reload", "Reload repositories now.");
-
-        static readonly GUIContent RepositoryTypeContent =
-            EditorGUIUtility.TrTextContent("Repository Type", "Select repository storage type.");
-
-        void RenderToolbar()
+        private void RenderToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, EmptyLayoutOption);
 
-            // Repository Type Dropdown
-            var newType = (RepositoryTracker.RepositoryType)EditorGUILayout.EnumPopup(
-                _currentType,
-                EditorStyles.toolbarDropDown,
-                GUILayout.Width(120)
-            );
+            var labels = _availableTypes.Select(type => type.ToString()).ToArray();
+            var currentIndex = Array.IndexOf(_availableTypes, _currentType);
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
 
+            var newIndex = EditorGUILayout.Popup(currentIndex, labels, EditorStyles.toolbarDropDown, GUILayout.Width(140));
+            var newType = _availableTypes[newIndex];
             if (newType != _currentType)
             {
                 _currentType = newType;
@@ -91,14 +97,11 @@ namespace Lilja.Repository.Editor
                 _isDirty = true;
             }
 
-            // Auto Reload Toggle
             var newAutoReload = GUILayout.Toggle(
                 _enableAutoReload,
-                EnableAutoReloadContent,
+                EditorGUIUtility.TrTextContent("Auto Reload", "Reload automatically every 2 seconds."),
                 EditorStyles.toolbarButton,
-                EmptyLayoutOption
-            );
-
+                EmptyLayoutOption);
             if (newAutoReload != _enableAutoReload)
             {
                 _enableAutoReload = newAutoReload;
@@ -107,32 +110,24 @@ namespace Lilja.Repository.Editor
 
             GUILayout.FlexibleSpace();
 
-            // Reload Button
-            if (GUILayout.Button(ReloadContent, EditorStyles.toolbarButton, EmptyLayoutOption))
+            if (GUILayout.Button(
+                    EditorGUIUtility.TrTextContent("Reload", "Reload repositories now."),
+                    EditorStyles.toolbarButton,
+                    EmptyLayoutOption))
             {
                 _isDirty = true;
             }
 
-            // Item Count -> Open Directory Button
-            if (_currentType != RepositoryTracker.RepositoryType.InMemory)
+            if (_currentType != RepositoryTracker.RepositoryType.InMemory &&
+                GUILayout.Button("Open Directory", EditorStyles.toolbarButton, EmptyLayoutOption))
             {
-                if (GUILayout.Button("Open Directory", EditorStyles.toolbarButton, EmptyLayoutOption))
-                {
-                    EditorUtility.RevealInFinder(Application.persistentDataPath);
-                }
+                EditorUtility.RevealInFinder(Application.persistentDataPath);
             }
 
             EditorGUILayout.EndHorizontal();
         }
 
-        #endregion
-
-        #region Table
-
-        private Vector2 _tableScroll;
-        private GUIStyle _tableListStyle;
-
-        void RenderTable()
+        private void RenderTable()
         {
             if (_tableListStyle == null)
             {
@@ -142,8 +137,7 @@ namespace Lilja.Repository.Editor
             }
 
             EditorGUILayout.BeginVertical(_tableListStyle, EmptyLayoutOption);
-
-            this._tableScroll = EditorGUILayout.BeginScrollView(
+            _tableScroll = EditorGUILayout.BeginScrollView(
                 _tableScroll,
                 GUILayout.ExpandWidth(true),
                 GUILayout.MaxWidth(2000f));
@@ -151,21 +145,17 @@ namespace Lilja.Repository.Editor
             var controlRect = EditorGUILayout.GetControlRect(
                 GUILayout.ExpandHeight(true),
                 GUILayout.ExpandWidth(true));
-
             _treeView?.OnGUI(controlRect);
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
         }
 
-        void Update()
+        private void Update()
         {
-            if (_enableAutoReload && Application.isPlaying)
+            if (_enableAutoReload && Application.isPlaying && _interval++ % 120 == 0)
             {
-                if (_interval++ % 120 == 0) // Every 2 seconds at 60fps
-                {
-                    _isDirty = true;
-                }
+                _isDirty = true;
             }
 
             if (_isDirty)
@@ -176,15 +166,7 @@ namespace Lilja.Repository.Editor
             }
         }
 
-        #endregion
-
-        #region Details Panel
-
-        private static GUIStyle _detailsStyle;
-        private static GUIStyle _detailsHeaderStyle;
-        private Vector2 _detailsScroll;
-
-        void RenderDetailsPanel()
+        private void RenderDetailsPanel()
         {
             if (_detailsStyle == null)
             {
@@ -203,15 +185,14 @@ namespace Lilja.Repository.Editor
 
             EditorGUILayout.BeginVertical(EmptyLayoutOption);
 
-            string headerText = "Details";
-            string detailsText = "Select an item to view details.";
-            object selectedValue;
+            var headerText = "Details";
+            var detailsText = "Select an item to view details.";
+            object selectedValue = null;
 
             var selected = _treeView.state.selectedIDs;
             if (selected.Count > 0)
             {
-                var first = selected[0];
-                var item = _treeView.FindItemById(first);
+                var item = _treeView.FindItemById(selected[0]);
                 if (item != null)
                 {
                     if (item.IsRepository)
@@ -224,7 +205,6 @@ namespace Lilja.Repository.Editor
                     {
                         headerText = $"{item.Key} ({item.Type})";
                         selectedValue = item.FullValue;
-
                         if (selectedValue != null)
                         {
                             try
@@ -244,33 +224,20 @@ namespace Lilja.Repository.Editor
                 }
             }
 
-            // Header
             EditorGUILayout.LabelField(headerText, _detailsHeaderStyle);
+            _detailsScroll = EditorGUILayout.BeginScrollView(_detailsScroll, EmptyLayoutOption);
 
-            // Scrollable details
-            _detailsScroll = EditorGUILayout.BeginScrollView(this._detailsScroll, EmptyLayoutOption);
-
-            var vector = _detailsStyle.CalcSize(new GUIContent(detailsText));
+            var textSize = _detailsStyle.CalcSize(new GUIContent(detailsText));
             EditorGUILayout.SelectableLabel(
                 detailsText,
                 _detailsStyle,
                 GUILayout.ExpandHeight(true),
                 GUILayout.ExpandWidth(true),
-                GUILayout.MinWidth(vector.x),
-                GUILayout.MinHeight(vector.y)
-            );
+                GUILayout.MinWidth(textSize.x),
+                GUILayout.MinHeight(textSize.y));
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
         }
-
-        #endregion
-
-        #region File Loading (for Edit Mode)
-
-        // This section can be expanded later to support file-based loading in Edit Mode
-        // similar to the original implementation's LoadFromFiles method
-
-        #endregion
     }
 }

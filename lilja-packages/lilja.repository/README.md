@@ -1,64 +1,71 @@
 # Lilja.Repository
 
-Source Generatorを活用した、高性能・トランザクション対応のリポジトリパターンを提供するUnityパッケージです。  
-`[Entity]` 属性を付与したクラスから、DTO・Converter・Formatter・Repositoryを自動生成します。
+`[Entity]` を付けたクラスから、Unity 用の Repository 実装を source generator で生成するパッケージです。  
+Entity 定義、transaction、永続化ファイルをできるだけ単純に保ちつつ、DDD / オニオンアーキテクチャ向けの Repository を扱いやすくすることを目指しています。
 
-## 主な機能
+## 何が生成されるか
 
-- **Source Generator による自動コード生成**
-  - DTO（フラットな `[Serializable]` クラス）
-  - Converter（Entity ↔ DTO 変換）
-  - Repository インターフェース + 実装（InMemory / JSON / MessagePack）
-  - MessagePack Formatter（依存フリーな低レベル実装）
-  - Key Accessor（`[Key]` 属性付きEntity用）
-- **トランザクション管理** — `TxManager` による読み取り / 読み書きトランザクション（SemaphoreSlim による書き込み直列化）
-- **ValueObject サポート** — `[ToPrimitive]` / `[FromPrimitive]` によるプリミティブ変換・フラット化
-- **Atomic ファイル書き込み** — `AtomicFileWriter` による一時ファイル→リプレースパターンでデータ破損を防止
-- **エディタ拡張** — Repository Viewer で実行時のリポジトリ状態をインスペクト可能
+- `I{Entity}Repository`
+- `InMemory{Entity}Repository`
+- `[Persist]` がある場合:
+  - `{Entity}Dto`
+  - `{Entity}.ToDto` / `{Entity}.FromDto`
+  - `Json{Entity}Repository`
+- `[Key]` がある場合:
+  - `{Entity}.GetKey`
+  - `[Persist]` もあると `{Entity}.GetKeyFromDto`
+- MessagePack 参照がある場合のみ:
+  - `{Entity}DtoFormatter`
+  - `MessagePack{Entity}Repository`
 
 ## 要件
 
-- Unity 6000.3 以降
-- [UniTask](https://github.com/Cysharp/UniTask) 2.5.10 以降
+- Unity `6000.3` 以降
+- `com.cysharp.unitask` `2.5.10` 以降
+- MessagePack は optional
 
-## インストール
+## Entity の書き方
 
-`Plugins/Lilja/Package Management/Fix Lilja Package Paths to Relative` より追加してください（ローカルパッケージとしてインポートする場合）。
-
-## 使い方
-
-### 1. Entity の定義
-
-`[Entity]` 属性をクラスに付与し、永続化するフィールドに `[Persist(index)]` を指定します。  
-主キーには `[Key]` 属性を付与します。
+- 対応対象は `instance field` と `instance auto-property`
+- `static` メンバー、計算プロパティ、custom accessor property は非対応
+- 永続化リポジトリを生成するなら、`[Key]` メンバーにも `[Persist(index)]` が必要
 
 ```csharp
 using Lilja.Repository;
+
+namespace Demo;
 
 [Entity]
 public partial class Item
 {
     [Key]
     [Persist(0)]
-    private int _id;
+    public int Id { get; }
 
     [Persist(1)]
-    private string _name;
+    public string Name { get; }
 
     [Persist(2)]
-    private Coordinate _location;
+    public Coordinate Position { get; }
+
+    public Item(int id, string name, Coordinate position)
+    {
+        Id = id;
+        Name = name;
+        Position = position;
+    }
 }
 ```
 
-### 2. ValueObject の定義
+## ValueObject
 
-`[ToPrimitive]` / `[FromPrimitive]` 属性を使用して、プリミティブ型への変換・復元を定義します。  
-Source Generator はこれを検出し、DTO内でフィールドを自動的にフラット化します。
+`[ToPrimitive]` と `[FromPrimitive]` が対になっている型は DTO へフラット化されます。  
+復元は `[FromPrimitive]` static メソッド、または `[FromPrimitive]` 付きコンストラクタから行われます。
 
 ```csharp
 using Lilja.Repository;
 
-public struct Coordinate
+public readonly struct Coordinate
 {
     public int X { get; }
     public int Y { get; }
@@ -75,78 +82,77 @@ public struct Coordinate
 }
 ```
 
-### 3. 自動生成されるコード
+## Repository の使い方
 
-上記の `Item` Entity から以下が自動生成されます。
-
-| 生成物          | クラス名                      | 説明                                     |
-| --------------- | ----------------------------- | ---------------------------------------- |
-| DTO             | `ItemDto`                     | フラット化された `[Serializable]` クラス |
-| Converter       | `Item.ToDto` / `Item.FromDto` | Entity ↔ DTO 変換メソッド                |
-| Repository I/F  | `IItemRepository`             | CRUD操作インターフェース                 |
-| InMemory実装    | `InMemoryItemRepository`      | メモリ上のリポジトリ                     |
-| JSON実装        | `JsonItemRepository`          | JSONファイル永続化リポジトリ             |
-| MessagePack実装 | `MessagePackItemRepository`   | MessagePack永続化リポジトリ（※）         |
-| Formatter       | `ItemDtoFormatter`            | 依存フリーなMessagePackフォーマッタ（※） |
-| Key Accessor    | Key Accessor                  | `[Key]` フィールドへのアクセサ           |
-
-> ※ MessagePack関連のコードは、プロジェクトにMessagePackが参照されている場合のみ生成されます。
-
-### 4. トランザクション
-
-`TxManager` を通じてリポジトリ操作をトランザクション内で実行できます。
+`InMemory` はそのまま使えます。  
+`Json` / `MessagePack` は利用前に `InitializeAsync` が必須です。  
+`Read` は存在しない可能性を表すため nullable を返します。  
+永続化は `1 repository = 1 file` の単純な形です。
 
 ```csharp
+using Demo.Repositories;
+using Lilja.Repository;
+
 var txManager = new TxManager();
+var repository = new JsonItemRepository();
 
-// 読み取りトランザクション
-txManager.BeginROTransaction(tx =>
-{
-    // 読み取り操作
-});
+await repository.InitializeAsync();
 
-// 読み書きトランザクション（コミット/ロールバック対応）
 await txManager.BeginRWTransactionAsync(tx =>
 {
-    // 読み書き操作
-    // 正常完了でコミット、例外でロールバック
-}, cancellationToken);
+    repository.Create(tx, new Item(1, "Potion", new Coordinate(10, 20)));
+});
+
+txManager.BeginROTransaction(tx =>
+{
+    var item = repository.Read(tx, 1);
+    if (item is not null)
+    {
+        UnityEngine.Debug.Log(item.Name);
+    }
+});
 ```
 
-## コア属性一覧
+## Transaction 契約
 
-| 属性               | 対象                      | 説明                                            |
-| ------------------ | ------------------------- | ----------------------------------------------- |
-| `[Entity]`         | クラス                    | Source Generator の対象としてマーク             |
-| `[Key]`            | フィールド / プロパティ   | 主キーフィールドをマーク                        |
-| `[Persist(index)]` | フィールド / プロパティ   | 永続化対象フィールドをマーク（indexで順序指定） |
-| `[ToPrimitive]`    | メソッド                  | ValueObjectのプリミティブ変換メソッドをマーク   |
-| `[FromPrimitive]`  | コンストラクタ / メソッド | ValueObjectのプリミティブ復元メソッドをマーク   |
+- RW transaction 中の変更は transaction-local に staged されます
+- RO transaction は committed state だけを見ます
+- commit は `persist all dirty staged states` の成功後に committed state を差し替えます
+- persist 失敗時は committed state は更新されず、例外が呼び出し元へ返ります
+- rollback は staged state を捨てるだけで、コミット済み状態は触りません
 
-## ディレクトリ構成
+### 制約
 
-```
-lilja.repository/
-├── src/
-│   ├── Scripts/
-│   │   ├── Runtime/
-│   │   │   └── Core/
-│   │   │       ├── Attributes/       # Entity, Key, Persist, ToPrimitive, FromPrimitive
-│   │   │       ├── Transactions/     # TxManager, IReadOnlyTx, IReadWriteTx
-│   │   │       ├── Diagnostics/      # RepositoryTracker（エディタ専用）
-│   │   │       └── IO/               # AtomicFileWriter
-│   │   └── Editor/                   # RepositoryViewer（エディタ拡張）
-│   └── Plugins/                      # Source Generator DLL
-├── Analyzer/                         # Source Generator ソースコード
-│   ├── Lilja.Repository.Analyzer/
-│   │   ├── RepositoryGenerator.cs    # IIncrementalGenerator 実装
-│   │   ├── Analysis/                 # EntityAnalyzer
-│   │   ├── Emitters/                 # DTO, Converter, Formatter, Repository, KeyAccessor
-│   │   └── Models/                   # EntityInfo, FieldInfo
-│   └── Lilja.Repository.Analyzer.Test/
-└── package.json
+- `AtomicFileWriter` が保証するのは単一ファイルの置換までです
+- 複数 repository ファイルをまたぐ crash-safe ACID commit は保証しません
+
+## Editor
+
+- Repository Viewer は MessagePack を compile-time 必須にしません
+- MessagePack 未導入時は JSON / InMemory だけを表示します
+- DTO の key 表示は生成された `GetKeyFromDto` を優先して使います
+
+## 診断
+
+generator は次の形を error として止めます。
+
+- `partial` でない Entity
+- generic Entity
+- `static` な `[Key]` / `[Persist]`
+- computed property / custom accessor property
+- 重複した `Persist(index)`
+- `[Persist]` されていない key を持つ永続化 Entity
+- 不正な `[ToPrimitive]` / `[FromPrimitive]`
+
+## 開発メモ
+
+analyzer のビルド成果物は `src/Plugins/Lilja.Repository.Analyzer.dll` へコピーされます。  
+release 前は次を実行して、source と同梱 DLL を同期してください。
+
+```powershell
+dotnet build .\Analyzer\Lilja.Repository.Analyzer.slnx
 ```
 
 ## ライセンス
 
-[LICENSE](https://github.com/kamahir0/Lilja/blob/main/LICENSE) を参照してください。
+[LICENSE](https://github.com/kamahir0/Lilja/blob/main/LICENSE)

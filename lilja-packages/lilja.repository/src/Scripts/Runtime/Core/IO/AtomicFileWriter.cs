@@ -70,5 +70,16 @@ namespace Lilja.Repository
                 File.Move(tempPath, destPath);
             }
         }
+
+        /// <summary>
+        /// 対象ファイルが存在すれば削除する。
+        /// </summary>
+        public static void DeleteIfExists(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
     }
 }

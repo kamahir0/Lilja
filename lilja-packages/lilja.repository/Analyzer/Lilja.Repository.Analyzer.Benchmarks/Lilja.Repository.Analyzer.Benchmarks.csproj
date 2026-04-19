@@ -4,17 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +28,10 @@
              Link="Runtime\Repositories\%(Filename)%(Extension)" />
     <Compile Include="..\..\src\Scripts\Runtime\Core\Transactions\*.cs"
              Link="Runtime\Transactions\%(Filename)%(Extension)" />
+    <Compile Include="..\Lilja.Repository.Analyzer.Test\FrameworkStubs.cs"
+             Link="Shared\FrameworkStubs.cs" />
+    <Compile Include="..\Lilja.Repository.Analyzer.Test\SampleEntities.cs"
+             Link="Shared\SampleEntities.cs" />
   </ItemGroup>
 
 </Project>

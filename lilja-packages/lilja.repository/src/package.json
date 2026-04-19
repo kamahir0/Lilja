@@ -1,11 +1,14 @@
 {
   "name": "com.kamahir0.lilja.repository",
   "displayName": "Lilja.Repository",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "unity": "6000.3",
-  "description": "Lilja package created by DevKit.",
+  "description": "Unity repository source generator with staged transactions, JSON persistence, and optional MessagePack support.",
   "keywords": [
-    "lilja"
+    "lilja",
+    "unity",
+    "repository",
+    "source-generator"
   ],
   "author": {
     "name": "kamahir0",

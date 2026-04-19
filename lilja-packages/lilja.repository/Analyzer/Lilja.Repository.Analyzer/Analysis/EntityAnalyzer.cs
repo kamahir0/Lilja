@@ -1,7 +1,9 @@
-using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Lilja.Repository.Analyzer.Models;
 
 namespace Lilja.Repository.Analyzer.Analysis;
@@ -11,244 +13,443 @@ namespace Lilja.Repository.Analyzer.Analysis;
 /// </summary>
 internal static class EntityAnalyzer
 {
-    private const string EntityAttributeFullName = "Lilja.Repository.EntityAttribute";
     private const string KeyAttributeFullName = "Lilja.Repository.KeyAttribute";
     private const string PersistAttributeFullName = "Lilja.Repository.PersistAttribute";
     private const string ToPrimitiveAttributeFullName = "Lilja.Repository.ToPrimitiveAttribute";
     private const string FromPrimitiveAttributeFullName = "Lilja.Repository.FromPrimitiveAttribute";
 
-    /// <summary>
-    /// シンボルからEntity情報を解析する。
-    /// </summary>
-    public static EntityInfo? Analyze(INamedTypeSymbol classSymbol, Compilation compilation)
+    private static readonly SymbolDisplayFormat FullyQualifiedNullableFormat =
+        SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
+            SymbolDisplayMiscellaneousOptions.UseSpecialTypes |
+            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
+    public static EntityAnalysisResult Analyze(INamedTypeSymbol classSymbol)
     {
-        // Entity属性チェック
-        if (!HasAttribute(classSymbol, EntityAttributeFullName))
+        var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+
+        if (!IsPartial(classSymbol))
         {
-            return null;
+            diagnostics.Add(Diagnostic.Create(
+                RepositoryDiagnostics.EntityMustBePartial,
+                classSymbol.Locations.FirstOrDefault(),
+                classSymbol.Name));
         }
 
-        var fields = new List<Models.FieldInfo>();
-        var keyFields = new List<Models.FieldInfo>();
+        if (classSymbol.IsGenericType)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                RepositoryDiagnostics.GenericEntityIsNotSupported,
+                classSymbol.Locations.FirstOrDefault(),
+                classSymbol.Name));
+        }
+
+        var persistMembers = new List<EntityMemberInfo>();
+        var keyMembers = new List<EntityMemberInfo>();
+        var persistIndexes = new Dictionary<int, string>();
 
         foreach (var member in classSymbol.GetMembers())
         {
-            if (member is not IFieldSymbol fieldSymbol)
+            switch (member)
             {
-                continue;
-            }
-
-            // Key属性チェック
-            var isKey = HasAttribute(fieldSymbol, KeyAttributeFullName);
-
-            // Persist属性を持つフィールドのみ対象
-            var persistAttr = GetAttribute(fieldSymbol, PersistAttributeFullName);
-
-            if (persistAttr != null)
-            {
-                // インデックス取得
-                var index = 0;
-                if (persistAttr.ConstructorArguments.Length > 0 &&
-                    persistAttr.ConstructorArguments[0].Value is int idx)
-                {
-                    index = idx;
-                }
-
-                // ValueObject検出
-                var valueObjectInfo = AnalyzeValueObject(fieldSymbol.Type);
-
-                var fieldInfo = new Models.FieldInfo(
-                    fieldSymbol.Name,
-                    GetPrimitiveTypeName(fieldSymbol.Type),
-                    fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                    index,
-                    isKey,
-                    valueObjectInfo
-                );
-
-                fields.Add(fieldInfo);
-
-                if (isKey)
-                {
-                    keyFields.Add(fieldInfo);
-                }
-            }
-            else if (isKey)
-            {
-                // Persist属性なしだがKey属性のみのフィールド（InMemory専用のKey）
-                var keyFieldInfo = new Models.FieldInfo(
-                    fieldSymbol.Name,
-                    GetPrimitiveTypeName(fieldSymbol.Type),
-                    fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                    -1,
-                    true,
-                    ValueObjectInfo.None
-                );
-
-                keyFields.Add(keyFieldInfo);
+                case IFieldSymbol fieldSymbol when !fieldSymbol.IsImplicitlyDeclared:
+                    AnalyzeField(fieldSymbol, persistMembers, keyMembers, persistIndexes, diagnostics);
+                    break;
+                case IPropertySymbol propertySymbol when !propertySymbol.IsImplicitlyDeclared:
+                    AnalyzeProperty(propertySymbol, persistMembers, keyMembers, persistIndexes, diagnostics);
+                    break;
             }
         }
 
-        // インデックス順にソート
-        fields.Sort((a, b) => a.Index.CompareTo(b.Index));
+        persistMembers.Sort((left, right) => left.Index.CompareTo(right.Index));
+
+        if (persistMembers.Count > 0)
+        {
+            foreach (var keyMember in keyMembers)
+            {
+                if (!keyMember.IsPersisted)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        RepositoryDiagnostics.PersistedEntityKeyMustAlsoPersist,
+                        GetMemberLocation(classSymbol, keyMember.Name),
+                        keyMember.Name));
+                }
+            }
+        }
+
+        if (diagnostics.Any(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
+        {
+            return new EntityAnalysisResult(null, diagnostics.ToImmutable());
+        }
 
         var ns = classSymbol.ContainingNamespace.IsGlobalNamespace
             ? string.Empty
             : classSymbol.ContainingNamespace.ToDisplayString();
+        var fullTypeName = classSymbol.ToDisplayString(FullyQualifiedNullableFormat);
+        var needsConstructorGeneration =
+            persistMembers.Count > 0 && !HasMatchingConstructor(classSymbol, persistMembers);
 
-        // 既存コンストラクタの存在チェック（Persistフィールドがある場合のみ）
-        var needsConstructorGeneration = fields.Count > 0 && !HasMatchingConstructor(classSymbol, fields);
+        var entity = new EntityInfo(
+            ns,
+            classSymbol.Name,
+            fullTypeName,
+            persistMembers,
+            keyMembers,
+            needsConstructorGeneration);
 
-        return new EntityInfo(ns, classSymbol.Name, fields, keyFields, needsConstructorGeneration);
+        return new EntityAnalysisResult(entity, diagnostics.ToImmutable());
     }
 
-    /// <summary>
-    /// Persist属性フィールドと同じシグネチャのコンストラクタが存在するかチェック。
-    /// </summary>
-    private static bool HasMatchingConstructor(INamedTypeSymbol classSymbol, List<Models.FieldInfo> fields)
+    private static void AnalyzeField(
+        IFieldSymbol fieldSymbol,
+        List<EntityMemberInfo> persistMembers,
+        List<EntityMemberInfo> keyMembers,
+        Dictionary<int, string> persistIndexes,
+        ImmutableArray<Diagnostic>.Builder diagnostics)
     {
-        foreach (var ctor in classSymbol.Constructors)
+        var hasKey = HasAttribute(fieldSymbol, KeyAttributeFullName);
+        var persistAttribute = GetAttribute(fieldSymbol, PersistAttributeFullName);
+        if (!hasKey && persistAttribute == null)
         {
-            if (ctor.IsImplicitlyDeclared || ctor.IsStatic)
+            return;
+        }
+
+        if (fieldSymbol.IsStatic)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                RepositoryDiagnostics.StaticAnnotatedMember,
+                fieldSymbol.Locations.FirstOrDefault(),
+                fieldSymbol.Name));
+            return;
+        }
+
+        AnalyzeMemberCore(
+            fieldSymbol,
+            fieldSymbol.Type,
+            fieldSymbol.Name,
+            EntityMemberKind.Field,
+            hasKey,
+            persistAttribute,
+            persistMembers,
+            keyMembers,
+            persistIndexes,
+            diagnostics);
+    }
+
+    private static void AnalyzeProperty(
+        IPropertySymbol propertySymbol,
+        List<EntityMemberInfo> persistMembers,
+        List<EntityMemberInfo> keyMembers,
+        Dictionary<int, string> persistIndexes,
+        ImmutableArray<Diagnostic>.Builder diagnostics)
+    {
+        var hasKey = HasAttribute(propertySymbol, KeyAttributeFullName);
+        var persistAttribute = GetAttribute(propertySymbol, PersistAttributeFullName);
+        if (!hasKey && persistAttribute == null)
+        {
+            return;
+        }
+
+        if (propertySymbol.IsStatic)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                RepositoryDiagnostics.StaticAnnotatedMember,
+                propertySymbol.Locations.FirstOrDefault(),
+                propertySymbol.Name));
+            return;
+        }
+
+        if (!IsSupportedAutoProperty(propertySymbol))
+        {
+            diagnostics.Add(Diagnostic.Create(
+                RepositoryDiagnostics.PropertyMustBeAutoProperty,
+                propertySymbol.Locations.FirstOrDefault(),
+                propertySymbol.Name));
+            return;
+        }
+
+        AnalyzeMemberCore(
+            propertySymbol,
+            propertySymbol.Type,
+            propertySymbol.Name,
+            EntityMemberKind.Property,
+            hasKey,
+            persistAttribute,
+            persistMembers,
+            keyMembers,
+            persistIndexes,
+            diagnostics);
+    }
+
+    private static void AnalyzeMemberCore(
+        ISymbol symbol,
+        ITypeSymbol typeSymbol,
+        string name,
+        EntityMemberKind kind,
+        bool hasKey,
+        AttributeData? persistAttribute,
+        List<EntityMemberInfo> persistMembers,
+        List<EntityMemberInfo> keyMembers,
+        Dictionary<int, string> persistIndexes,
+        ImmutableArray<Diagnostic>.Builder diagnostics)
+    {
+        var isPersisted = persistAttribute != null;
+        var index = -1;
+        if (persistAttribute != null &&
+            persistAttribute.ConstructorArguments.Length > 0 &&
+            persistAttribute.ConstructorArguments[0].Value is int parsedIndex)
+        {
+            index = parsedIndex;
+        }
+
+        if (isPersisted)
+        {
+            if (persistIndexes.TryGetValue(index, out var existingMemberName))
+            {
+                diagnostics.Add(Diagnostic.Create(
+                    RepositoryDiagnostics.DuplicatePersistIndex,
+                    symbol.Locations.FirstOrDefault(),
+                    index,
+                    symbol.ContainingType.Name));
+            }
+            else
+            {
+                persistIndexes.Add(index, name);
+            }
+        }
+
+        var valueObjectInfo = AnalyzeValueObject(typeSymbol, symbol.Locations.FirstOrDefault(), diagnostics);
+        var memberInfo = new EntityMemberInfo(
+            name,
+            typeSymbol.ToDisplayString(FullyQualifiedNullableFormat),
+            index,
+            hasKey,
+            isPersisted,
+            kind,
+            valueObjectInfo);
+
+        if (isPersisted)
+        {
+            persistMembers.Add(memberInfo);
+        }
+
+        if (hasKey)
+        {
+            keyMembers.Add(memberInfo);
+        }
+    }
+
+    private static bool HasMatchingConstructor(
+        INamedTypeSymbol classSymbol,
+        IReadOnlyList<EntityMemberInfo> persistMembers)
+    {
+        foreach (var constructor in classSymbol.Constructors)
+        {
+            if (constructor.IsImplicitlyDeclared || constructor.IsStatic)
             {
                 continue;
             }
 
-            var parameters = ctor.Parameters;
-            if (parameters.Length != fields.Count)
+            if (constructor.Parameters.Length != persistMembers.Count)
             {
                 continue;
             }
 
-            var match = true;
-            for (int i = 0; i < fields.Count; i++)
+            var allMatch = true;
+            for (var i = 0; i < persistMembers.Count; i++)
             {
-                var field = fields[i];
-                var param = parameters[i];
-
-                // 型を比較（フル修飾名で比較）
-                var paramTypeName = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                if (paramTypeName != field.FullTypeName)
+                var parameterType = constructor.Parameters[i].Type.ToDisplayString(FullyQualifiedNullableFormat);
+                if (parameterType != persistMembers[i].TypeName)
                 {
-                    match = false;
+                    allMatch = false;
                     break;
                 }
             }
 
-            if (match)
+            if (allMatch)
             {
                 return true;
             }
         }
+
         return false;
     }
 
-    private static ValueObjectInfo AnalyzeValueObject(ITypeSymbol typeSymbol)
+    private static ValueObjectInfo AnalyzeValueObject(
+        ITypeSymbol typeSymbol,
+        Location? diagnosticLocation,
+        ImmutableArray<Diagnostic>.Builder diagnostics)
     {
-        // ToPrimitive属性を持つメソッドを探す
-        string toPrimitiveMethodName = null;
-        var tupleElements = new List<TupleElementInfo>();
+        var toPrimitiveCandidates = typeSymbol.GetMembers()
+            .OfType<IMethodSymbol>()
+            .Where(method => HasAttribute(method, ToPrimitiveAttributeFullName))
+            .ToArray();
 
-        foreach (var member in typeSymbol.GetMembers())
-        {
-            if (member is not IMethodSymbol methodSymbol)
-            {
-                continue;
-            }
-
-            var toPrimitiveAttr = GetAttribute(methodSymbol, ToPrimitiveAttributeFullName);
-            if (toPrimitiveAttr == null)
-            {
-                continue;
-            }
-
-            toPrimitiveMethodName = methodSymbol.Name;
-
-            // 戻り値の型を解析
-            var returnType = methodSymbol.ReturnType;
-
-            if (returnType is INamedTypeSymbol namedType && namedType.IsTupleType)
-            {
-                // タプル型
-                foreach (var element in namedType.TupleElements)
-                {
-                    tupleElements.Add(new TupleElementInfo(
-                        GetPrimitiveTypeName(element.Type),
-                        element.Name
-                    ));
-                }
-            }
-            else
-            {
-                // 単一プリミティブ型
-                tupleElements.Add(new TupleElementInfo(
-                    GetPrimitiveTypeName(returnType),
-                    "Value"
-                ));
-            }
-            break;
-        }
-
-        if (toPrimitiveMethodName == null)
+        if (toPrimitiveCandidates.Length == 0)
         {
             return ValueObjectInfo.None;
         }
 
-        // FromPrimitive属性を持つstaticメソッドまたはコンストラクタを探す
-        string fromPrimitiveMethodName = null;
-        var isFromPrimitiveStatic = false;
-
-        foreach (var member in typeSymbol.GetMembers())
+        if (toPrimitiveCandidates.Length != 1 ||
+            toPrimitiveCandidates[0].IsStatic ||
+            toPrimitiveCandidates[0].Parameters.Length != 0)
         {
-            if (member is IMethodSymbol methodSymbol)
-            {
-                var fromPrimitiveAttr = GetAttribute(methodSymbol, FromPrimitiveAttributeFullName);
-                if (fromPrimitiveAttr != null && methodSymbol.IsStatic)
-                {
-                    fromPrimitiveMethodName = methodSymbol.Name;
-                    isFromPrimitiveStatic = true;
-                    break;
-                }
-            }
+            diagnostics.Add(Diagnostic.Create(
+                RepositoryDiagnostics.InvalidToPrimitive,
+                diagnosticLocation,
+                typeSymbol.Name));
+            return ValueObjectInfo.None;
         }
 
-        // staticメソッドがなければコンストラクタを探す
-        if (fromPrimitiveMethodName == null)
+        var toPrimitiveMethod = toPrimitiveCandidates[0];
+        var tupleElements = GetTupleElements(toPrimitiveMethod.ReturnType);
+
+        var fromPrimitiveMethods = typeSymbol.GetMembers()
+            .OfType<IMethodSymbol>()
+            .Where(method => method.MethodKind != MethodKind.Constructor &&
+                             HasAttribute(method, FromPrimitiveAttributeFullName))
+            .ToArray();
+        var fromPrimitiveConstructors = ((INamedTypeSymbol)typeSymbol).Constructors
+            .Where(constructor => HasAttribute(constructor, FromPrimitiveAttributeFullName))
+            .ToArray();
+
+        var hasSingleStaticFactory =
+            fromPrimitiveMethods.Length == 1 &&
+            fromPrimitiveConstructors.Length == 0 &&
+            fromPrimitiveMethods[0].IsStatic &&
+            SymbolEqualityComparer.Default.Equals(fromPrimitiveMethods[0].ReturnType, typeSymbol) &&
+            ParametersMatchTupleElements(fromPrimitiveMethods[0].Parameters, tupleElements);
+
+        if (hasSingleStaticFactory)
         {
-            foreach (var constructor in ((INamedTypeSymbol)typeSymbol).Constructors)
-            {
-                var fromPrimitiveAttr = GetAttribute(constructor, FromPrimitiveAttributeFullName);
-                if (fromPrimitiveAttr != null)
-                {
-                    // コンストラクタ使用（メソッド名は空）
-                    fromPrimitiveMethodName = string.Empty;
-                    isFromPrimitiveStatic = false;
-                    break;
-                }
-            }
+            return new ValueObjectInfo(
+                true,
+                toPrimitiveMethod.Name,
+                fromPrimitiveMethods[0].Name,
+                true,
+                tupleElements);
         }
 
-        return new ValueObjectInfo(true, toPrimitiveMethodName, fromPrimitiveMethodName ?? string.Empty, isFromPrimitiveStatic, tupleElements);
+        var hasSingleConstructor =
+            fromPrimitiveMethods.Length == 0 &&
+            fromPrimitiveConstructors.Length == 1 &&
+            ParametersMatchTupleElements(fromPrimitiveConstructors[0].Parameters, tupleElements);
+
+        if (hasSingleConstructor)
+        {
+            return new ValueObjectInfo(
+                true,
+                toPrimitiveMethod.Name,
+                string.Empty,
+                false,
+                tupleElements);
+        }
+
+        diagnostics.Add(Diagnostic.Create(
+            RepositoryDiagnostics.InvalidFromPrimitive,
+            diagnosticLocation,
+            typeSymbol.Name));
+        return ValueObjectInfo.None;
     }
 
-    private static string GetPrimitiveTypeName(ITypeSymbol typeSymbol)
+    private static IReadOnlyList<TupleElementInfo> GetTupleElements(ITypeSymbol returnType)
     {
-        return typeSymbol.SpecialType switch
+        if (returnType is INamedTypeSymbol namedType && namedType.IsTupleType)
         {
-            SpecialType.System_Boolean => "bool",
-            SpecialType.System_Byte => "byte",
-            SpecialType.System_SByte => "sbyte",
-            SpecialType.System_Int16 => "short",
-            SpecialType.System_UInt16 => "ushort",
-            SpecialType.System_Int32 => "int",
-            SpecialType.System_UInt32 => "uint",
-            SpecialType.System_Int64 => "long",
-            SpecialType.System_UInt64 => "ulong",
-            SpecialType.System_Single => "float",
-            SpecialType.System_Double => "double",
-            SpecialType.System_String => "string",
-            _ => typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+            var elements = new List<TupleElementInfo>(namedType.TupleElements.Length);
+            for (var i = 0; i < namedType.TupleElements.Length; i++)
+            {
+                var element = namedType.TupleElements[i];
+                var name = string.IsNullOrWhiteSpace(element.Name) ? $"Item{i + 1}" : element.Name;
+                elements.Add(new TupleElementInfo(
+                    element.Type.ToDisplayString(FullyQualifiedNullableFormat),
+                    name));
+            }
+
+            return elements;
+        }
+
+        return new[]
+        {
+            new TupleElementInfo(returnType.ToDisplayString(FullyQualifiedNullableFormat), "Value"),
         };
+    }
+
+    private static bool ParametersMatchTupleElements(
+        ImmutableArray<IParameterSymbol> parameters,
+        IReadOnlyList<TupleElementInfo> tupleElements)
+    {
+        if (parameters.Length != tupleElements.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].Type.ToDisplayString(FullyQualifiedNullableFormat) != tupleElements[i].TypeName)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsSupportedAutoProperty(IPropertySymbol propertySymbol)
+    {
+        if (propertySymbol.IsIndexer)
+        {
+            return false;
+        }
+
+        foreach (var syntaxReference in propertySymbol.DeclaringSyntaxReferences)
+        {
+            if (syntaxReference.GetSyntax() is not PropertyDeclarationSyntax declaration)
+            {
+                return false;
+            }
+
+            if (declaration.ExpressionBody != null || declaration.AccessorList == null)
+            {
+                return false;
+            }
+
+            foreach (var accessor in declaration.AccessorList.Accessors)
+            {
+                if (accessor.Body != null || accessor.ExpressionBody != null)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsPartial(INamedTypeSymbol classSymbol)
+    {
+        foreach (var syntaxReference in classSymbol.DeclaringSyntaxReferences)
+        {
+            if (syntaxReference.GetSyntax() is ClassDeclarationSyntax declaration &&
+                declaration.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Location? GetMemberLocation(INamedTypeSymbol classSymbol, string memberName)
+    {
+        foreach (var member in classSymbol.GetMembers())
+        {
+            if (member.Name == memberName)
+            {
+                return member.Locations.FirstOrDefault();
+            }
+        }
+
+        return classSymbol.Locations.FirstOrDefault();
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeFullName)
@@ -258,17 +459,14 @@ internal static class EntityAnalyzer
 
     private static AttributeData? GetAttribute(ISymbol symbol, string attributeFullName)
     {
-        foreach (var attr in symbol.GetAttributes())
+        foreach (var attribute in symbol.GetAttributes())
         {
-            var attrClass = attr.AttributeClass;
-            if (attrClass == null) continue;
-
-            var fullName = attrClass.ToDisplayString();
-            if (fullName == attributeFullName)
+            if (attribute.AttributeClass?.ToDisplayString() == attributeFullName)
             {
-                return attr;
+                return attribute;
             }
         }
+
         return null;
     }
 }

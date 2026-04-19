@@ -1,18 +1,13 @@
-using System.Collections.Generic;
-using System.Text;
 using Lilja.Repository.Analyzer.Models;
 
 namespace Lilja.Repository.Analyzer.Emitters;
 
 /// <summary>
 /// KeyAccessor生成。
-/// Entity partial classにinternal static GetKeyメソッドを追加する。
+/// Entity partial classにinternal static GetKey/GetKeyFromDtoを追加する。
 /// </summary>
 internal static class KeyAccessorEmitter
 {
-    /// <summary>
-    /// KeyAccessorコードを生成する。
-    /// </summary>
     public static string Emit(EntityInfo entity)
     {
         if (!entity.HasKey)
@@ -20,81 +15,58 @@ internal static class KeyAccessorEmitter
             return string.Empty;
         }
 
-        var sb = new StringBuilder();
-
-        var keyTypeName = GetKeyTypeName(entity);
-
-        sb.AppendLine("#nullable disable");
-        sb.AppendLine();
+        var keyTypeName = EmitterSupport.GetKeyTypeName(entity);
+        var entityTypeName = EmitterSupport.Qualify(entity.FullTypeName);
+        var dtoTypeName = EmitterSupport.Qualify(entity.DtoTypeName);
 
         if (!string.IsNullOrEmpty(entity.Namespace))
         {
-            sb.AppendLine($"namespace {entity.Namespace}");
-            sb.AppendLine("{");
-        }
+            var dtoAccessor = entity.HasPersistMembers
+                ? $$"""
 
-        var indent = string.IsNullOrEmpty(entity.Namespace) ? "    " : "        ";
-        var classIndent = string.IsNullOrEmpty(entity.Namespace) ? "" : "    ";
-
-        sb.AppendLine($"{classIndent}partial class {entity.ClassName}");
-        sb.AppendLine($"{classIndent}{{");
-
-        sb.AppendLine($"{indent}/// <summary>");
-        sb.AppendLine($"{indent}/// Entityからキーを取得する。");
-        sb.AppendLine($"{indent}/// </summary>");
-        sb.AppendLine($"{indent}internal static {keyTypeName} GetKey({entity.ClassName} entity)");
-        sb.AppendLine($"{indent}{{");
-        sb.AppendLine($"{indent}    return {GetKeyReturnExpression(entity)};");
-        sb.AppendLine($"{indent}}}");
-
-        sb.AppendLine($"{classIndent}}}");
-
-        if (!string.IsNullOrEmpty(entity.Namespace))
+        internal static {{keyTypeName}} GetKeyFromDto({{dtoTypeName}} dto)
         {
-            sb.AppendLine("}");
+            return {{EmitterSupport.GetDtoKeyExpression(entity, "dto")}};
         }
+"""
+                : string.Empty;
 
-        return sb.ToString();
-    }
+            return $$"""
+#nullable enable
 
-    /// <summary>
-    /// キーの型文字列を取得する。
-    /// </summary>
-    private static string GetKeyTypeName(EntityInfo entity)
+namespace {{entity.Namespace}}
+{
+    partial class {{entity.ClassName}}
     {
-        if (entity.IsCompositeKey)
+        internal static {{keyTypeName}} GetKey({{entityTypeName}} entity)
         {
-            var types = new List<string>();
-            foreach (var keyField in entity.KeyFields)
-            {
-                types.Add(keyField.TypeName);
-            }
-            return $"({string.Join(", ", types)})";
-        }
-        else
-        {
-            return entity.KeyFields[0].TypeName;
-        }
+            return {{EmitterSupport.GetEntityKeyExpression(entity, "entity")}};
+        }{{dtoAccessor}}
     }
+}
+""";
+        }
 
-    /// <summary>
-    /// GetKeyメソッドのreturn式を生成する。
-    /// フィールドに直接アクセスする（DTO経由ではない）。
-    /// </summary>
-    private static string GetKeyReturnExpression(EntityInfo entity)
+        var rootDtoAccessor = entity.HasPersistMembers
+            ? $$"""
+
+    internal static {{keyTypeName}} GetKeyFromDto({{dtoTypeName}} dto)
     {
-        if (entity.IsCompositeKey)
-        {
-            var parts = new List<string>();
-            foreach (var keyField in entity.KeyFields)
-            {
-                parts.Add($"entity.{keyField.Name}");
-            }
-            return $"({string.Join(", ", parts)})";
-        }
-        else
-        {
-            return $"entity.{entity.KeyFields[0].Name}";
-        }
+        return {{EmitterSupport.GetDtoKeyExpression(entity, "dto")}};
+    }
+"""
+            : string.Empty;
+
+        return $$"""
+#nullable enable
+
+partial class {{entity.ClassName}}
+{
+    internal static {{keyTypeName}} GetKey({{entityTypeName}} entity)
+    {
+        return {{EmitterSupport.GetEntityKeyExpression(entity, "entity")}};
+    }{{rootDtoAccessor}}
+}
+""";
     }
 }

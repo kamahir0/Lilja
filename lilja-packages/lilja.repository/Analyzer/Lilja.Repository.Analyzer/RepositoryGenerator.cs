@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Lilja.Repository.Analyzer.Analysis;
@@ -15,129 +13,119 @@ namespace Lilja.Repository.Analyzer;
 [Generator(LanguageNames.CSharp)]
 public sealed class RepositoryGenerator : IIncrementalGenerator
 {
-    /// <summary>
-    /// MessagePackのIMessagePackFormatter型の完全修飾名。
-    /// </summary>
     private const string MessagePackFormatterTypeName = "MessagePack.Formatters.IMessagePackFormatter`1";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // 属性定義を埋め込み生成（RuntimeにあるものをSource Generator側でも認識できるようにする）
-        // 注: Runtimeに定義があるため、ここでは生成しない
-
-        // [Entity]属性を持つクラスを検出
-        var entityClasses = context.SyntaxProvider
+        var entityAnalyses = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 "Lilja.Repository.EntityAttribute",
                 predicate: static (node, _) => node is ClassDeclarationSyntax,
-                transform: static (ctx, _) => GetEntityInfo(ctx))
-            .Where(static info => info.HasValue)
-            .Select(static (info, _) => info!.Value);
+                transform: static (ctx, _) => GetEntityAnalysis(ctx));
 
-        // MessagePackの存在確認用にCompilationを取得
         var hasMessagePack = context.CompilationProvider
-            .Select(static (compilation, _) => HasMessagePackReference(compilation));
+            .Select(static (compilation, _) => compilation.GetTypeByMetadataName(MessagePackFormatterTypeName) != null);
 
-        // EntityとMessagePack存在フラグを結合
-        var entityWithContext = entityClasses.Combine(hasMessagePack);
-
-        // コンパイルと結合して出力
-        context.RegisterSourceOutput(entityWithContext, static (spc, tuple) =>
+        context.RegisterSourceOutput(entityAnalyses.Combine(hasMessagePack), static (spc, pair) =>
         {
-            var (entity, messagePackAvailable) = tuple;
+            var (analysis, messagePackAvailable) = pair;
 
-            // Interface + InMemory は常に生成
+            foreach (var diagnostic in analysis.Diagnostics)
+            {
+                spc.ReportDiagnostic(diagnostic);
+            }
+
+            if (!analysis.Entity.HasValue)
+            {
+                return;
+            }
+
+            var entity = analysis.Entity.Value;
+
             GenerateRepositoryInterface(spc, entity);
             GenerateInMemoryRepository(spc, entity);
 
-            // Key有りEntityはKeyAccessorを生成
             if (entity.HasKey)
             {
                 GenerateKeyAccessor(spc, entity);
             }
 
-            // Persist属性フィールドがある場合のみDTO/Converter/永続化リポジトリを生成
-            if (entity.HasPersistFields)
+            if (!entity.HasPersistMembers)
             {
-                GenerateDto(spc, entity);
-                GenerateConverter(spc, entity);
-                GenerateJsonRepository(spc, entity);
+                return;
+            }
 
-                // MessagePackが参照されている場合のみFormatter + MessagePackRepository生成
-                if (messagePackAvailable)
-                {
-                    GenerateFormatter(spc, entity);
-                    GenerateMessagePackRepository(spc, entity);
-                }
+            GenerateDto(spc, entity);
+            GenerateConverter(spc, entity);
+            GenerateStorageEnvelope(spc, entity);
+            GenerateJsonRepository(spc, entity);
+
+            if (messagePackAvailable)
+            {
+                GenerateFormatter(spc, entity);
+                GenerateStorageEnvelopeFormatter(spc, entity);
+                GenerateMessagePackRepository(spc, entity);
             }
         });
     }
 
-    /// <summary>
-    /// コンパイル対象のアセンブリでMessagePackが参照されているか確認する。
-    /// </summary>
-    private static bool HasMessagePackReference(Compilation compilation)
-    {
-        // IMessagePackFormatter<T>型が存在するか確認
-        var formatterType = compilation.GetTypeByMetadataName(MessagePackFormatterTypeName);
-        return formatterType != null;
-    }
-
-    private static EntityInfo? GetEntityInfo(GeneratorAttributeSyntaxContext context)
+    private static EntityAnalysisResult GetEntityAnalysis(GeneratorAttributeSyntaxContext context)
     {
         if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
         {
-            return null;
+            return default;
         }
 
-        return EntityAnalyzer.Analyze(classSymbol, context.SemanticModel.Compilation);
+        return EntityAnalyzer.Analyze(classSymbol);
     }
 
     private static void GenerateDto(SourceProductionContext context, EntityInfo entity)
     {
-        var source = DtoEmitter.Emit(entity);
-        context.AddSource($"{entity.ClassName}Dto.g.cs", source);
+        context.AddSource($"{entity.ClassName}Dto.g.cs", DtoEmitter.Emit(entity));
     }
 
     private static void GenerateConverter(SourceProductionContext context, EntityInfo entity)
     {
-        var source = ConverterEmitter.Emit(entity);
-        context.AddSource($"{entity.ClassName}.Converter.g.cs", source);
+        context.AddSource($"{entity.ClassName}.Converter.g.cs", ConverterEmitter.Emit(entity));
     }
 
     private static void GenerateFormatter(SourceProductionContext context, EntityInfo entity)
     {
-        var source = FormatterEmitter.Emit(entity);
-        context.AddSource($"{entity.ClassName}DtoFormatter.g.cs", source);
+        context.AddSource($"{entity.ClassName}DtoFormatter.g.cs", FormatterEmitter.EmitDtoFormatter(entity));
+    }
+
+    private static void GenerateStorageEnvelope(SourceProductionContext context, EntityInfo entity)
+    {
+        context.AddSource($"{entity.ClassName}StorageEnvelope.g.cs", StorageEnvelopeEmitter.Emit(entity));
+    }
+
+    private static void GenerateStorageEnvelopeFormatter(SourceProductionContext context, EntityInfo entity)
+    {
+        context.AddSource($"{entity.ClassName}StorageEnvelopeFormatter.g.cs", FormatterEmitter.EmitStorageEnvelopeFormatter(entity));
     }
 
     private static void GenerateRepositoryInterface(SourceProductionContext context, EntityInfo entity)
     {
-        var source = RepositoryEmitter.EmitInterface(entity);
-        context.AddSource($"I{entity.ClassName}Repository.g.cs", source);
+        context.AddSource($"I{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitInterface(entity));
     }
 
     private static void GenerateInMemoryRepository(SourceProductionContext context, EntityInfo entity)
     {
-        var source = RepositoryEmitter.EmitInMemoryImplementation(entity);
-        context.AddSource($"InMemory{entity.ClassName}Repository.g.cs", source);
+        context.AddSource($"InMemory{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitInMemoryImplementation(entity));
     }
 
     private static void GenerateJsonRepository(SourceProductionContext context, EntityInfo entity)
     {
-        var source = RepositoryEmitter.EmitJsonImplementation(entity);
-        context.AddSource($"Json{entity.ClassName}Repository.g.cs", source);
+        context.AddSource($"Json{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitJsonImplementation(entity));
     }
 
     private static void GenerateKeyAccessor(SourceProductionContext context, EntityInfo entity)
     {
-        var source = KeyAccessorEmitter.Emit(entity);
-        context.AddSource($"{entity.ClassName}.KeyAccessor.g.cs", source);
+        context.AddSource($"{entity.ClassName}.KeyAccessor.g.cs", KeyAccessorEmitter.Emit(entity));
     }
 
     private static void GenerateMessagePackRepository(SourceProductionContext context, EntityInfo entity)
     {
-        var source = RepositoryEmitter.EmitMessagePackImplementation(entity);
-        context.AddSource($"MessagePack{entity.ClassName}Repository.g.cs", source);
+        context.AddSource($"MessagePack{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitMessagePackImplementation(entity));
     }
 }
