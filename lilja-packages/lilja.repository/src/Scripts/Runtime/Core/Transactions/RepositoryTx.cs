@@ -153,6 +153,86 @@ namespace Lilja.Repository
                 .Upsert(key, value);
         }
 
+        internal static void CreateKeyedValue<TKey, TValue>(
+            IReadWriteTx tx,
+            object repository,
+            IReadOnlyDictionary<TKey, TValue> committedState,
+            TKey key,
+            TValue value,
+            Func<Dictionary<TKey, TValue>, CancellationToken, UniTask> persistAsync,
+            Action<Dictionary<TKey, TValue>> applyCommittedState,
+            IEqualityComparer<TKey>? comparer = null)
+            where TKey : notnull
+        {
+            var overlayState = GetOverlayState(
+                tx,
+                repository,
+                committedState,
+                persistAsync,
+                applyCommittedState,
+                comparer);
+
+            if (overlayState.TryGetValue(key, out _))
+            {
+                throw CreateStrictCrudException("Create", repository, key, "already exists.");
+            }
+
+            overlayState.Upsert(key, value);
+        }
+
+        internal static void UpdateKeyedValue<TKey, TValue>(
+            IReadWriteTx tx,
+            object repository,
+            IReadOnlyDictionary<TKey, TValue> committedState,
+            TKey key,
+            TValue value,
+            Func<Dictionary<TKey, TValue>, CancellationToken, UniTask> persistAsync,
+            Action<Dictionary<TKey, TValue>> applyCommittedState,
+            IEqualityComparer<TKey>? comparer = null)
+            where TKey : notnull
+        {
+            var overlayState = GetOverlayState(
+                tx,
+                repository,
+                committedState,
+                persistAsync,
+                applyCommittedState,
+                comparer);
+
+            if (!overlayState.TryGetValue(key, out _))
+            {
+                throw CreateStrictCrudException("Update", repository, key, "was not found.");
+            }
+
+            overlayState.Upsert(key, value);
+        }
+
+        internal static void DeleteKeyedValue<TKey, TValue>(
+            IReadWriteTx tx,
+            object repository,
+            IReadOnlyDictionary<TKey, TValue> committedState,
+            TKey key,
+            Func<Dictionary<TKey, TValue>, CancellationToken, UniTask> persistAsync,
+            Action<Dictionary<TKey, TValue>> applyCommittedState,
+            IEqualityComparer<TKey>? comparer = null)
+            where TKey : notnull
+        {
+            var overlayState = GetOverlayState(
+                tx,
+                repository,
+                committedState,
+                persistAsync,
+                applyCommittedState,
+                comparer);
+
+            if (!overlayState.TryGetValue(key, out _))
+            {
+                throw CreateStrictCrudException("Delete", repository, key, "was not found.");
+            }
+
+            overlayState.Remove(key);
+        }
+
         public static bool RemoveKeyedValue<TKey, TValue>(
             IReadWriteTx tx,
             object repository,
@@ -171,6 +251,77 @@ namespace Lilja.Repository
                 applyCommittedState,
                 comparer)
                 .Remove(key);
+        }
+
+        internal static void CreateReferenceStateValue<TState>(
+            IReadWriteTx tx,
+            object repository,
+            Func<TState?> createStagedState,
+            Func<TState?, CancellationToken, UniTask> persistAsync,
+            Action<TState?> applyCommittedState,
+            TState value)
+            where TState : class
+        {
+            var writeState = WriteState(
+                tx,
+                repository,
+                createStagedState,
+                persistAsync,
+                applyCommittedState);
+
+            if (writeState.Value != null)
+            {
+                throw CreateStrictCrudException("Create", repository, "already exists.");
+            }
+
+            writeState.Value = value;
+        }
+
+        internal static void UpdateReferenceStateValue<TState>(
+            IReadWriteTx tx,
+            object repository,
+            Func<TState?> createStagedState,
+            Func<TState?, CancellationToken, UniTask> persistAsync,
+            Action<TState?> applyCommittedState,
+            TState value)
+            where TState : class
+        {
+            var writeState = WriteState(
+                tx,
+                repository,
+                createStagedState,
+                persistAsync,
+                applyCommittedState);
+
+            if (writeState.Value == null)
+            {
+                throw CreateStrictCrudException("Update", repository, "was not found.");
+            }
+
+            writeState.Value = value;
+        }
+
+        internal static void DeleteReferenceStateValue<TState>(
+            IReadWriteTx tx,
+            object repository,
+            Func<TState?> createStagedState,
+            Func<TState?, CancellationToken, UniTask> persistAsync,
+            Action<TState?> applyCommittedState)
+            where TState : class
+        {
+            var writeState = WriteState(
+                tx,
+                repository,
+                createStagedState,
+                persistAsync,
+                applyCommittedState);
+
+            if (writeState.Value == null)
+            {
+                throw CreateStrictCrudException("Delete", repository, "was not found.");
+            }
+
+            writeState.Value = null;
         }
 
         private static RepositoryOverlayState<TKey, TValue> GetOverlayState<TKey, TValue>(
@@ -235,6 +386,30 @@ namespace Lilja.Repository
             return committedState;
         }
 
+        private static InvalidOperationException CreateStrictCrudException<TKey>(
+            string operation,
+            object repository,
+            TKey key,
+            string reason)
+        {
+            return new InvalidOperationException(
+                $"{operation} failed for repository '{repository.GetType().Name}' with key '{FormatIdentifier(key)}': entity {reason}");
+        }
+
+        private static InvalidOperationException CreateStrictCrudException(
+            string operation,
+            object repository,
+            string reason)
+        {
+            return new InvalidOperationException(
+                $"{operation} failed for repository '{repository.GetType().Name}': entity {reason}");
+        }
+
+        private static string FormatIdentifier<TValue>(TValue value)
+        {
+            return value?.ToString() ?? "<null>";
+        }
+
         private static void ValidateReadArguments<TState>(
             IReadOnlyTx tx,
             object repository,
@@ -281,12 +456,29 @@ namespace Lilja.Repository
 
     public sealed class RepositoryWriteState<TState>
     {
+        private TState _value;
+
         internal RepositoryWriteState(TState value)
         {
-            Value = value;
+            _value = value;
         }
 
-        public TState Value { get; set; }
+        public bool HasChanges { get; private set; }
+
+        public TState Value
+        {
+            get => _value;
+            set
+            {
+                _value = value;
+                HasChanges = true;
+            }
+        }
+
+        internal void AcceptChanges()
+        {
+            HasChanges = false;
+        }
     }
 
     internal interface IReadTransactionSnapshotAccess
@@ -350,16 +542,28 @@ namespace Lilja.Repository
 
         public async UniTask PrepareCommitAsync(CancellationToken cancellationToken)
         {
+            if (!State.HasChanges)
+            {
+                return;
+            }
+
             await _persistAsync(State.Value, cancellationToken);
         }
 
         public void ApplyCommit()
         {
+            if (!State.HasChanges)
+            {
+                return;
+            }
+
             _applyCommittedState(State.Value);
+            State.AcceptChanges();
         }
 
         public UniTask RollbackAsync(CancellationToken cancellationToken)
         {
+            State.AcceptChanges();
             return UniTask.CompletedTask;
         }
     }

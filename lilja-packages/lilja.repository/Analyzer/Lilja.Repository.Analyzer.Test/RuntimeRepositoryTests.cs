@@ -98,6 +98,186 @@ public sealed class RuntimeRepositoryTests
     }
 
     [Fact]
+    public async Task InMemoryRepository_StrictCrudRejectsInvalidLifecycleOperations()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "before"));
+        });
+
+        var createException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Create(tx, CreateItem(1, "duplicate"));
+            });
+        });
+        Assert.Contains("Create", createException.Message, StringComparison.Ordinal);
+        Assert.Contains("1", createException.Message, StringComparison.Ordinal);
+
+        var updateException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Update(tx, CreateItem(2, "missing"));
+            });
+        });
+        Assert.Contains("Update", updateException.Message, StringComparison.Ordinal);
+        Assert.Contains("2", updateException.Message, StringComparison.Ordinal);
+
+        var deleteException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Delete(tx, 2);
+            });
+        });
+        Assert.Contains("Delete", deleteException.Message, StringComparison.Ordinal);
+        Assert.Contains("2", deleteException.Message, StringComparison.Ordinal);
+
+        txManager.BeginROTransaction(ro =>
+        {
+            var item = repository.Read(ro, 1);
+            Assert.NotNull(item);
+            Assert.Equal("before", item!.Name);
+            Assert.Null(repository.Read(ro, 2));
+        });
+    }
+
+    [Fact]
+    public async Task InMemoryRepository_CreateThenUpdateWithinSameTransactionSucceeds()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "alpha"));
+            repository.Update(tx, CreateItem(1, "beta"));
+
+            Assert.Equal("beta", repository.Read(tx, 1)!.Name);
+        });
+
+        txManager.BeginROTransaction(ro =>
+        {
+            Assert.Equal("beta", repository.Read(ro, 1)!.Name);
+        });
+    }
+
+    [Fact]
+    public async Task InMemoryRepository_DeleteThenCreateWithinSameTransactionSucceeds()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "before"));
+        });
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Delete(tx, 1);
+            repository.Create(tx, CreateItem(1, "after"));
+
+            Assert.Equal("after", repository.Read(tx, 1)!.Name);
+        });
+
+        txManager.BeginROTransaction(ro =>
+        {
+            Assert.Equal("after", repository.Read(ro, 1)!.Name);
+        });
+    }
+
+    [Fact]
+    public async Task InMemoryRepository_DeleteThenUpdateWithinSameTransactionThrowsAndDeleteStillCommits()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "before"));
+        });
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Delete(tx, 1);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+            {
+                repository.Update(tx, CreateItem(1, "after"));
+            });
+            Assert.Contains("Update", exception.Message, StringComparison.Ordinal);
+            Assert.Contains("1", exception.Message, StringComparison.Ordinal);
+        });
+
+        txManager.BeginROTransaction(ro =>
+        {
+            Assert.Null(repository.Read(ro, 1));
+        });
+    }
+
+    [Fact]
+    public async Task InMemoryRepository_CreateThenCreateWithinSameTransactionThrowsAndFirstCreateCommits()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "first"));
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+            {
+                repository.Create(tx, CreateItem(1, "duplicate"));
+            });
+            Assert.Contains("Create", exception.Message, StringComparison.Ordinal);
+            Assert.Contains("1", exception.Message, StringComparison.Ordinal);
+
+            repository.Create(tx, CreateItem(2, "second"));
+        });
+
+        txManager.BeginROTransaction(ro =>
+        {
+            Assert.Equal("first", repository.Read(ro, 1)!.Name);
+            Assert.Equal("second", repository.Read(ro, 2)!.Name);
+        });
+    }
+
+    [Fact]
+    public async Task InMemoryRepository_DeleteThenDeleteWithinSameTransactionThrowsAndFirstDeleteCommits()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "before"));
+        });
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Delete(tx, 1);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+            {
+                repository.Delete(tx, 1);
+            });
+            Assert.Contains("Delete", exception.Message, StringComparison.Ordinal);
+            Assert.Contains("1", exception.Message, StringComparison.Ordinal);
+        });
+
+        txManager.BeginROTransaction(ro =>
+        {
+            Assert.Null(repository.Read(ro, 1));
+        });
+    }
+
+    [Fact]
     public async Task JsonRepository_RequiresInitializeAsync()
     {
         Application.persistentDataPath = CreateTempDataPath();
@@ -292,6 +472,58 @@ public sealed class RuntimeRepositoryTests
         {
             Assert.Null(repository.Read(tx, 2));
             Assert.Single(repository.All(tx));
+        });
+    }
+
+    [Fact]
+    public async Task JsonKeyedRepository_StrictCrudRejectsInvalidLifecycleOperations()
+    {
+        var dataPath = CreateTempDataPath();
+        Application.persistentDataPath = dataPath;
+
+        var repository = new JsonItemEntityRepository();
+        var txManager = new TxManager();
+        await repository.InitializeAsync();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "before"));
+        });
+
+        var createException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Create(tx, CreateItem(1, "duplicate"));
+            });
+        });
+        Assert.Contains("Create", createException.Message, StringComparison.Ordinal);
+        Assert.Contains("1", createException.Message, StringComparison.Ordinal);
+
+        var updateException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Update(tx, CreateItem(2, "missing"));
+            });
+        });
+        Assert.Contains("Update", updateException.Message, StringComparison.Ordinal);
+        Assert.Contains("2", updateException.Message, StringComparison.Ordinal);
+
+        var deleteException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Delete(tx, 2);
+            });
+        });
+        Assert.Contains("Delete", deleteException.Message, StringComparison.Ordinal);
+        Assert.Contains("2", deleteException.Message, StringComparison.Ordinal);
+
+        txManager.BeginROTransaction(tx =>
+        {
+            Assert.Equal("before", repository.Read(tx, 1)!.Name);
+            Assert.Null(repository.Read(tx, 2));
         });
     }
 
@@ -571,6 +803,104 @@ public sealed class RuntimeRepositoryTests
         Assert.NotNull(envelope);
         Assert.False(envelope.HasValue);
         Assert.Null(envelope.Item);
+    }
+
+    [Fact]
+    public async Task InMemorySingletonRepository_StrictCrudRejectsInvalidLifecycleOperations()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemorySettingsEntityRepository();
+
+        var updateException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Update(tx, new SettingsEntity(10));
+            });
+        });
+        Assert.Contains("Update", updateException.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(InMemorySettingsEntityRepository), updateException.Message, StringComparison.Ordinal);
+
+        var deleteException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Delete(tx);
+            });
+        });
+        Assert.Contains("Delete", deleteException.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(InMemorySettingsEntityRepository), deleteException.Message, StringComparison.Ordinal);
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, new SettingsEntity(10));
+        });
+
+        var createException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Create(tx, new SettingsEntity(20));
+            });
+        });
+        Assert.Contains("Create", createException.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(InMemorySettingsEntityRepository), createException.Message, StringComparison.Ordinal);
+
+        txManager.BeginROTransaction(tx =>
+        {
+            Assert.Equal(10, repository.Read(tx)!.Volume);
+        });
+    }
+
+    [Fact]
+    public async Task JsonSingletonRepository_StrictCrudRejectsInvalidLifecycleOperations()
+    {
+        var dataPath = CreateTempDataPath();
+        Application.persistentDataPath = dataPath;
+
+        var repository = new JsonSettingsEntityRepository();
+        var txManager = new TxManager();
+        await repository.InitializeAsync();
+
+        var updateException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Update(tx, new SettingsEntity(10));
+            });
+        });
+        Assert.Contains("Update", updateException.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(JsonSettingsEntityRepository), updateException.Message, StringComparison.Ordinal);
+
+        var deleteException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Delete(tx);
+            });
+        });
+        Assert.Contains("Delete", deleteException.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(JsonSettingsEntityRepository), deleteException.Message, StringComparison.Ordinal);
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, new SettingsEntity(10));
+        });
+
+        var createException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await txManager.BeginRWTransactionAsync(tx =>
+            {
+                repository.Create(tx, new SettingsEntity(20));
+            });
+        });
+        Assert.Contains("Create", createException.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(JsonSettingsEntityRepository), createException.Message, StringComparison.Ordinal);
+
+        txManager.BeginROTransaction(tx =>
+        {
+            Assert.Equal(10, repository.Read(tx)!.Volume);
+        });
     }
 
     [Fact]

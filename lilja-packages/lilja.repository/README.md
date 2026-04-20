@@ -89,6 +89,11 @@ public readonly struct Coordinate
 `Read` は存在しない可能性を表すため nullable を返します。  
 永続化は `1 repository = 1 file` の単純な形です。
 
+- `Create` は current staged view に対象がすでに存在すると `InvalidOperationException` を投げます
+- `Update` は current staged view に対象が存在しないと `InvalidOperationException` を投げます
+- `Delete` は current staged view に対象が存在しないと `InvalidOperationException` を投げます
+- 存在判定は committed state ではなく、同一 transaction 内の staged な変更を含めた current view で行われます
+
 ```csharp
 using Demo.Repositories;
 using Lilja.Repository;
@@ -119,6 +124,7 @@ txManager.BeginROTransaction(tx =>
 - RO transaction は committed state だけを見ます
 - commit は `persist all dirty staged states` の成功後に committed state を差し替えます
 - persist 失敗時は committed state は更新されず、例外が呼び出し元へ返ります
+- strict CRUD の存在判定は current staged view 基準です
 - rollback は staged state を捨てるだけで、コミット済み状態は触りません
 
 ### 制約

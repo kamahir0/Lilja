@@ -34,7 +34,7 @@ namespace Lilja.Repository
 
         public void Create(IReadWriteTx tx, TEntity entity)
         {
-            RepositoryTx.UpsertKeyedValue(
+            RepositoryTx.CreateKeyedValue(
                 tx,
                 this,
                 (IReadOnlyDictionary<TKey, TEntity>)_storage,
@@ -47,7 +47,7 @@ namespace Lilja.Repository
 
         public void Update(IReadWriteTx tx, TEntity entity)
         {
-            RepositoryTx.UpsertKeyedValue(
+            RepositoryTx.UpdateKeyedValue(
                 tx,
                 this,
                 (IReadOnlyDictionary<TKey, TEntity>)_storage,
@@ -60,7 +60,7 @@ namespace Lilja.Repository
 
         public void Delete(IReadWriteTx tx, TKey key)
         {
-            RepositoryTx.RemoveKeyedValue(
+            RepositoryTx.DeleteKeyedValue(
                 tx,
                 this,
                 (IReadOnlyDictionary<TKey, TEntity>)_storage,
@@ -120,22 +120,29 @@ namespace Lilja.Repository
 
         public void Create(IReadWriteTx tx, TEntity entity)
         {
-            GetWriteState(tx).Value = entity;
+            RepositoryTx.CreateReferenceStateValue(
+                tx,
+                this,
+                () => _entity,
+                PersistStateAsync,
+                state => _entity = state,
+                entity);
         }
 
         public void Update(IReadWriteTx tx, TEntity entity)
         {
-            GetWriteState(tx).Value = entity;
+            RepositoryTx.UpdateReferenceStateValue(
+                tx,
+                this,
+                () => _entity,
+                PersistStateAsync,
+                state => _entity = state,
+                entity);
         }
 
         public void Delete(IReadWriteTx tx)
         {
-            GetWriteState(tx).Value = null;
-        }
-
-        private RepositoryWriteState<TEntity?> GetWriteState(IReadWriteTx tx)
-        {
-            return RepositoryTx.WriteState(
+            RepositoryTx.DeleteReferenceStateValue(
                 tx,
                 this,
                 () => _entity,
@@ -218,7 +225,7 @@ namespace Lilja.Repository
         {
             EnsureInitialized();
             var dto = ToDto(entity);
-            RepositoryTx.UpsertKeyedValue(
+            RepositoryTx.CreateKeyedValue(
                 tx,
                 this,
                 (IReadOnlyDictionary<TKey, TDto>)_cache,
@@ -233,7 +240,7 @@ namespace Lilja.Repository
         {
             EnsureInitialized();
             var dto = ToDto(entity);
-            RepositoryTx.UpsertKeyedValue(
+            RepositoryTx.UpdateKeyedValue(
                 tx,
                 this,
                 (IReadOnlyDictionary<TKey, TDto>)_cache,
@@ -247,7 +254,7 @@ namespace Lilja.Repository
         public void Delete(IReadWriteTx tx, TKey key)
         {
             EnsureInitialized();
-            RepositoryTx.RemoveKeyedValue(
+            RepositoryTx.DeleteKeyedValue(
                 tx,
                 this,
                 (IReadOnlyDictionary<TKey, TDto>)_cache,
@@ -383,19 +390,36 @@ namespace Lilja.Repository
         public void Create(IReadWriteTx tx, TEntity entity)
         {
             EnsureInitialized();
-            GetWriteState(tx).Value = ToDto(entity);
+            RepositoryTx.CreateReferenceStateValue(
+                tx,
+                this,
+                () => _cache,
+                PersistStateAsync,
+                state => _cache = state,
+                ToDto(entity));
         }
 
         public void Update(IReadWriteTx tx, TEntity entity)
         {
             EnsureInitialized();
-            GetWriteState(tx).Value = ToDto(entity);
+            RepositoryTx.UpdateReferenceStateValue(
+                tx,
+                this,
+                () => _cache,
+                PersistStateAsync,
+                state => _cache = state,
+                ToDto(entity));
         }
 
         public void Delete(IReadWriteTx tx)
         {
             EnsureInitialized();
-            GetWriteState(tx).Value = null;
+            RepositoryTx.DeleteReferenceStateValue(
+                tx,
+                this,
+                () => _cache,
+                PersistStateAsync,
+                state => _cache = state);
         }
 
         protected abstract TDto ToDto(TEntity entity);
@@ -414,16 +438,6 @@ namespace Lilja.Repository
             }
 
             throw new InvalidOperationException($"{GetType().Name} must be initialized by calling InitializeAsync before use.");
-        }
-
-        private RepositoryWriteState<TDto?> GetWriteState(IReadWriteTx tx)
-        {
-            return RepositoryTx.WriteState(
-                tx,
-                this,
-                () => _cache,
-                PersistStateAsync,
-                state => _cache = state);
         }
 
         private UniTask PersistStateAsync(TDto? state, CancellationToken ct)
