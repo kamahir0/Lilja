@@ -137,7 +137,7 @@ namespace Lilja.Repository
             }
         }
 
-        private async UniTask CloseReaderAdmissionAndWaitForReadersAsync(CancellationToken cancellationToken)
+        private async UniTask CloseReaderAdmissionAndWaitForReadersAsync()
         {
             Task? waitTask = null;
             lock (_readerSync)
@@ -157,7 +157,6 @@ namespace Lilja.Repository
                 return;
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
             await waitTask;
         }
 
@@ -378,7 +377,7 @@ namespace Lilja.Repository
                     await participant.PrepareCommitAsync(cancellationToken);
                 }
 
-                await _owner.CloseReaderAdmissionAndWaitForReadersAsync(cancellationToken);
+                await _owner.CloseReaderAdmissionAndWaitForReadersAsync();
                 try
                 {
                     foreach (var participant in _participants.Values)

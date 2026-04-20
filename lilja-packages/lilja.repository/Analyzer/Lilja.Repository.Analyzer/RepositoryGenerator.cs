@@ -81,51 +81,58 @@ public sealed class RepositoryGenerator : IIncrementalGenerator
 
     private static void GenerateDto(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"{entity.ClassName}Dto.g.cs", DtoEmitter.Emit(entity));
+        context.AddSource(GetHintName(entity, $"{entity.ClassName}Dto.g.cs"), DtoEmitter.Emit(entity));
     }
 
     private static void GenerateConverter(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"{entity.ClassName}.Converter.g.cs", ConverterEmitter.Emit(entity));
+        context.AddSource(GetHintName(entity, $"{entity.ClassName}.Converter.g.cs"), ConverterEmitter.Emit(entity));
     }
 
     private static void GenerateFormatter(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"{entity.ClassName}DtoFormatter.g.cs", FormatterEmitter.EmitDtoFormatter(entity));
+        context.AddSource(GetHintName(entity, $"{entity.ClassName}DtoFormatter.g.cs"), FormatterEmitter.EmitDtoFormatter(entity));
     }
 
     private static void GenerateStorageEnvelope(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"{entity.ClassName}StorageEnvelope.g.cs", StorageEnvelopeEmitter.Emit(entity));
+        context.AddSource(GetHintName(entity, $"{entity.ClassName}StorageEnvelope.g.cs"), StorageEnvelopeEmitter.Emit(entity));
     }
 
     private static void GenerateStorageEnvelopeFormatter(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"{entity.ClassName}StorageEnvelopeFormatter.g.cs", FormatterEmitter.EmitStorageEnvelopeFormatter(entity));
+        context.AddSource(GetHintName(entity, $"{entity.ClassName}StorageEnvelopeFormatter.g.cs"), FormatterEmitter.EmitStorageEnvelopeFormatter(entity));
     }
 
     private static void GenerateRepositoryInterface(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"I{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitInterface(entity));
+        context.AddSource(GetHintName(entity, $"I{entity.ClassName}Repository.g.cs"), RepositoryEmitter.EmitInterface(entity));
     }
 
     private static void GenerateInMemoryRepository(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"InMemory{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitInMemoryImplementation(entity));
+        context.AddSource(GetHintName(entity, $"InMemory{entity.ClassName}Repository.g.cs"), RepositoryEmitter.EmitInMemoryImplementation(entity));
     }
 
     private static void GenerateJsonRepository(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"Json{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitJsonImplementation(entity));
+        context.AddSource(GetHintName(entity, $"Json{entity.ClassName}Repository.g.cs"), RepositoryEmitter.EmitJsonImplementation(entity));
     }
 
     private static void GenerateKeyAccessor(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"{entity.ClassName}.KeyAccessor.g.cs", KeyAccessorEmitter.Emit(entity));
+        context.AddSource(GetHintName(entity, $"{entity.ClassName}.KeyAccessor.g.cs"), KeyAccessorEmitter.Emit(entity));
     }
 
     private static void GenerateMessagePackRepository(SourceProductionContext context, EntityInfo entity)
     {
-        context.AddSource($"MessagePack{entity.ClassName}Repository.g.cs", RepositoryEmitter.EmitMessagePackImplementation(entity));
+        context.AddSource(GetHintName(entity, $"MessagePack{entity.ClassName}Repository.g.cs"), RepositoryEmitter.EmitMessagePackImplementation(entity));
+    }
+
+    private static string GetHintName(EntityInfo entity, string fileName)
+    {
+        return string.IsNullOrEmpty(entity.Namespace)
+            ? fileName
+            : $"{entity.StorageIdentifier}.{fileName}";
     }
 }

@@ -1,18 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Lilja.Repository;
+using InventorySample = Lilja.Repository.Analyzer.Tests.Samples.Inventory.SharedNameEntity;
+using InventoryJsonRepository = Lilja.Repository.Analyzer.Tests.Samples.Inventory.Repositories.JsonSharedNameEntityRepository;
 using Lilja.Repository.Analyzer.Tests.Samples;
 using Lilja.Repository.Analyzer.Tests.Samples.Repositories;
 using Lilja.Repository.Diagnostics;
+using Lilja.Repository.Editor;
 using Lilja.Repository.Generated.Dtos.Lilja.Repository.Analyzer.Tests.Samples;
 using Lilja.Repository.Generated.Formatters.Lilja.Repository.Analyzer.Tests.Samples;
 using Lilja.Repository.Generated.Storage.Lilja.Repository.Analyzer.Tests.Samples;
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
+using ProfileSample = Lilja.Repository.Analyzer.Tests.Samples.Profile.SharedNameEntity;
+using ProfileJsonRepository = Lilja.Repository.Analyzer.Tests.Samples.Profile.Repositories.JsonSharedNameEntityRepository;
 using UnityEngine;
 using Xunit;
 
@@ -20,10 +26,18 @@ namespace Lilja.Repository.Analyzer.Test;
 
 public sealed class RuntimeRepositoryTests
 {
+    private const string ItemEntityStorageIdentifier = "Lilja.Repository.Analyzer.Tests.Samples.ItemEntity";
+    private const string SettingsEntityStorageIdentifier = "Lilja.Repository.Analyzer.Tests.Samples.SettingsEntity";
+    private const string InventorySharedNameStorageIdentifier =
+        "Lilja.Repository.Analyzer.Tests.Samples.Inventory.SharedNameEntity";
+    private const string ProfileSharedNameStorageIdentifier =
+        "Lilja.Repository.Analyzer.Tests.Samples.Profile.SharedNameEntity";
+
     public RuntimeRepositoryTests()
     {
         Debug.ResetTestState();
         RuntimeInstanceMonitor.ResetForTests();
+        Application.isPlaying = true;
     }
 
     [Fact]
@@ -118,7 +132,7 @@ public sealed class RuntimeRepositoryTests
 
         var dto = ItemEntity.ToDto(CreateItem(5, "preloaded"));
         File.WriteAllText(
-            Path.Combine(dataPath, "ItemEntity.json"),
+            GetJsonPath(dataPath, ItemEntityStorageIdentifier),
             JsonUtility.ToJson(
                 new ItemEntityStorageEnvelope
                 {
@@ -146,7 +160,7 @@ public sealed class RuntimeRepositoryTests
     {
         var dataPath = CreateTempDataPath();
         Application.persistentDataPath = dataPath;
-        var filePath = Path.Combine(dataPath, "ItemEntity.json");
+        var filePath = GetJsonPath(dataPath, ItemEntityStorageIdentifier);
         File.WriteAllText(filePath, "{ invalid json");
 
         var repository = new JsonItemEntityRepository();
@@ -398,6 +412,54 @@ public sealed class RuntimeRepositoryTests
     }
 
     [Fact]
+    public async Task ReadWriteTransaction_CancellationDuringPublishStillCommits()
+    {
+        var txManager = new TxManager();
+        var repository = new InMemoryItemEntityRepository();
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Create(tx, CreateItem(1, "before"));
+        });
+
+        var releaseReader = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var readerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var readerTask = txManager.BeginROTransactionAsync(async ro =>
+        {
+            Assert.Equal("before", repository.Read(ro, 1)!.Name);
+            readerEntered.TrySetResult(true);
+            await releaseReader.Task;
+        });
+
+        await readerEntered.Task;
+
+        using var cancellationTokenSource = new System.Threading.CancellationTokenSource();
+        var writerTask = AwaitUniTask(txManager.BeginRWTransactionAsync(tx =>
+        {
+            repository.Update(tx, CreateItem(1, "after"));
+        }, cancellationTokenSource.Token));
+
+        await Task.Delay(50);
+        cancellationTokenSource.Cancel();
+
+        await Task.Delay(50);
+        Assert.False(writerTask.IsCompleted);
+
+        releaseReader.TrySetResult(true);
+        await Task.WhenAll(AwaitUniTask(readerTask), writerTask);
+
+        txManager.BeginROTransaction(ro =>
+        {
+            Assert.Equal("after", repository.Read(ro, 1)!.Name);
+        });
+
+        await txManager.BeginROTransactionAsync(ro =>
+        {
+            Assert.Equal("after", repository.Read(ro, 1)!.Name);
+            return UniTask.CompletedTask;
+        });
+    }
+
+    [Fact]
     public async Task MessagePackRepository_DoesNotSwapCommittedStateWhenPersistFails()
     {
         var dataPath = CreateTempDataPath();
@@ -446,7 +508,7 @@ public sealed class RuntimeRepositoryTests
             repository.Create(tx, CreateItem(2, "json-two"));
         });
 
-        var filePath = Path.Combine(dataPath, "ItemEntity.json");
+        var filePath = GetJsonPath(dataPath, ItemEntityStorageIdentifier);
         var envelope = JsonUtility.FromJson<ItemEntityStorageEnvelope>(File.ReadAllText(filePath));
 
         Assert.NotNull(envelope);
@@ -469,7 +531,7 @@ public sealed class RuntimeRepositoryTests
             repository.Create(tx, CreateItem(2, "msg-two"));
         });
 
-        var bytes = File.ReadAllBytes(Path.Combine(dataPath, "ItemEntity.msgpack"));
+        var bytes = File.ReadAllBytes(GetMessagePackPath(dataPath, ItemEntityStorageIdentifier));
         var envelope = MessagePackSerializer.Deserialize<ItemEntityStorageEnvelope>(bytes, CreateItemEntityMessagePackOptions());
 
         Assert.NotNull(envelope);
@@ -501,7 +563,7 @@ public sealed class RuntimeRepositoryTests
             Assert.Null(repository.Read(tx));
         });
 
-        var filePath = Path.Combine(dataPath, "SettingsEntity.json");
+        var filePath = GetJsonPath(dataPath, SettingsEntityStorageIdentifier);
         Assert.True(File.Exists(filePath));
 
         var envelope = JsonUtility.FromJson<SettingsEntityStorageEnvelope>(File.ReadAllText(filePath));
@@ -531,6 +593,114 @@ public sealed class RuntimeRepositoryTests
         Assert.Contains(Debug.WarningMessages, message => message.Contains("Multiple persisted repository instances", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task NamespacedJsonRepositories_UseDistinctStorageFiles()
+    {
+        var dataPath = CreateTempDataPath();
+        Application.persistentDataPath = dataPath;
+
+        var inventoryRepository = new InventoryJsonRepository();
+        var profileRepository = new ProfileJsonRepository();
+        var txManager = new TxManager();
+
+        await inventoryRepository.InitializeAsync();
+        await profileRepository.InitializeAsync();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            inventoryRepository.Create(tx, new InventorySample(1, "inventory"));
+            profileRepository.Create(tx, new ProfileSample(2, "profile"));
+        });
+
+        Assert.True(File.Exists(GetJsonPath(dataPath, InventorySharedNameStorageIdentifier)));
+        Assert.True(File.Exists(GetJsonPath(dataPath, ProfileSharedNameStorageIdentifier)));
+
+        txManager.BeginROTransaction(tx =>
+        {
+            Assert.Equal("inventory", inventoryRepository.Read(tx, 1)!.Name);
+            Assert.Equal("profile", profileRepository.Read(tx, 2)!.Name);
+        });
+    }
+
+    [Fact]
+    public async Task RepositoryTreeDataLoader_UsesStorageIdentifierToResolveSameNamedPersistedTypes()
+    {
+        var dataPath = CreateTempDataPath();
+        Application.persistentDataPath = dataPath;
+
+        var inventoryRepository = new InventoryJsonRepository();
+        var profileRepository = new ProfileJsonRepository();
+        var txManager = new TxManager();
+
+        await inventoryRepository.InitializeAsync();
+        await profileRepository.InitializeAsync();
+
+        await txManager.BeginRWTransactionAsync(tx =>
+        {
+            inventoryRepository.Create(tx, new InventorySample(1, "inventory"));
+            profileRepository.Create(tx, new ProfileSample(2, "profile"));
+        });
+
+        var wasPlaying = Application.isPlaying;
+        Application.isPlaying = false;
+        try
+        {
+            var id = 0;
+            var nodes = RepositoryTreeDataLoader.Load(RepositoryTracker.RepositoryType.Json, ref id)
+                .Cast<RepositoryTrackerViewItem>()
+                .ToList();
+
+            Assert.Equal(2, nodes.Count);
+
+            var inventoryNode = nodes.Single(node => node.RepositoryName == Path.GetFileName(GetJsonPath(dataPath, InventorySharedNameStorageIdentifier)));
+            var profileNode = nodes.Single(node => node.RepositoryName == Path.GetFileName(GetJsonPath(dataPath, ProfileSharedNameStorageIdentifier)));
+
+            Assert.NotNull(inventoryNode.children);
+            Assert.NotNull(profileNode.children);
+
+            var inventoryItem = Assert.Single(inventoryNode.children!.Cast<RepositoryTrackerViewItem>());
+            var profileItem = Assert.Single(profileNode.children!.Cast<RepositoryTrackerViewItem>());
+            Assert.NotNull(inventoryItem.FullValue);
+            Assert.NotNull(profileItem.FullValue);
+
+            Assert.Equal("1", inventoryItem.Key);
+            Assert.Equal("2", profileItem.Key);
+            Assert.Equal(
+                "Lilja.Repository.Generated.Dtos.Lilja.Repository.Analyzer.Tests.Samples.Inventory.SharedNameEntityDto",
+                inventoryItem.FullValue!.GetType().FullName);
+            Assert.Equal(
+                "Lilja.Repository.Generated.Dtos.Lilja.Repository.Analyzer.Tests.Samples.Profile.SharedNameEntityDto",
+                profileItem.FullValue!.GetType().FullName);
+        }
+        finally
+        {
+            Application.isPlaying = wasPlaying;
+        }
+    }
+
+    [Fact]
+    public void RepositoryTreeDataLoader_FallsBackToUnknownForUnresolvedPersistedFiles()
+    {
+        var dataPath = CreateTempDataPath();
+        Application.persistentDataPath = dataPath;
+        File.WriteAllText(Path.Combine(dataPath, "Unknown.Namespace.Entity.json"), "{\"Items\":[]}");
+
+        var wasPlaying = Application.isPlaying;
+        Application.isPlaying = false;
+        try
+        {
+            var id = 0;
+            var node = Assert.Single(RepositoryTreeDataLoader.Load(RepositoryTracker.RepositoryType.Json, ref id).Cast<RepositoryTrackerViewItem>());
+
+            Assert.Equal("Unknown", node.Type);
+            Assert.Contains("Items", node.ValuePreview, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Application.isPlaying = wasPlaying;
+        }
+    }
+
     private static ItemEntity CreateItem(int id, string name)
     {
         return new ItemEntity(id, name, new SampleCoordinate(id, id + 1));
@@ -548,6 +718,16 @@ public sealed class RuntimeRepositoryTests
     private static async Task AwaitUniTask(UniTask task)
     {
         await task;
+    }
+
+    private static string GetJsonPath(string dataPath, string storageIdentifier)
+    {
+        return Path.Combine(dataPath, storageIdentifier + ".json");
+    }
+
+    private static string GetMessagePackPath(string dataPath, string storageIdentifier)
+    {
+        return Path.Combine(dataPath, storageIdentifier + ".msgpack");
     }
 
     private static string CreateTempDataPath()

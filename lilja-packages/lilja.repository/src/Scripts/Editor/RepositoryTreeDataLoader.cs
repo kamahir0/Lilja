@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using Lilja.Repository.Diagnostics;
 
@@ -53,10 +54,9 @@ namespace Lilja.Repository.Editor
             ref int id)
         {
             var fileName = Path.GetFileName(file);
-            var entityName = Path.GetFileNameWithoutExtension(file);
-            var dtoType = RuntimeTypeCache.FindType(entityName + "Dto");
-            var envelopeType = RuntimeTypeCache.FindType(entityName + "StorageEnvelope");
-            if (dtoType == null || envelopeType == null)
+            var storageIdentifier = Path.GetFileNameWithoutExtension(file);
+            var metadata = RuntimeTypeCache.FindPersistedTypeMetadata(storageIdentifier);
+            if (metadata == null || metadata.DtoType == null || metadata.EnvelopeType == null)
             {
                 children.Add(new RepositoryTrackerViewItem(++id)
                 {
@@ -76,14 +76,14 @@ namespace Lilja.Repository.Editor
             {
                 if (repositoryType == RepositoryTracker.RepositoryType.Json)
                 {
-                    LoadJsonFile(file, entityName, dtoType, envelopeType, itemChildren, ref id);
+                    LoadJsonFile(file, metadata, itemChildren, ref id);
                 }
                 else
                 {
-                    LoadMessagePackFile(file, entityName, dtoType, envelopeType, itemChildren, ref id);
+                    LoadMessagePackFile(file, metadata, itemChildren, ref id);
                 }
 
-                AddRepositoryNode(children, ref id, fileName, dtoType.Name, itemChildren);
+                AddRepositoryNode(children, ref id, fileName, metadata.DtoType.Name, itemChildren);
             }
             catch (Exception e)
             {
@@ -118,35 +118,40 @@ namespace Lilja.Repository.Editor
             });
         }
 
-        private static void LoadJsonFile(string file, string entityName, Type dtoType, Type envelopeType, List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren, ref int id)
+        private static void LoadJsonFile(
+            string file,
+            RuntimeTypeCache.PersistedTypeMetadata metadata,
+            List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren,
+            ref int id)
         {
             var json = File.ReadAllText(file);
-            var envelope = string.IsNullOrWhiteSpace(json)
+            var envelopeType = metadata.EnvelopeType!;
+            object? envelope = string.IsNullOrWhiteSpace(json)
                 ? null
                 : JsonUtility.FromJson(json, envelopeType);
-            LoadEnvelopeItems(entityName, dtoType, envelopeType, envelope, itemChildren, ref id);
+            LoadEnvelopeItems(metadata, envelope, itemChildren, ref id);
         }
 
-        private static void LoadMessagePackFile(string file, string entityName, Type dtoType, Type envelopeType, List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren, ref int id)
+        private static void LoadMessagePackFile(
+            string file,
+            RuntimeTypeCache.PersistedTypeMetadata metadata,
+            List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren,
+            ref int id)
         {
             var bytes = File.ReadAllBytes(file);
-            var formatterType = RuntimeTypeCache.FindType(entityName + "DtoFormatter");
-            var envelopeFormatterType = RuntimeTypeCache.FindType(entityName + "StorageEnvelopeFormatter");
-            var options = MessagePackReflectionBridge.CreateOptions(envelopeFormatterType, formatterType);
+            var options = MessagePackReflectionBridge.CreateOptions(metadata.EnvelopeFormatterType!, metadata.DtoFormatterType!);
             if (options == null)
             {
                 throw new InvalidOperationException("MessagePack runtime could not be initialized.");
             }
 
-            var envelope = MessagePackReflectionBridge.Deserialize(bytes, envelopeType, options);
-            LoadEnvelopeItems(entityName, dtoType, envelopeType, envelope, itemChildren, ref id);
+            var envelope = MessagePackReflectionBridge.Deserialize(bytes, metadata.EnvelopeType!, options);
+            LoadEnvelopeItems(metadata, envelope, itemChildren, ref id);
         }
 
         private static void LoadEnvelopeItems(
-            string entityName,
-            Type dtoType,
-            Type envelopeType,
-            object envelope,
+            RuntimeTypeCache.PersistedTypeMetadata metadata,
+            object? envelope,
             List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren,
             ref int id)
         {
@@ -155,6 +160,8 @@ namespace Lilja.Repository.Editor
                 return;
             }
 
+            var dtoType = metadata.DtoType!;
+            var envelopeType = metadata.EnvelopeType!;
             var itemsField = envelopeType.GetField("Items");
             if (itemsField != null)
             {
@@ -167,7 +174,7 @@ namespace Lilja.Repository.Editor
                 var index = 0;
                 foreach (var item in items)
                 {
-                    AddDtoItem(entityName, dtoType, item, itemChildren, ref id, index++);
+                    AddDtoItem(dtoType, metadata.EntityDtoKeyAccessor, item, itemChildren, ref id, index++);
                 }
 
                 return;
@@ -193,11 +200,17 @@ namespace Lilja.Repository.Editor
             });
         }
 
-        private static void AddDtoItem(string entityName, Type dtoType, object item, List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren, ref int id, int fallbackIndex)
+        private static void AddDtoItem(
+            Type dtoType,
+            MethodInfo? keyAccessor,
+            object item,
+            List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren,
+            ref int id,
+            int fallbackIndex)
         {
             itemChildren.Add(new RepositoryTrackerViewItem(++id)
             {
-                Key = ExtractKeyFromDto(entityName, item, dtoType, fallbackIndex),
+                Key = ExtractKeyFromDto(item, dtoType, keyAccessor, fallbackIndex),
                 Type = dtoType.Name,
                 ValuePreview = GetValuePreview(item),
                 FullValue = item,
@@ -206,14 +219,13 @@ namespace Lilja.Repository.Editor
             });
         }
 
-        private static string ExtractKeyFromDto(string entityName, object dto, Type dtoType, int fallbackIndex)
+        private static string ExtractKeyFromDto(object? dto, Type dtoType, MethodInfo? keyAccessor, int fallbackIndex)
         {
             if (dto == null)
             {
                 return $"Item {fallbackIndex}";
             }
 
-            var keyAccessor = RuntimeTypeCache.FindEntityDtoKeyAccessor(entityName, dtoType);
             if (keyAccessor != null)
             {
                 try
@@ -280,8 +292,8 @@ namespace Lilja.Repository.Editor
                     {
                         var result = allMethod.Invoke(repo, new object[] { TrackerReadOnlyTx }) as System.Collections.IEnumerable;
                         var entityType = allMethod.ReturnType.GetGenericArguments()[0];
-                        var getKeyMethod = entityType.GetMethod("GetKey", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                        var toDtoMethod = entityType.GetMethod("ToDto", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                        var getKeyMethod = entityType.GetMethod("GetKey", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                        var toDtoMethod = entityType.GetMethod("ToDto", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
                         var count = 0;
                         if (result != null)
@@ -307,12 +319,12 @@ namespace Lilja.Repository.Editor
                     }
                     else
                     {
-                        var readMethod = repoType.GetMethod("Read", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, new[] { typeof(IReadOnlyTx) }, null);
+                        var readMethod = repoType.GetMethod("Read", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(IReadOnlyTx) }, null);
                         var entity = readMethod?.Invoke(repo, new object[] { TrackerReadOnlyTx });
                         if (entity != null)
                         {
                             var entityType = entity.GetType();
-                            var toDtoMethod = entityType.GetMethod("ToDto", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                            var toDtoMethod = entityType.GetMethod("ToDto", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                             var displayValue = toDtoMethod?.Invoke(null, new[] { entity }) ?? entity;
                             itemChildren.Add(new RepositoryTrackerViewItem(++id)
                             {
@@ -350,7 +362,7 @@ namespace Lilja.Repository.Editor
             }
         }
 
-        private static string GetValuePreview(object value)
+        private static string GetValuePreview(object? value)
         {
             if (value == null)
             {

@@ -61,7 +61,7 @@ internal static class MessagePackRepositoryEmitter
         string envelopeFormatterTypeName)
     {
         builder.Append($@"        public MessagePack{entity.ClassName}Repository()
-            : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, ""{entity.ClassName}.msgpack""))
+            : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, ""{entity.StorageIdentifier}.msgpack""))
         {{
 #if UNITY_EDITOR
             TrackRepository(global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.MessagePack);

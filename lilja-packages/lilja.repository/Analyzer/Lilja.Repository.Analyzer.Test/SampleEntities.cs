@@ -72,3 +72,43 @@ namespace Lilja.Repository.Analyzer.Tests.Samples
         }
     }
 }
+
+namespace Lilja.Repository.Analyzer.Tests.Samples.Inventory
+{
+    [Entity]
+    public partial class SharedNameEntity
+    {
+        [Key]
+        [Persist(0)]
+        private readonly int _id;
+
+        [Persist(1)]
+        public string Name { get; }
+
+        public SharedNameEntity(int id, string name)
+        {
+            _id = id;
+            Name = name;
+        }
+    }
+}
+
+namespace Lilja.Repository.Analyzer.Tests.Samples.Profile
+{
+    [Entity]
+    public partial class SharedNameEntity
+    {
+        [Key]
+        [Persist(0)]
+        private readonly int _id;
+
+        [Persist(1)]
+        public string Name { get; }
+
+        public SharedNameEntity(int id, string name)
+        {
+            _id = id;
+            Name = name;
+        }
+    }
+}

@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <DefineConstants>$(DefineConstants);UNITY_EDITOR</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +35,14 @@
              Link="Runtime\Repositories\%(Filename)%(Extension)" />
     <Compile Include="..\..\src\Scripts\Runtime\Core\Transactions\*.cs"
              Link="Runtime\Transactions\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Scripts\Editor\RuntimeTypeCache.cs"
+             Link="Editor\RuntimeTypeCache.cs" />
+    <Compile Include="..\..\src\Scripts\Editor\MessagePackReflectionBridge.cs"
+             Link="Editor\MessagePackReflectionBridge.cs" />
+    <Compile Include="..\..\src\Scripts\Editor\RepositoryTreeDataLoader.cs"
+             Link="Editor\RepositoryTreeDataLoader.cs" />
+    <Compile Include="..\..\src\Scripts\Editor\RepositoryTrackerViewItem.cs"
+             Link="Editor\RepositoryTrackerViewItem.cs" />
   </ItemGroup>
 
 </Project>

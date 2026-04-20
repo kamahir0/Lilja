@@ -356,3 +356,26 @@ namespace MessagePack.Resolvers
         public static MessagePack.IFormatterResolver Instance => MessagePack.TestFormatterResolver.Instance;
     }
 }
+
+namespace UnityEditor.IMGUI.Controls
+{
+    public class TreeViewItem<T>
+    {
+        public TreeViewItem()
+        {
+        }
+
+        public TreeViewItem(T id)
+        {
+            this.id = id;
+        }
+
+        public T id { get; set; } = default!;
+
+        public int depth { get; set; }
+
+        public List<TreeViewItem<T>>? children { get; set; }
+
+        public bool hasChildren => children != null && children.Count > 0;
+    }
+}

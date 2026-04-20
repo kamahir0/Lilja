@@ -216,8 +216,8 @@ public sealed class RepositoryBenchmarks
     {
         return Backend switch
         {
-            RepositoryBackendKind.Json => "ItemEntity.json",
-            RepositoryBackendKind.MessagePack => "ItemEntity.msgpack",
+            RepositoryBackendKind.Json => "Lilja.Repository.Analyzer.Tests.Samples.ItemEntity.json",
+            RepositoryBackendKind.MessagePack => "Lilja.Repository.Analyzer.Tests.Samples.ItemEntity.msgpack",
             _ => null,
         };
     }

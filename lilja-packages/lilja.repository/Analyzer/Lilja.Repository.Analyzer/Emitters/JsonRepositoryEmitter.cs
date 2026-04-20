@@ -22,7 +22,7 @@ internal static class JsonRepositoryEmitter
             $"Json{entity.ClassName}Repository",
             $"global::Lilja.Repository.PersistedKeyedRepositoryBase<{entity.FullTypeName}, {keyTypeName}, {dtoTypeName}>");
         builder.Append($@"        public Json{entity.ClassName}Repository()
-            : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, ""{entity.ClassName}.json""))
+            : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, ""{entity.StorageIdentifier}.json""))
         {{
 #if UNITY_EDITOR
             TrackRepository(global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.Json);
@@ -44,7 +44,7 @@ internal static class JsonRepositoryEmitter
             $"Json{entity.ClassName}Repository",
             $"global::Lilja.Repository.PersistedSingletonRepositoryBase<{entity.FullTypeName}, {dtoTypeName}>");
         builder.Append($@"        public Json{entity.ClassName}Repository()
-            : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, ""{entity.ClassName}.json""))
+            : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, ""{entity.StorageIdentifier}.json""))
         {{
 #if UNITY_EDITOR
             TrackRepository(global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.Json);

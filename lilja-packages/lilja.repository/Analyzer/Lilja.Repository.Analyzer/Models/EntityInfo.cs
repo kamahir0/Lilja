@@ -13,6 +13,11 @@ internal readonly struct EntityInfo
 
     public string FullTypeName { get; }
 
+    public string StorageIdentifier =>
+        string.IsNullOrEmpty(Namespace)
+            ? ClassName
+            : $"{Namespace}.{ClassName}";
+
     public IReadOnlyList<EntityMemberInfo> PersistMembers { get; }
 
     public IReadOnlyList<EntityMemberInfo> KeyMembers { get; }

@@ -55,37 +55,103 @@ public sealed class GeneratorDriverTests
             includeMessagePack: true);
 
         var hintNames = result.Results.Single().GeneratedSources.Select(source => source.HintName).ToArray();
-        Assert.Contains("ItemDto.g.cs", hintNames);
-        Assert.Contains("ItemStorageEnvelope.g.cs", hintNames);
-        Assert.Contains("Item.Converter.g.cs", hintNames);
-        Assert.Contains("Item.KeyAccessor.g.cs", hintNames);
-        Assert.Contains("IItemRepository.g.cs", hintNames);
-        Assert.Contains("JsonItemRepository.g.cs", hintNames);
-        Assert.Contains("MessagePackItemRepository.g.cs", hintNames);
-        Assert.Contains("ItemStorageEnvelopeFormatter.g.cs", hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "ItemDto.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "ItemStorageEnvelope.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "Item.Converter.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "Item.KeyAccessor.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "IItemRepository.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "JsonItemRepository.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "MessagePackItemRepository.g.cs"), hintNames);
+        Assert.Contains(GetHintName("Demo.Item", "ItemStorageEnvelopeFormatter.g.cs"), hintNames);
 
         var generatedSources = result.Results.Single().GeneratedSources.ToDictionary(
             source => source.HintName,
             source => source.SourceText.ToString(),
             StringComparer.Ordinal);
-        Assert.Contains("InMemoryKeyedRepositoryBase", generatedSources["InMemoryItemRepository.g.cs"], StringComparison.Ordinal);
-        Assert.Contains("PersistedKeyedRepositoryBase", generatedSources["JsonItemRepository.g.cs"], StringComparison.Ordinal);
-        Assert.Contains("PersistedKeyedRepositoryBase", generatedSources["MessagePackItemRepository.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("InMemoryKeyedRepositoryBase", generatedSources[GetHintName("Demo.Item", "InMemoryItemRepository.g.cs")], StringComparison.Ordinal);
+        Assert.Contains("PersistedKeyedRepositoryBase", generatedSources[GetHintName("Demo.Item", "JsonItemRepository.g.cs")], StringComparison.Ordinal);
+        Assert.Contains("PersistedKeyedRepositoryBase", generatedSources[GetHintName("Demo.Item", "MessagePackItemRepository.g.cs")], StringComparison.Ordinal);
         Assert.Contains(
             "public global::Lilja.Repository.Generated.Dtos.Demo.ItemDto Deserialize",
-            generatedSources["ItemDtoFormatter.g.cs"],
+            generatedSources[GetHintName("Demo.Item", "ItemDtoFormatter.g.cs")],
             StringComparison.Ordinal);
         Assert.DoesNotContain(
             "public global::Lilja.Repository.Generated.Dtos.Demo.ItemDto? Deserialize",
-            generatedSources["ItemDtoFormatter.g.cs"],
+            generatedSources[GetHintName("Demo.Item", "ItemDtoFormatter.g.cs")],
             StringComparison.Ordinal);
         Assert.Contains(
             "public global::Lilja.Repository.Generated.Storage.Demo.ItemStorageEnvelope Deserialize",
-            generatedSources["ItemStorageEnvelopeFormatter.g.cs"],
+            generatedSources[GetHintName("Demo.Item", "ItemStorageEnvelopeFormatter.g.cs")],
             StringComparison.Ordinal);
         Assert.DoesNotContain(
             "public global::Lilja.Repository.Generated.Storage.Demo.ItemStorageEnvelope? Deserialize",
-            generatedSources["ItemStorageEnvelopeFormatter.g.cs"],
+            generatedSources[GetHintName("Demo.Item", "ItemStorageEnvelopeFormatter.g.cs")],
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NamespacedEntitiesWithSameClassName_GenerateUniqueHintsAndStoragePaths()
+    {
+        var result = RunGenerator(
+            """
+            using Lilja.Repository;
+
+            namespace Demo.Inventory
+            {
+                [Entity]
+                public partial class Item
+                {
+                    [Key]
+                    [Persist(0)]
+                    public int Id { get; }
+
+                    public Item(int id)
+                    {
+                        Id = id;
+                    }
+                }
+            }
+
+            namespace Demo.Profile
+            {
+                [Entity]
+                public partial class Item
+                {
+                    [Key]
+                    [Persist(0)]
+                    public int Id { get; }
+
+                    public Item(int id)
+                    {
+                        Id = id;
+                    }
+                }
+            }
+            """,
+            includeMessagePack: true);
+
+        var generatedSources = result.Results.Single().GeneratedSources.ToDictionary(
+            source => source.HintName,
+            source => source.SourceText.ToString(),
+            StringComparer.Ordinal);
+
+        Assert.Contains(GetHintName("Demo.Inventory.Item", "JsonItemRepository.g.cs"), generatedSources.Keys);
+        Assert.Contains(GetHintName("Demo.Profile.Item", "JsonItemRepository.g.cs"), generatedSources.Keys);
+        Assert.Contains(
+            "\"Demo.Inventory.Item.json\"",
+            generatedSources[GetHintName("Demo.Inventory.Item", "JsonItemRepository.g.cs")],
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"Demo.Profile.Item.json\"",
+            generatedSources[GetHintName("Demo.Profile.Item", "JsonItemRepository.g.cs")],
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"Demo.Inventory.Item.msgpack\"",
+            generatedSources[GetHintName("Demo.Inventory.Item", "MessagePackItemRepository.g.cs")],
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"Demo.Profile.Item.msgpack\"",
+            generatedSources[GetHintName("Demo.Profile.Item", "MessagePackItemRepository.g.cs")],
             StringComparison.Ordinal);
     }
 
@@ -114,9 +180,9 @@ public sealed class GeneratorDriverTests
             includeMessagePack: false);
 
         var hintNames = result.Results.Single().GeneratedSources.Select(source => source.HintName).ToArray();
-        Assert.DoesNotContain("MessagePackItemRepository.g.cs", hintNames);
-        Assert.DoesNotContain("ItemDtoFormatter.g.cs", hintNames);
-        Assert.DoesNotContain("ItemStorageEnvelopeFormatter.g.cs", hintNames);
+        Assert.DoesNotContain(GetHintName("Demo.Item", "MessagePackItemRepository.g.cs"), hintNames);
+        Assert.DoesNotContain(GetHintName("Demo.Item", "ItemDtoFormatter.g.cs"), hintNames);
+        Assert.DoesNotContain(GetHintName("Demo.Item", "ItemStorageEnvelopeFormatter.g.cs"), hintNames);
     }
 
     [Theory]
@@ -254,6 +320,11 @@ public sealed class GeneratorDriverTests
         }
 
         return result;
+    }
+
+    private static string GetHintName(string storageIdentifier, string fileName)
+    {
+        return storageIdentifier + "." + fileName;
     }
 
     private static readonly MetadataReference[] BasicReferences = CreateBasicReferences();
