@@ -87,6 +87,45 @@ public sealed class GeneratorDriverTests
             "public global::Lilja.Repository.Generated.Storage.Demo.ItemStorageEnvelope? Deserialize",
             generatedSources[GetHintName("Demo.Item", "ItemStorageEnvelopeFormatter.g.cs")],
             StringComparison.Ordinal);
+        Assert.Contains(
+            "Items = new global::System.Collections.Generic.List<global::Lilja.Repository.Generated.Dtos.Demo.ItemDto>()",
+            generatedSources[GetHintName("Demo.Item", "ItemStorageEnvelope.g.cs")],
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SingletonPersistedEntity_KeepsSingletonStorageShape()
+    {
+        var result = RunGenerator(
+            """
+            using Lilja.Repository;
+
+            namespace Demo;
+
+            [Entity]
+            public partial class Settings
+            {
+                [Persist(0)]
+                public int Volume { get; }
+
+                public Settings(int volume)
+                {
+                    Volume = volume;
+                }
+            }
+            """,
+            includeMessagePack: true);
+
+        var generatedSources = result.Results.Single().GeneratedSources.ToDictionary(
+            source => source.HintName,
+            source => source.SourceText.ToString(),
+            StringComparer.Ordinal);
+
+        Assert.Contains("PersistedSingletonRepositoryBase", generatedSources[GetHintName("Demo.Settings", "JsonSettingsRepository.g.cs")], StringComparison.Ordinal);
+        Assert.Contains("PersistedSingletonRepositoryBase", generatedSources[GetHintName("Demo.Settings", "MessagePackSettingsRepository.g.cs")], StringComparison.Ordinal);
+        Assert.Contains("public bool HasValue;", generatedSources[GetHintName("Demo.Settings", "SettingsStorageEnvelope.g.cs")], StringComparison.Ordinal);
+        Assert.Contains("public global::Lilja.Repository.Generated.Dtos.Demo.SettingsDto? Item;", generatedSources[GetHintName("Demo.Settings", "SettingsStorageEnvelope.g.cs")], StringComparison.Ordinal);
+        Assert.DoesNotContain("Items = new global::System.Collections.Generic.List", generatedSources[GetHintName("Demo.Settings", "SettingsStorageEnvelope.g.cs")], StringComparison.Ordinal);
     }
 
     [Fact]

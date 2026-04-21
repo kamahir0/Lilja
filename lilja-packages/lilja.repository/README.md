@@ -1,7 +1,7 @@
 # Lilja.Repository
 
 `[Entity]` を付けたクラスから、Unity 用の Repository 実装を source generator で生成するパッケージです。  
-Entity 定義、transaction、永続化ファイルをできるだけ単純に保ちつつ、DDD / オニオンアーキテクチャ向けの Repository を扱いやすくすることを目指しています。
+generated repository を使う前提で、Entity 定義、transaction、永続化ファイルをできるだけ単純に保ちつつ、DDD / オニオンアーキテクチャ向けの Repository を扱いやすくすることを目指しています。
 
 ## 何が生成されるか
 
@@ -29,6 +29,7 @@ Entity 定義、transaction、永続化ファイルをできるだけ単純に�
 - 対応対象は `instance field` と `instance auto-property`
 - `static` メンバー、計算プロパティ、custom accessor property は非対応
 - 永続化リポジトリを生成するなら、`[Key]` メンバーにも `[Persist(index)]` が必要
+- Entity は実質的に immutable を前提とします。mutable entity は unsupported contract です
 
 ```csharp
 using Lilja.Repository;
@@ -89,6 +90,11 @@ public readonly struct Coordinate
 `Read` は存在しない可能性を表すため nullable を返します。  
 永続化は `1 repository = 1 file` の単純な形です。
 
+このパッケージは generated repository を使う前提です。  
+`RepositoryTx` のような low-level helper を使った手書き custom repository はサポート対象外です。
+- `InMemoryKeyed / InMemorySingleton / PersistedKeyed / PersistedSingleton` の4系統 base は意図的に維持しています
+- keyed は `Items`、singleton は `HasValue` / `Item` の永続化 shape を使い分けます
+
 - `Create` は current staged view に対象がすでに存在すると `InvalidOperationException` を投げます
 - `Update` は current staged view に対象が存在しないと `InvalidOperationException` を投げます
 - `Delete` は current staged view に対象が存在しないと `InvalidOperationException` を投げます
@@ -126,6 +132,7 @@ txManager.BeginROTransaction(tx =>
 - persist 失敗時は committed state は更新されず、例外が呼び出し元へ返ります
 - strict CRUD の存在判定は current staged view 基準です
 - rollback は staged state を捨てるだけで、コミット済み状態は触りません
+- low-level transaction helper は public contract ではなく、generated repository の内部実装です
 
 ### 制約
 

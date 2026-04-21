@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Lilja.Repository;
@@ -924,6 +925,90 @@ public sealed class RuntimeRepositoryTests
     }
 
     [Fact]
+    public void RuntimeSurface_ExposesGeneratedRepositoryFacingTypesOnly()
+    {
+        Assert.True(typeof(InMemoryKeyedRepositoryBase<ItemEntity, int>).IsPublic);
+        Assert.True(typeof(InMemorySingletonRepositoryBase<SettingsEntity>).IsPublic);
+        Assert.True(typeof(PersistedKeyedRepositoryBase<ItemEntity, int, ItemEntityDto>).IsPublic);
+        Assert.True(typeof(PersistedSingletonRepositoryBase<SettingsEntity, SettingsEntityDto>).IsPublic);
+
+        Assert.False(typeof(RepositoryTx).IsPublic);
+        Assert.False(typeof(RepositoryWriteState<ItemEntity>).IsPublic);
+        Assert.False(typeof(RepositoryOverlayState<int, ItemEntityDto>).IsPublic);
+        Assert.False(typeof(RuntimeInstanceMonitor).IsPublic);
+
+        var publicLowLevelMethods = typeof(RepositoryTx).GetMethods(BindingFlags.Public | BindingFlags.Static);
+        Assert.DoesNotContain(publicLowLevelMethods, method => method.Name == "UpsertKeyedValue");
+        Assert.DoesNotContain(publicLowLevelMethods, method => method.Name == "RemoveKeyedValue");
+    }
+
+    [Fact]
+    public void RuntimeSurface_PublicApiSnapshotMatchesExpected()
+    {
+        var expected = new[]
+        {
+            "type Lilja.Repository.AtomicFileWriter",
+            "method System.Void Lilja.Repository.AtomicFileWriter.DeleteIfExists(System.String filePath)",
+            "method System.Void Lilja.Repository.AtomicFileWriter.WriteAllBytes(System.String filePath, System.Byte[] bytes)",
+            "method System.Void Lilja.Repository.AtomicFileWriter.WriteAllText(System.String filePath, System.String content)",
+            "type Lilja.Repository.Diagnostics.RepositoryTracker",
+            "method System.Collections.Generic.IEnumerable<System.Object> Lilja.Repository.Diagnostics.RepositoryTracker.GetAll(Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType type)",
+            "method System.Void Lilja.Repository.Diagnostics.RepositoryTracker.Track(System.Object repository, Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType type)",
+            "type Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType",
+            "field Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory",
+            "field Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.Json",
+            "field Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.MessagePack",
+            "type Lilja.Repository.EntityAttribute",
+            "ctor Lilja.Repository.EntityAttribute()",
+            "type Lilja.Repository.FromPrimitiveAttribute",
+            "ctor Lilja.Repository.FromPrimitiveAttribute()",
+            "type Lilja.Repository.IReadOnlyTx",
+            "type Lilja.Repository.IReadWriteTx",
+            "type Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>",
+            "method System.Collections.Generic.IReadOnlyList<TEntity> Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>.All(Lilja.Repository.IReadOnlyTx tx)",
+            "method System.Void Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>.Create(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "method System.Void Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>.Delete(Lilja.Repository.IReadWriteTx tx, TKey key)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>.InitializeAsync(System.Threading.CancellationToken ct)",
+            "method TEntity Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>.Read(Lilja.Repository.IReadOnlyTx tx, TKey key)",
+            "method System.Void Lilja.Repository.InMemoryKeyedRepositoryBase<TEntity, TKey>.Update(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "type Lilja.Repository.InMemorySingletonRepositoryBase<TEntity>",
+            "method System.Void Lilja.Repository.InMemorySingletonRepositoryBase<TEntity>.Create(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "method System.Void Lilja.Repository.InMemorySingletonRepositoryBase<TEntity>.Delete(Lilja.Repository.IReadWriteTx tx)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.InMemorySingletonRepositoryBase<TEntity>.InitializeAsync(System.Threading.CancellationToken ct)",
+            "method TEntity Lilja.Repository.InMemorySingletonRepositoryBase<TEntity>.Read(Lilja.Repository.IReadOnlyTx tx)",
+            "method System.Void Lilja.Repository.InMemorySingletonRepositoryBase<TEntity>.Update(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "type Lilja.Repository.KeyAttribute",
+            "ctor Lilja.Repository.KeyAttribute()",
+            "type Lilja.Repository.PersistAttribute",
+            "ctor Lilja.Repository.PersistAttribute(System.Int32 index)",
+            "property System.Int32 Lilja.Repository.PersistAttribute.Index { get; }",
+            "type Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>",
+            "method System.Collections.Generic.IReadOnlyList<TEntity> Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>.All(Lilja.Repository.IReadOnlyTx tx)",
+            "method System.Void Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>.Create(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "method System.Void Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>.Delete(Lilja.Repository.IReadWriteTx tx, TKey key)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>.InitializeAsync(System.Threading.CancellationToken ct)",
+            "method TEntity Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>.Read(Lilja.Repository.IReadOnlyTx tx, TKey key)",
+            "method System.Void Lilja.Repository.PersistedKeyedRepositoryBase<TEntity, TKey, TDto>.Update(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "type Lilja.Repository.PersistedSingletonRepositoryBase<TEntity, TDto>",
+            "method System.Void Lilja.Repository.PersistedSingletonRepositoryBase<TEntity, TDto>.Create(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "method System.Void Lilja.Repository.PersistedSingletonRepositoryBase<TEntity, TDto>.Delete(Lilja.Repository.IReadWriteTx tx)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.PersistedSingletonRepositoryBase<TEntity, TDto>.InitializeAsync(System.Threading.CancellationToken ct)",
+            "method TEntity Lilja.Repository.PersistedSingletonRepositoryBase<TEntity, TDto>.Read(Lilja.Repository.IReadOnlyTx tx)",
+            "method System.Void Lilja.Repository.PersistedSingletonRepositoryBase<TEntity, TDto>.Update(Lilja.Repository.IReadWriteTx tx, TEntity entity)",
+            "type Lilja.Repository.ToPrimitiveAttribute",
+            "ctor Lilja.Repository.ToPrimitiveAttribute()",
+            "type Lilja.Repository.TxManager",
+            "ctor Lilja.Repository.TxManager()",
+            "method System.Void Lilja.Repository.TxManager.BeginROTransaction(System.Action<Lilja.Repository.IReadOnlyTx> action)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.TxManager.BeginROTransactionAsync(System.Func<Lilja.Repository.IReadOnlyTx, Cysharp.Threading.Tasks.UniTask> action)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.TxManager.BeginRWTransactionAsync(System.Action<Lilja.Repository.IReadWriteTx> action, System.Threading.CancellationToken ct)",
+            "method Cysharp.Threading.Tasks.UniTask Lilja.Repository.TxManager.BeginRWTransactionAsync(System.Func<Lilja.Repository.IReadWriteTx, Cysharp.Threading.Tasks.UniTask> action, System.Threading.CancellationToken ct)",
+        };
+
+        Assert.Equal(expected, DescribePublicRuntimeSurface().ToArray());
+    }
+
+    [Fact]
     public async Task NamespacedJsonRepositories_UseDistinctStorageFiles()
     {
         var dataPath = CreateTempDataPath();
@@ -1065,5 +1150,106 @@ public sealed class RuntimeRepositoryTests
         var path = Path.Combine(Path.GetTempPath(), "LiljaRepositoryTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
+    }
+
+    private static IEnumerable<string> DescribePublicRuntimeSurface()
+    {
+        var assembly = typeof(TxManager).Assembly;
+        var types = assembly.GetTypes()
+            .Where(IsTrackedRuntimeSurfaceType)
+            .OrderBy(type => FormatTypeName(type), StringComparer.Ordinal);
+
+        foreach (var type in types)
+        {
+            yield return "type " + FormatTypeName(type);
+
+            foreach (var constructor in type.GetConstructors(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                         .OrderBy(static constructor => constructor.ToString(), StringComparer.Ordinal))
+            {
+                yield return $"ctor {FormatTypeName(type)}({FormatParameters(constructor.GetParameters())})";
+            }
+
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                         .OrderBy(static property => property.Name, StringComparer.Ordinal))
+            {
+                var accessors = new List<string>(2);
+                if (property.GetMethod?.IsPublic == true)
+                {
+                    accessors.Add("get;");
+                }
+
+                if (property.SetMethod?.IsPublic == true)
+                {
+                    accessors.Add("set;");
+                }
+
+                yield return $"property {FormatTypeName(property.PropertyType)} {FormatTypeName(type)}.{property.Name} {{ {string.Join(" ", accessors)} }}";
+            }
+
+            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                         .Where(static method => !method.IsSpecialName)
+                         .OrderBy(static method => method.Name, StringComparer.Ordinal)
+                         .ThenBy(static method => method.ToString(), StringComparer.Ordinal))
+            {
+                yield return $"method {FormatTypeName(method.ReturnType)} {FormatTypeName(type)}.{method.Name}({FormatParameters(method.GetParameters())})";
+            }
+
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                         .Where(static field => !field.IsSpecialName)
+                         .OrderBy(static field => field.Name, StringComparer.Ordinal))
+            {
+                yield return $"field {FormatTypeName(field.FieldType)} {FormatTypeName(type)}.{field.Name}";
+            }
+        }
+    }
+
+    private static bool IsTrackedRuntimeSurfaceType(Type type)
+    {
+        if (!type.IsPublic && !type.IsNestedPublic)
+        {
+            return false;
+        }
+
+        if (type.Namespace == null)
+        {
+            return false;
+        }
+
+        return type.Namespace == "Lilja.Repository" || type.Namespace == "Lilja.Repository.Diagnostics";
+    }
+
+    private static string FormatParameters(ParameterInfo[] parameters)
+    {
+        return string.Join(
+            ", ",
+            parameters.Select(parameter => $"{FormatTypeName(parameter.ParameterType)} {parameter.Name}"));
+    }
+
+    private static string FormatTypeName(Type type)
+    {
+        if (type.IsGenericParameter)
+        {
+            return type.Name;
+        }
+
+        if (type.IsArray)
+        {
+            return $"{FormatTypeName(type.GetElementType()!)}[]";
+        }
+
+        if (type.IsGenericType)
+        {
+            var genericType = type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition();
+            var genericTypeName = (genericType.FullName ?? genericType.Name).Replace('+', '.');
+            var backtickIndex = genericTypeName.IndexOf('`');
+            if (backtickIndex >= 0)
+            {
+                genericTypeName = genericTypeName.Substring(0, backtickIndex);
+            }
+
+            return $"{genericTypeName}<{string.Join(", ", type.GetGenericArguments().Select(FormatTypeName))}>";
+        }
+
+        return (type.FullName ?? type.Name).Replace('+', '.');
     }
 }

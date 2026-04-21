@@ -9,7 +9,7 @@ namespace Lilja.Repository.Diagnostics
     /// 正常系では 1 instance を前提とする runtime コンポーネントの重複生成を検知する。
     /// 重複は例外ではなく warning で通知する。
     /// </summary>
-    public static class RuntimeInstanceMonitor
+    internal static class RuntimeInstanceMonitor
     {
         private static readonly object SyncRoot = new object();
         private static readonly List<WeakReference<object>> TxManagers = new List<WeakReference<object>>();
@@ -18,7 +18,9 @@ namespace Lilja.Repository.Diagnostics
         private static bool _txManagerWarningIssued;
         private static readonly HashSet<string> WarnedRepositoryKeys = new HashSet<string>(StringComparer.Ordinal);
 
-        public static void TrackTxManager(object txManager)
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+        internal static void TrackTxManager(object txManager)
         {
             if (txManager == null)
             {
@@ -39,7 +41,9 @@ namespace Lilja.Repository.Diagnostics
             }
         }
 
-        public static void TrackPersistedRepository(object repository, string filePath)
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+        internal static void TrackPersistedRepository(object repository, string filePath)
         {
             if (repository == null || string.IsNullOrWhiteSpace(filePath))
             {

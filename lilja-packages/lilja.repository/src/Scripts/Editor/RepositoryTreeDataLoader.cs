@@ -162,24 +162,50 @@ namespace Lilja.Repository.Editor
 
             var dtoType = metadata.DtoType!;
             var envelopeType = metadata.EnvelopeType!;
-            var itemsField = envelopeType.GetField("Items");
-            if (itemsField != null)
+            if (TryLoadCollectionEnvelopeItems(envelopeType, envelope, dtoType, metadata.EntityDtoKeyAccessor, itemChildren, ref id))
             {
-                var items = itemsField.GetValue(envelope) as System.Collections.IList;
-                if (items == null)
-                {
-                    return;
-                }
-
-                var index = 0;
-                foreach (var item in items)
-                {
-                    AddDtoItem(dtoType, metadata.EntityDtoKeyAccessor, item, itemChildren, ref id, index++);
-                }
-
                 return;
             }
 
+            LoadSingletonEnvelopeItem(envelopeType, envelope, dtoType, itemChildren, ref id);
+        }
+
+        private static bool TryLoadCollectionEnvelopeItems(
+            Type envelopeType,
+            object envelope,
+            Type dtoType,
+            MethodInfo? keyAccessor,
+            List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren,
+            ref int id)
+        {
+            var itemsField = envelopeType.GetField("Items");
+            if (itemsField == null)
+            {
+                return false;
+            }
+
+            var items = itemsField.GetValue(envelope) as System.Collections.IList;
+            if (items == null)
+            {
+                return true;
+            }
+
+            var index = 0;
+            foreach (var item in items)
+            {
+                AddDtoItem(dtoType, keyAccessor, item, itemChildren, ref id, index++);
+            }
+
+            return true;
+        }
+
+        private static void LoadSingletonEnvelopeItem(
+            Type envelopeType,
+            object envelope,
+            Type dtoType,
+            List<UnityEditor.IMGUI.Controls.TreeViewItem<int>> itemChildren,
+            ref int id)
+        {
             var hasValueField = envelopeType.GetField("HasValue");
             var itemField = envelopeType.GetField("Item");
             var hasValue = (bool?)hasValueField?.GetValue(envelope) ?? false;

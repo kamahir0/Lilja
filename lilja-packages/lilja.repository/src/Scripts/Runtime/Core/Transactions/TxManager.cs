@@ -202,8 +202,7 @@ namespace Lilja.Repository
 
         private sealed class ReadOnlyTxImpl : IReadOnlyTx, IReadTransactionSnapshotAccess
         {
-            private readonly Dictionary<object, object?> _snapshots =
-                new Dictionary<object, object?>(ReferenceEqualityComparer.Instance);
+            private readonly ReadTransactionSnapshotStore _snapshotStore = new ReadTransactionSnapshotStore();
             private readonly Action _disposeAction;
             private bool _disposed;
 
@@ -228,14 +227,7 @@ namespace Lilja.Repository
                     throw new ArgumentNullException(nameof(getCommittedState));
                 }
 
-                if (_snapshots.TryGetValue(repository, out var existingSnapshot))
-                {
-                    return existingSnapshot is null ? default! : (TState)existingSnapshot;
-                }
-
-                var snapshot = getCommittedState();
-                _snapshots.Add(repository, snapshot);
-                return snapshot;
+                return _snapshotStore.GetOrAddSnapshot(repository, getCommittedState);
             }
 
             public void Dispose()
@@ -246,7 +238,7 @@ namespace Lilja.Repository
                 }
 
                 _disposed = true;
-                _snapshots.Clear();
+                _snapshotStore.Clear();
                 _disposeAction();
             }
 
@@ -262,8 +254,7 @@ namespace Lilja.Repository
         private sealed class ReadWriteTxImpl : IReadWriteTx, IWriteTransactionStateAccess
         {
             private readonly TxManager _owner;
-            private readonly Dictionary<object, ITransactionParticipant> _participants =
-                new Dictionary<object, ITransactionParticipant>(ReferenceEqualityComparer.Instance);
+            private readonly RepositoryTransactionStateStore _stateStore = new RepositoryTransactionStateStore();
             private bool _disposed;
 
             public ReadWriteTxImpl(TxManager owner)
@@ -276,16 +267,7 @@ namespace Lilja.Repository
                 [MaybeNullWhen(false)] out TState state)
             {
                 EnsureNotDisposed();
-
-                if (_participants.TryGetValue(repository, out var participant) &&
-                    participant is RepositoryStateParticipant<TState> typedParticipant)
-                {
-                    state = typedParticipant.State.Value;
-                    return true;
-                }
-
-                state = default;
-                return false;
+                return _stateStore.TryGetState(repository, out state);
             }
 
             public RepositoryWriteState<TState> GetOrAddState<TState>(
@@ -295,24 +277,11 @@ namespace Lilja.Repository
                 Action<TState> applyCommittedState)
             {
                 EnsureNotDisposed();
-
-                if (_participants.TryGetValue(repository, out var existingParticipant))
-                {
-                    if (existingParticipant is RepositoryStateParticipant<TState> typedParticipant)
-                    {
-                        return typedParticipant.State;
-                    }
-
-                    throw new InvalidOperationException("Repository transaction state type mismatch was detected.");
-                }
-
-                var participant = new RepositoryStateParticipant<TState>(
-                    createState(),
+                return _stateStore.GetOrAddState(
+                    repository,
+                    createState,
                     persistAsync,
                     applyCommittedState);
-
-                _participants.Add(repository, participant);
-                return participant.State;
             }
 
             public bool TryGetOverlayState<TKey, TValue>(
@@ -321,16 +290,7 @@ namespace Lilja.Repository
                 where TKey : notnull
             {
                 EnsureNotDisposed();
-
-                if (_participants.TryGetValue(repository, out var participant) &&
-                    participant is IOverlayStateParticipant<TKey, TValue> typedParticipant)
-                {
-                    state = typedParticipant.State;
-                    return true;
-                }
-
-                state = default;
-                return false;
+                return _stateStore.TryGetOverlayState(repository, out state);
             }
 
             public RepositoryOverlayState<TKey, TValue> GetOrAddOverlayState<TKey, TValue>(
@@ -342,48 +302,28 @@ namespace Lilja.Repository
                 where TKey : notnull
             {
                 EnsureNotDisposed();
-
-                if (_participants.TryGetValue(repository, out var existingParticipant))
-                {
-                    if (existingParticipant is IOverlayStateParticipant<TKey, TValue> typedParticipant)
-                    {
-                        return typedParticipant.State;
-                    }
-
-                    throw new InvalidOperationException("Repository transaction state type mismatch was detected.");
-                }
-
-                var participant = new RepositoryOverlayParticipant<TKey, TValue>(
+                return _stateStore.GetOrAddOverlayState(
+                    repository,
                     committedState,
                     persistAsync,
                     applyCommittedState,
                     comparer);
-
-                _participants.Add(repository, participant);
-                return participant.State;
             }
 
             internal async UniTask CommitAsync(CancellationToken cancellationToken)
             {
                 EnsureNotDisposed();
 
-                if (_participants.Count == 0)
+                if (!_stateStore.HasParticipants)
                 {
                     return;
                 }
 
-                foreach (var participant in _participants.Values)
-                {
-                    await participant.PrepareCommitAsync(cancellationToken);
-                }
-
+                await _stateStore.PrepareCommitAsync(cancellationToken);
                 await _owner.CloseReaderAdmissionAndWaitForReadersAsync();
                 try
                 {
-                    foreach (var participant in _participants.Values)
-                    {
-                        participant.ApplyCommit();
-                    }
+                    _stateStore.ApplyCommit();
                 }
                 finally
                 {
@@ -394,11 +334,7 @@ namespace Lilja.Repository
             internal async UniTask RollbackAsync(CancellationToken cancellationToken)
             {
                 EnsureNotDisposed();
-
-                foreach (var participant in _participants.Values)
-                {
-                    await participant.RollbackAsync(cancellationToken);
-                }
+                await _stateStore.RollbackAsync(cancellationToken);
             }
 
             public void Dispose()
@@ -409,7 +345,7 @@ namespace Lilja.Repository
                 }
 
                 _disposed = true;
-                _participants.Clear();
+                _stateStore.Clear();
             }
 
             private void EnsureNotDisposed()
