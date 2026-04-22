@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Lilja.Repository.Diagnostics
 {
     /// <summary>
-    /// Tracks live repository instances so editor tooling can inspect them during play mode.
+    /// プレイモード中にエディターツールから確認できるよう、生存中のリポジトリインスタンスを追跡します。
     /// </summary>
     public static class RepositoryTracker
     {
@@ -18,7 +18,7 @@ namespace Lilja.Repository.Diagnostics
         };
 
         /// <summary>
-        /// Identifies the backing storage strategy used by a repository.
+        /// リポジトリが使用するバックエンドの保存方式を識別します。
         /// </summary>
         public enum RepositoryType
         {
@@ -28,11 +28,11 @@ namespace Lilja.Repository.Diagnostics
         }
 
         /// <summary>
-        /// Registers a repository instance for diagnostics.
+        /// 診断用にリポジトリインスタンスを登録します。
         /// </summary>
-        /// <param name="repository">The repository instance to track.</param>
-        /// <param name="type">The repository storage type.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="repository"/> is <see langword="null"/>.</exception>
+        /// <param name="repository">追跡するリポジトリインスタンス。</param>
+        /// <param name="type">リポジトリの保存方式。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="repository"/> が <see langword="null"/> です。</exception>
         public static void Track(object repository, RepositoryType type)
         {
             if (repository is null)
@@ -49,10 +49,10 @@ namespace Lilja.Repository.Diagnostics
         }
 
         /// <summary>
-        /// Returns all currently live repository instances for the requested storage type.
+        /// 指定された保存方式に属する、現在生存中のすべてのリポジトリインスタンスを返します。
         /// </summary>
-        /// <param name="type">The repository storage type.</param>
-        /// <returns>A snapshot of live repository instances.</returns>
+        /// <param name="type">リポジトリの保存方式。</param>
+        /// <returns>生存中のリポジトリインスタンスのスナップショット。</returns>
         public static IEnumerable<object> GetAll(RepositoryType type)
         {
             lock (SyncRoot)

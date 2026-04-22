@@ -2,16 +2,16 @@
 namespace Lilja.Repository.Internal
 {
     /// <summary>
-    /// Stores staged write information for singleton repositories.
+    /// シングルトンリポジトリ向けのステージング済み書き込み情報を保持します。
     /// </summary>
-    /// <typeparam name="TValue">The value type stored in the repository.</typeparam>
+    /// <typeparam name="TValue">リポジトリに格納される値の型。</typeparam>
     internal sealed class RepositoryWriteState<TValue>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RepositoryWriteState{TValue}"/> class.
+        /// <see cref="RepositoryWriteState{TValue}"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
-        /// <param name="value">The currently staged or committed value.</param>
-        /// <param name="hasValue">Whether a value is present.</param>
+        /// <param name="value">現在ステージングされている、または確定済みの値。</param>
+        /// <param name="hasValue">値が存在するかどうか。</param>
         public RepositoryWriteState(TValue? value, bool hasValue)
         {
             Value = value;
@@ -19,12 +19,12 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Gets or sets the staged value.
+        /// ステージングされた値を取得または設定します。
         /// </summary>
         public TValue? Value { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether a staged value exists.
+        /// ステージングされた値が存在するかどうかを示す値を取得または設定します。
         /// </summary>
         public bool HasValue { get; set; }
     }

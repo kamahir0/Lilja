@@ -6,17 +6,17 @@ using Cysharp.Threading.Tasks;
 namespace Lilja.Repository.Internal
 {
     /// <summary>
-    /// Stores repository-specific state for a single transaction scope.
+    /// 単一のトランザクションスコープに対するリポジトリ固有の状態を保持します。
     /// </summary>
     internal sealed class RepositoryTx : IReadWriteTx
     {
         private readonly Dictionary<IRepositoryParticipant, object> _participantStates;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RepositoryTx"/> class.
+        /// <see cref="RepositoryTx"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         /// <param name="isReadWrite">
-        /// <see langword="true"/> when the transaction supports writes; otherwise <see langword="false"/>.
+        /// トランザクションが書き込みをサポートする場合は <see langword="true"/>、それ以外は <see langword="false"/>。
         /// </param>
         public RepositoryTx(bool isReadWrite)
         {
@@ -25,17 +25,17 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Gets a value indicating whether the transaction supports write staging.
+        /// トランザクションが書き込みのステージングをサポートしているかどうかを示す値を取得します。
         /// </summary>
         public bool IsReadWrite { get; }
 
         /// <summary>
-        /// Gets a value indicating whether any repositories have joined this transaction.
+        /// このトランザクションに参加しているリポジトリが存在するかどうかを示す値を取得します。
         /// </summary>
         public bool HasParticipants => _participantStates.Count > 0;
 
         /// <summary>
-        /// Marks the transaction as disposed.
+        /// トランザクションを破棄済みとしてマークします。
         /// </summary>
         public void Dispose()
         {
@@ -43,16 +43,16 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Gets a value indicating whether the transaction has been disposed.
+        /// トランザクションが破棄済みかどうかを示す値を取得します。
         /// </summary>
         public bool IsDisposed { get; private set; }
 
         /// <summary>
-        /// Attempts to retrieve repository-specific state that has already been associated with the transaction.
+        /// すでにそのトランザクションへ関連付けられている、リポジトリ固有の状態の取得を試みます。
         /// </summary>
-        /// <param name="participant">The repository participant.</param>
-        /// <param name="transactionState">The previously registered state.</param>
-        /// <returns><see langword="true"/> when state exists; otherwise <see langword="false"/>.</returns>
+        /// <param name="participant">リポジトリ参加者。</param>
+        /// <param name="transactionState">以前に登録された状態。</param>
+        /// <returns>状態が存在する場合は <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
         public bool TryGetParticipantState(IRepositoryParticipant participant, out object transactionState)
         {
             EnsureNotDisposed();
@@ -60,12 +60,12 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Returns existing repository state for the transaction, or creates it on first access.
+        /// そのトランザクションに対する既存のリポジトリ状態を返し、初回アクセス時は新たに作成します。
         /// </summary>
-        /// <typeparam name="TState">The type of transaction state.</typeparam>
-        /// <param name="participant">The repository participant.</param>
-        /// <param name="factory">Creates the state when it does not already exist.</param>
-        /// <returns>The existing or newly created state object.</returns>
+        /// <typeparam name="TState">トランザクション状態の型。</typeparam>
+        /// <param name="participant">リポジトリ参加者。</param>
+        /// <param name="factory">状態がまだ存在しない場合に作成します。</param>
+        /// <returns>既存または新規作成された状態オブジェクト。</returns>
         public TState GetOrCreateParticipantState<TState>(IRepositoryParticipant participant, Func<TState> factory)
             where TState : class
         {
@@ -87,10 +87,10 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Invokes <see cref="IRepositoryParticipant.PrepareCommitAsync"/> for every participating repository.
+        /// 参加しているすべてのリポジトリに対して <see cref="IRepositoryParticipant.PrepareCommitAsync"/> を呼び出します。
         /// </summary>
-        /// <param name="ct">A token that can cancel commit preparation.</param>
-        /// <returns>A task that completes when every participant has prepared its state.</returns>
+        /// <param name="ct">コミット準備を取り消せるトークン。</param>
+        /// <returns>すべての参加者が状態の準備を終えたときに完了するタスク。</returns>
         public async UniTask PrepareCommitAsync(CancellationToken ct)
         {
             EnsureNotDisposed();
@@ -103,7 +103,7 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Applies the prepared state for every participating repository.
+        /// 参加しているすべてのリポジトリに対して、準備済みの状態を反映します。
         /// </summary>
         public void ApplyCommit()
         {
@@ -116,7 +116,7 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Discards all staged repository state for the transaction.
+        /// そのトランザクションに対してステージングされた、すべてのリポジトリ状態を破棄します。
         /// </summary>
         public void Rollback()
         {

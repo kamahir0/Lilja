@@ -3,7 +3,7 @@ using System;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Marks a partial class as a repository entity handled by the source generator.
+    /// partial クラスを、ソースジェネレーターが扱うリポジトリエンティティとして示します。
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public sealed class EntityAttribute : Attribute

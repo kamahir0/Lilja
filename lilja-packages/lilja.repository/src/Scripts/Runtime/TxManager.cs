@@ -6,7 +6,7 @@ using Lilja.Repository.Internal;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Coordinates repository transaction lifetimes for concurrent readers and serialized writers.
+    /// 並行する読み取りと直列化された書き込みのために、リポジトリトランザクションの生存期間を調整します。
     /// </summary>
     public class TxManager
     {
@@ -16,7 +16,7 @@ namespace Lilja.Repository
         private bool _readerAdmissionOpen = true;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TxManager"/> class.
+        /// <see cref="TxManager"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         public TxManager()
         {
@@ -24,10 +24,10 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Executes a synchronous read-only transaction.
+        /// 同期の読み取り専用トランザクションを実行します。
         /// </summary>
-        /// <param name="action">The callback that performs read operations.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+        /// <param name="action">読み取り処理を実行するコールバック。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> が <see langword="null"/> です。</exception>
         public void BeginROTransaction(Action<IReadOnlyTx> action)
         {
             if (action is null)
@@ -48,11 +48,11 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Executes an asynchronous read-only transaction.
+        /// 非同期の読み取り専用トランザクションを実行します。
         /// </summary>
-        /// <param name="action">The callback that performs read operations.</param>
-        /// <returns>A task that completes when the callback finishes.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+        /// <param name="action">読み取り処理を実行するコールバック。</param>
+        /// <returns>コールバックが完了したときに完了するタスク。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> が <see langword="null"/> です。</exception>
         public async UniTask BeginROTransactionAsync(Func<IReadOnlyTx, UniTask> action)
         {
             if (action is null)
@@ -73,12 +73,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Executes a read-write transaction using a synchronous callback.
+        /// 同期コールバックを使って読み書きトランザクションを実行します。
         /// </summary>
-        /// <param name="action">The callback that stages writes.</param>
-        /// <param name="ct">A token that cancels the transaction before commit completes.</param>
-        /// <returns>A task that completes after the transaction commits.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+        /// <param name="action">書き込みをステージングするコールバック。</param>
+        /// <param name="ct">コミット完了前にトランザクションを取り消すトークン。</param>
+        /// <returns>トランザクションのコミット後に完了するタスク。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> が <see langword="null"/> です。</exception>
         public UniTask BeginRWTransactionAsync(Action<IReadWriteTx> action, CancellationToken ct = default)
         {
             if (action is null)
@@ -96,12 +96,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Executes a read-write transaction using an asynchronous callback.
+        /// 非同期コールバックを使って読み書きトランザクションを実行します。
         /// </summary>
-        /// <param name="action">The callback that stages writes.</param>
-        /// <param name="ct">A token that cancels the transaction before commit completes.</param>
-        /// <returns>A task that completes after the transaction commits.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
+        /// <param name="action">書き込みをステージングするコールバック。</param>
+        /// <param name="ct">コミット完了前にトランザクションを取り消すトークン。</param>
+        /// <returns>トランザクションのコミット後に完了するタスク。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> が <see langword="null"/> です。</exception>
         public async UniTask BeginRWTransactionAsync(Func<IReadWriteTx, UniTask> action, CancellationToken ct = default)
         {
             if (action is null)

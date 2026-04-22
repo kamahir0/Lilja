@@ -4,15 +4,15 @@ using System.Text;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Writes files by replacing the destination with a temporary file once the write succeeds.
+    /// 書き込み成功後に一時ファイルで置き換えることで、ファイルを書き込みます。
     /// </summary>
     public static class AtomicFileWriter
     {
         /// <summary>
-        /// Writes UTF-8 text to a file using an atomic replace operation.
+        /// アトミックな置換操作を使って UTF-8 テキストをファイルへ書き込みます。
         /// </summary>
-        /// <param name="filePath">The destination path.</param>
-        /// <param name="content">The text to write.</param>
+        /// <param name="filePath">出力先パス。</param>
+        /// <param name="content">書き込むテキスト。</param>
         public static void WriteAllText(string filePath, string content)
         {
             var tempPath = GetTempPath(filePath);
@@ -30,10 +30,10 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Writes binary content to a file using an atomic replace operation.
+        /// アトミックな置換操作を使ってバイナリ内容をファイルへ書き込みます。
         /// </summary>
-        /// <param name="filePath">The destination path.</param>
-        /// <param name="bytes">The bytes to write.</param>
+        /// <param name="filePath">出力先パス。</param>
+        /// <param name="bytes">書き込むバイト列。</param>
         public static void WriteAllBytes(string filePath, byte[] bytes)
         {
             var tempPath = GetTempPath(filePath);
@@ -51,9 +51,9 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Deletes a file when it exists.
+        /// ファイルが存在する場合に削除します。
         /// </summary>
-        /// <param name="filePath">The file to remove.</param>
+        /// <param name="filePath">削除するファイル。</param>
         public static void DeleteIfExists(string filePath)
         {
             if (File.Exists(filePath))

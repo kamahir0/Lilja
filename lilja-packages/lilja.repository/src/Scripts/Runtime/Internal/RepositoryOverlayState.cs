@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace Lilja.Repository.Internal
 {
     /// <summary>
-    /// Tracks staged inserts, updates, and deletes on top of a committed keyed state snapshot.
+    /// 確定済みのキー付き状態スナップショットの上に、ステージングされた追加・更新・削除を追跡します。
     /// </summary>
-    /// <typeparam name="TKey">The key type used to identify entries.</typeparam>
-    /// <typeparam name="TValue">The value type stored in the repository.</typeparam>
+    /// <typeparam name="TKey">項目の識別に使うキー型。</typeparam>
+    /// <typeparam name="TValue">リポジトリに格納される値の型。</typeparam>
     internal sealed class RepositoryOverlayState<TKey, TValue>
         where TKey : notnull
     {
@@ -16,9 +16,9 @@ namespace Lilja.Repository.Internal
         private readonly HashSet<TKey> _deletedKeys;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RepositoryOverlayState{TKey, TValue}"/> class.
+        /// <see cref="RepositoryOverlayState{TKey, TValue}"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
-        /// <param name="committedState">The committed state that staged changes overlay.</param>
+        /// <param name="committedState">ステージングされた変更を重ね合わせる確定済み状態。</param>
         public RepositoryOverlayState(Dictionary<TKey, TValue> committedState)
         {
             _committedState = committedState;
@@ -27,10 +27,10 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Determines whether the overlay currently exposes a value for the supplied key.
+        /// オーバーレイが現在、指定されたキーに対する値を公開しているかどうかを判定します。
         /// </summary>
-        /// <param name="key">The key to inspect.</param>
-        /// <returns><see langword="true"/> when a value is visible; otherwise <see langword="false"/>.</returns>
+        /// <param name="key">確認するキー。</param>
+        /// <returns>値が可視であれば <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
         public bool ContainsKey(TKey key)
         {
             if (_upserts.ContainsKey(key))
@@ -47,11 +47,11 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Attempts to read a value taking staged changes into account.
+        /// ステージングされた変更を考慮して値の読み取りを試みます。
         /// </summary>
-        /// <param name="key">The key to inspect.</param>
-        /// <param name="value">The visible value when one exists.</param>
-        /// <returns><see langword="true"/> when a value is visible; otherwise <see langword="false"/>.</returns>
+        /// <param name="key">確認するキー。</param>
+        /// <param name="value">存在する場合の可視な値。</param>
+        /// <returns>値が可視であれば <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
         public bool TryGetValue(TKey key, out TValue value)
         {
             if (_upserts.TryGetValue(key, out value!))
@@ -69,10 +69,10 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Stages an insert or update for the supplied key.
+        /// 指定されたキーに対する追加または更新をステージングします。
         /// </summary>
-        /// <param name="key">The key to write.</param>
-        /// <param name="value">The value to stage.</param>
+        /// <param name="key">書き込むキー。</param>
+        /// <param name="value">ステージングする値。</param>
         public void Upsert(TKey key, TValue value)
         {
             _deletedKeys.Remove(key);
@@ -80,9 +80,9 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Stages deletion of the supplied key.
+        /// 指定されたキーの削除をステージングします。
         /// </summary>
-        /// <param name="key">The key to delete.</param>
+        /// <param name="key">削除するキー。</param>
         public void Delete(TKey key)
         {
             _upserts.Remove(key);
@@ -90,9 +90,9 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Calculates how many values are visible after applying staged changes.
+        /// ステージングされた変更を適用したあとの可視な値の件数を計算します。
         /// </summary>
-        /// <returns>The visible item count.</returns>
+        /// <returns>可視な項目数。</returns>
         public int Count()
         {
             var count = _committedState.Count;
@@ -116,9 +116,9 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Creates a new dictionary that combines committed state with all staged changes.
+        /// 確定済み状態とすべてのステージング変更を結合した新しい辞書を作成します。
         /// </summary>
-        /// <returns>A materialized snapshot of the current overlay.</returns>
+        /// <returns>現在のオーバーレイを実体化したスナップショット。</returns>
         public Dictionary<TKey, TValue> Materialize()
         {
             var materialized = new Dictionary<TKey, TValue>(_committedState);

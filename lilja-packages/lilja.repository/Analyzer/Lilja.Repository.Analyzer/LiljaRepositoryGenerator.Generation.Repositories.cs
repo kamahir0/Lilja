@@ -7,11 +7,11 @@ namespace Lilja.Repository.Analyzer;
 public sealed partial class LiljaRepositoryGenerator
 {
     /// <summary>
-    /// Emits every generated source file required for a validated entity model.
+    /// 検証済みのエンティティモデルに必要な生成ソースファイルをすべて出力します。
     /// </summary>
-    /// <param name="context">The Roslyn source production context.</param>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <param name="hasMessagePack">Whether MessagePack support is available in the compilation.</param>
+    /// <param name="context">Roslyn のソース生成コンテキスト。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <param name="hasMessagePack">コンパイル内で MessagePack サポートが利用可能かどうか。</param>
     private static void EmitEntity(SourceProductionContext context, EntityModel model, bool hasMessagePack)
     {
         AddSource(context, model, $"I{model.EntityName}Repository.g.cs", GenerateInterface(model));
@@ -42,12 +42,12 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Adds one generated source file using a namespace-qualified hint name when necessary.
+    /// 必要に応じて名前空間を含むヒント名を使って、生成ソースファイルを 1 つ追加します。
     /// </summary>
-    /// <param name="context">The Roslyn source production context.</param>
-    /// <param name="model">The entity model that owns the generated file.</param>
-    /// <param name="fileName">The generated file name.</param>
-    /// <param name="source">The generated source text.</param>
+    /// <param name="context">Roslyn のソース生成コンテキスト。</param>
+    /// <param name="model">生成ファイルを所有するエンティティモデル。</param>
+    /// <param name="fileName">生成されるファイル名。</param>
+    /// <param name="source">生成されたソーステキスト。</param>
     private static void AddSource(SourceProductionContext context, EntityModel model, string fileName, string source)
     {
         var hintName = string.IsNullOrEmpty(model.NamespaceName) ? fileName : model.StorageIdentifier + "." + fileName;
@@ -55,10 +55,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the repository interface exposed for an entity.
+    /// エンティティに対して公開されるリポジトリインターフェイスを生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateInterface(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -88,10 +88,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the in-memory repository implementation for an entity.
+    /// エンティティ用のインメモリリポジトリ実装を生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateInMemoryRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -122,10 +122,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the JSON-backed repository implementation for an entity.
+    /// エンティティ用の JSON バックエンドのリポジトリ実装を生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateJsonRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -163,10 +163,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the MessagePack-backed repository implementation for an entity.
+    /// エンティティ用の MessagePack バックエンドのリポジトリ実装を生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateMessagePackRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -206,11 +206,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends the parameterless constructor used by generated in-memory repositories.
+    /// 生成されるインメモリリポジトリで使う引数なしコンストラクタを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="typeName">The generated repository type name.</param>
-    /// <param name="repositoryType">The editor diagnostics repository type enum member.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="typeName">生成されるリポジトリ型名。</param>
+    /// <param name="repositoryType">エディター診断用のリポジトリ種別 enum メンバー。</param>
     private static void AppendTrackerConstructor(StringBuilder sb, string typeName, string repositoryType)
     {
         sb.Append("    public ").Append(typeName).AppendLine("()");
@@ -223,13 +223,13 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends the parameterless constructor used by generated persisted repositories.
+    /// 生成される永続化リポジトリで使う引数なしコンストラクタを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="typeName">The generated repository type name.</param>
-    /// <param name="extension">The file extension used by the repository.</param>
-    /// <param name="repositoryType">The editor diagnostics repository type enum member.</param>
-    /// <param name="storageIdentifier">The storage identifier used for the file name.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="typeName">生成されるリポジトリ型名。</param>
+    /// <param name="extension">リポジトリが使うファイル拡張子。</param>
+    /// <param name="repositoryType">エディター診断用のリポジトリ種別 enum メンバー。</param>
+    /// <param name="storageIdentifier">ファイル名に使う保存識別子。</param>
     private static void AppendPersistedConstructor(
         StringBuilder sb,
         string typeName,
@@ -250,11 +250,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends the constructor and resolver setup used by generated MessagePack repositories.
+    /// 生成される MessagePack リポジトリで使うコンストラクタとリゾルバー設定を追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="typeName">The generated repository type name.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="typeName">生成されるリポジトリ型名。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendMessagePackConstructor(StringBuilder sb, string typeName, EntityModel model)
     {
         sb.Append("    public ").Append(typeName).AppendLine("()");
@@ -279,10 +279,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends the <c>ToDto</c> override that delegates to the generated entity helper.
+    /// 生成されたエンティティヘルパーへ委譲する <c>ToDto</c> オーバーライドを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendToDtoOverride(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override ").Append(model.DtoTypeName).Append(" ToDto(").Append(model.EntityTypeName).AppendLine(" entity)");
@@ -293,10 +293,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends the <c>FromDto</c> override that delegates to the generated entity helper.
+    /// 生成されたエンティティヘルパーへ委譲する <c>FromDto</c> オーバーライドを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendFromDtoOverride(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override ").Append(model.EntityTypeName).Append(" FromDto(").Append(model.DtoTypeName).AppendLine(" dto)");
@@ -307,10 +307,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends JSON load and save overrides for keyed repositories.
+    /// キー付きリポジトリ向けの JSON 読み込み・保存オーバーライドを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendJsonKeyedLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<global::System.Collections.Generic.IReadOnlyList<").Append(model.DtoTypeName)
@@ -350,10 +350,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends JSON load and save overrides for singleton repositories.
+    /// シングルトンリポジトリ向けの JSON 読み込み・保存オーバーライドを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendJsonSingletonLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<").Append(model.DtoTypeName)
@@ -398,10 +398,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends MessagePack load and save overrides for keyed repositories.
+    /// キー付きリポジトリ向けの MessagePack 読み込み・保存オーバーライドを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendMessagePackKeyedLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<global::System.Collections.Generic.IReadOnlyList<").Append(model.DtoTypeName)
@@ -437,10 +437,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends MessagePack load and save overrides for singleton repositories.
+    /// シングルトンリポジトリ向けの MessagePack 読み込み・保存オーバーライドを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="model">解析済みのエンティティモデル。</param>
     private static void AppendMessagePackSingletonLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<").Append(model.DtoTypeName)
@@ -481,9 +481,9 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Creates a source builder initialized with the common auto-generated file header.
+    /// 共通の自動生成ファイルヘッダーで初期化されたソースビルダーを作成します。
     /// </summary>
-    /// <returns>The initialized source builder.</returns>
+    /// <returns>初期化済みのソースビルダー。</returns>
     private static StringBuilder CreateSourceBuilder()
     {
         var sb = new StringBuilder();
@@ -494,10 +494,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends a namespace declaration when the generated type is not in the global namespace.
+    /// 生成型がグローバル名前空間に属さない場合に、名前空間宣言を追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="namespaceName">The namespace to open.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="namespaceName">開く名前空間。</param>
     private static void AppendNamespaceStart(StringBuilder sb, string namespaceName)
     {
         if (string.IsNullOrEmpty(namespaceName))
@@ -510,10 +510,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Appends the closing brace for a previously opened namespace declaration.
+    /// 先に開いた名前空間宣言に対応する閉じ波かっこを追記します。
     /// </summary>
-    /// <param name="sb">The destination source builder.</param>
-    /// <param name="namespaceName">The namespace being closed.</param>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="namespaceName">閉じる対象の名前空間。</param>
     private static void AppendNamespaceEnd(StringBuilder sb, string namespaceName)
     {
         if (string.IsNullOrEmpty(namespaceName))

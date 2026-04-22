@@ -8,7 +8,7 @@ using System.Threading;
 namespace Lilja.Repository.Editor
 {
     /// <summary>
-    /// Accesses MessagePack APIs through reflection so the editor tooling can work when the package is optional.
+    /// パッケージが任意導入でもエディターツールが動作できるよう、リフレクション経由で MessagePack API にアクセスします。
     /// </summary>
     internal static class MessagePackReflectionBridge
     {
@@ -25,7 +25,7 @@ namespace Lilja.Repository.Editor
         private static readonly PropertyInfo? StandardResolverProperty = StandardResolverType?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
 
         /// <summary>
-        /// Gets a value indicating whether the required MessagePack runtime types are available.
+        /// 必要な MessagePack 実行時型が利用可能かどうかを示す値を取得します。
         /// </summary>
         public static bool IsAvailable =>
             SerializerType is not null &&
@@ -41,10 +41,10 @@ namespace Lilja.Repository.Editor
             StandardResolverProperty is not null;
 
         /// <summary>
-        /// Creates serializer options that include the supplied formatter types when MessagePack is available.
+        /// MessagePack が利用可能な場合に、指定されたフォーマッター型を含むシリアライザーオプションを作成します。
         /// </summary>
-        /// <param name="formatterTypes">Formatter types that should be registered ahead of the standard resolver.</param>
-        /// <returns>The configured options object, or the standard options when custom registration is unavailable.</returns>
+        /// <param name="formatterTypes">標準リゾルバーより前に登録すべきフォーマッター型。</param>
+        /// <returns>構成済みのオプションオブジェクト。カスタム登録が使えない場合は標準オプション。</returns>
         public static object? CreateOptions(params Type[] formatterTypes)
         {
             try
@@ -91,12 +91,12 @@ namespace Lilja.Repository.Editor
         }
 
         /// <summary>
-        /// Deserializes MessagePack bytes into the requested runtime type.
+        /// MessagePack のバイト列を、要求された実行時型へ逆シリアライズします。
         /// </summary>
-        /// <param name="bytes">The serialized payload.</param>
-        /// <param name="targetType">The runtime type to deserialize.</param>
-        /// <param name="options">The serializer options to use.</param>
-        /// <returns>The deserialized value, or <see langword="null"/> when deserialization cannot be performed.</returns>
+        /// <param name="bytes">シリアライズ済みペイロード。</param>
+        /// <param name="targetType">逆シリアライズ先の実行時型。</param>
+        /// <param name="options">使用するシリアライザーオプション。</param>
+        /// <returns>逆シリアライズされた値。逆シリアライズできない場合は <see langword="null"/>。</returns>
         public static object? Deserialize(byte[] bytes, Type targetType, object? options)
         {
             try

@@ -8,10 +8,10 @@ namespace Lilja.Repository.Analyzer;
 public sealed partial class LiljaRepositoryGenerator
 {
     /// <summary>
-    /// Determines whether any declaration of the entity is marked as <c>partial</c>.
+    /// エンティティのいずれかの宣言が <c>partial</c> としてマークされているかどうかを判定します。
     /// </summary>
-    /// <param name="entitySymbol">The entity symbol to inspect.</param>
-    /// <returns><see langword="true"/> when a partial declaration exists; otherwise <see langword="false"/>.</returns>
+    /// <param name="entitySymbol">確認するエンティティシンボル。</param>
+    /// <returns>partial 宣言が存在する場合は <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
     private static bool IsPartial(INamedTypeSymbol entitySymbol)
     {
         foreach (var syntaxReference in entitySymbol.DeclaringSyntaxReferences)
@@ -27,11 +27,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Determines whether a symbol has an attribute with the supplied metadata name.
+    /// シンボルが指定されたメタデータ名の属性を持つかどうかを判定します。
     /// </summary>
-    /// <param name="symbol">The symbol to inspect.</param>
-    /// <param name="metadataName">The fully qualified attribute metadata name.</param>
-    /// <returns><see langword="true"/> when the attribute is present; otherwise <see langword="false"/>.</returns>
+    /// <param name="symbol">確認するシンボル。</param>
+    /// <param name="metadataName">完全修飾された属性メタデータ名。</param>
+    /// <returns>属性が存在する場合は <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
     private static bool HasAttribute(ISymbol symbol, string metadataName)
     {
         foreach (var attributeData in symbol.GetAttributes())
@@ -46,11 +46,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Attempts to read the constructor index from a <c>[Persist]</c> attribute.
+    /// <c>[Persist]</c> 属性からコンストラクタ引数インデックスの読み取りを試みます。
     /// </summary>
-    /// <param name="symbol">The symbol to inspect.</param>
-    /// <param name="index">The extracted persistence index when available.</param>
-    /// <returns><see langword="true"/> when a valid index is present; otherwise <see langword="false"/>.</returns>
+    /// <param name="symbol">確認するシンボル。</param>
+    /// <param name="index">利用可能な場合に取り出された永続化インデックス。</param>
+    /// <returns>有効なインデックスが存在する場合は <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
     private static bool TryGetPersistIndex(ISymbol symbol, out int? index)
     {
         foreach (var attributeData in symbol.GetAttributes())
@@ -73,30 +73,30 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Returns the first source location for a symbol, or <see cref="Location.None"/> when unavailable.
+    /// シンボルに対する最初のソース位置を返します。利用できない場合は <see cref="Location.None"/> です。
     /// </summary>
-    /// <param name="symbol">The symbol whose location is required.</param>
-    /// <returns>The primary location used for diagnostics.</returns>
+    /// <param name="symbol">位置情報が必要なシンボル。</param>
+    /// <returns>診断に使う主要な位置情報。</returns>
     private static Location GetPrimaryLocation(ISymbol symbol)
     {
         return symbol.Locations.FirstOrDefault() ?? Location.None;
     }
 
     /// <summary>
-    /// Formats a type symbol using the fully qualified display format required by generated source.
+    /// 生成ソースで必要となる完全修飾表示形式を使って型シンボルを整形します。
     /// </summary>
-    /// <param name="typeSymbol">The type symbol to format.</param>
-    /// <returns>The fully qualified type name.</returns>
+    /// <param name="typeSymbol">整形する型シンボル。</param>
+    /// <returns>完全修飾型名。</returns>
     private static string GetTypeName(ITypeSymbol typeSymbol)
     {
         return typeSymbol.ToDisplayString(FullyQualifiedTypeFormat);
     }
 
     /// <summary>
-    /// Escapes C# keywords so generated identifiers remain valid source.
+    /// 生成される識別子が有効なソースのままでいられるよう、C# キーワードをエスケープします。
     /// </summary>
-    /// <param name="identifier">The identifier to escape.</param>
-    /// <returns>The original or escaped identifier.</returns>
+    /// <param name="identifier">エスケープする識別子。</param>
+    /// <returns>元の識別子、またはエスケープ済み識別子。</returns>
     private static string EscapeIdentifier(string identifier)
     {
         if (string.IsNullOrEmpty(identifier))
@@ -111,10 +111,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Converts an identifier to PascalCase for generated type and field names.
+    /// 識別子を、生成される型名やフィールド名向けの PascalCase に変換します。
     /// </summary>
-    /// <param name="identifier">The identifier to convert.</param>
-    /// <returns>The PascalCase identifier.</returns>
+    /// <param name="identifier">変換する識別子。</param>
+    /// <returns>PascalCase の識別子。</returns>
     private static string ToPascalCase(string identifier)
     {
         if (string.IsNullOrEmpty(identifier))
@@ -131,10 +131,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Converts an identifier to camelCase for generated local variables and constructor parameters.
+    /// 識別子を、生成されるローカル変数やコンストラクタ引数向けの camelCase に変換します。
     /// </summary>
-    /// <param name="identifier">The identifier to convert.</param>
-    /// <returns>The camelCase identifier.</returns>
+    /// <param name="identifier">変換する識別子。</param>
+    /// <returns>camelCase の識別子。</returns>
     private static string ToCamelCase(string identifier)
     {
         var trimmed = identifier.TrimStart('_');

@@ -7,30 +7,30 @@ using Lilja.Repository.Internal;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Provides transactional CRUD behavior for a singleton repository stored entirely in memory.
+    /// 完全にメモリ内に保持されるシングルトンリポジトリ向けの、トランザクション対応 CRUD 振る舞いを提供します。
     /// </summary>
-    /// <typeparam name="TEntity">The entity type managed by the repository.</typeparam>
+    /// <typeparam name="TEntity">リポジトリが管理するエンティティ型。</typeparam>
     public abstract class InMemorySingletonRepositoryBase<TEntity> : IRepositoryParticipant
         where TEntity : class
     {
         private TEntity? _committedValue;
 
         /// <summary>
-        /// Initializes the repository before first use.
+        /// 初回使用前にリポジトリを初期化します。
         /// </summary>
-        /// <param name="ct">A token that can cancel initialization.</param>
-        /// <returns>A completed task for the in-memory implementation.</returns>
+        /// <param name="ct">初期化を取り消せるトークン。</param>
+        /// <returns>インメモリ実装用の完了済みタスク。</returns>
         public UniTask InitializeAsync(CancellationToken ct = default)
         {
             return UniTask.CompletedTask;
         }
 
         /// <summary>
-        /// Reads the current entity value visible within the supplied transaction.
+        /// 指定されたトランザクション内で可視な現在のエンティティ値を読み取ります。
         /// </summary>
-        /// <param name="tx">The transaction to read through.</param>
-        /// <returns>The committed or staged entity, or <see langword="null"/> when no value exists.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
+        /// <param name="tx">読み取りに使用するトランザクション。</param>
+        /// <returns>確定済みまたはステージング済みのエンティティ値。存在しない場合は <see langword="null"/>。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="tx"/> が <see langword="null"/> です。</exception>
         public TEntity? Read(IReadOnlyTx tx)
         {
             if (tx is null)
@@ -47,12 +47,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Creates the singleton value within a read-write transaction.
+        /// 読み書きトランザクション内でシングルトン値を作成します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="entity">The entity to create.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">A value already exists or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="entity">作成するエンティティ。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">値がすでに存在するか、トランザクションが無効です。</exception>
         public void Create(IReadWriteTx tx, TEntity entity)
         {
             if (entity is null)
@@ -71,12 +71,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Replaces the singleton value within a read-write transaction.
+        /// 読み書きトランザクション内でシングルトン値を置き換えます。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="entity">The replacement entity.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">No value exists or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="entity">置き換え後のエンティティ。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">値が存在しないか、トランザクションが無効です。</exception>
         public void Update(IReadWriteTx tx, TEntity entity)
         {
             if (entity is null)
@@ -95,10 +95,10 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Deletes the singleton value within a read-write transaction.
+        /// 読み書きトランザクション内でシングルトン値を削除します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <exception cref="InvalidOperationException">No value exists or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <exception cref="InvalidOperationException">値が存在しないか、トランザクションが無効です。</exception>
         public void Delete(IReadWriteTx tx)
         {
             var state = GetWriteState(tx);
@@ -112,11 +112,11 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Persists the prepared state before it becomes the new committed value.
+        /// 準備済みの状態が新しい確定済み値になる前に永続化します。
         /// </summary>
-        /// <param name="state">The value that is about to become visible to readers.</param>
-        /// <param name="ct">A token that can cancel persistence.</param>
-        /// <returns>A task that completes when persistence finishes.</returns>
+        /// <param name="state">これから読み取り側に見えるようになる値。</param>
+        /// <param name="ct">永続化を取り消せるトークン。</param>
+        /// <returns>永続化が完了したときに完了するタスク。</returns>
         protected virtual UniTask PersistStateAsync(TEntity? state, CancellationToken ct)
         {
             return UniTask.CompletedTask;

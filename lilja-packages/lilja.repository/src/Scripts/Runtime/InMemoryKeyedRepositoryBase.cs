@@ -8,10 +8,10 @@ using Lilja.Repository.Internal;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Provides transactional CRUD behavior for a keyed repository stored entirely in memory.
+    /// 完全にメモリ内に保持されるキー付きリポジトリ向けの、トランザクション対応 CRUD 振る舞いを提供します。
     /// </summary>
-    /// <typeparam name="TEntity">The entity type managed by the repository.</typeparam>
-    /// <typeparam name="TKey">The key used to identify entities.</typeparam>
+    /// <typeparam name="TEntity">リポジトリが管理するエンティティ型。</typeparam>
+    /// <typeparam name="TKey">エンティティの識別に使うキー型。</typeparam>
     public abstract class InMemoryKeyedRepositoryBase<TEntity, TKey> : IRepositoryParticipant
         where TEntity : class
         where TKey : notnull
@@ -19,22 +19,22 @@ namespace Lilja.Repository
         private Dictionary<TKey, TEntity> _committedState = new Dictionary<TKey, TEntity>();
 
         /// <summary>
-        /// Initializes the repository before first use.
+        /// 初回使用前にリポジトリを初期化します。
         /// </summary>
-        /// <param name="ct">A token that can cancel initialization.</param>
-        /// <returns>A completed task for the in-memory implementation.</returns>
+        /// <param name="ct">初期化を取り消せるトークン。</param>
+        /// <returns>インメモリ実装用の完了済みタスク。</returns>
         public UniTask InitializeAsync(CancellationToken ct = default)
         {
             return UniTask.CompletedTask;
         }
 
         /// <summary>
-        /// Reads an entity visible within the supplied transaction.
+        /// 指定されたトランザクション内で可視なエンティティを読み取ります。
         /// </summary>
-        /// <param name="tx">The transaction to read through.</param>
-        /// <param name="key">The entity key.</param>
-        /// <returns>The committed or staged entity, or <see langword="null"/> when no entity exists.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
+        /// <param name="tx">読み取りに使用するトランザクション。</param>
+        /// <param name="key">エンティティキー。</param>
+        /// <returns>確定済みまたはステージング済みのエンティティ。存在しない場合は <see langword="null"/>。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="tx"/> が <see langword="null"/> です。</exception>
         public TEntity? Read(IReadOnlyTx tx, TKey key)
         {
             if (tx is null)
@@ -51,12 +51,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Creates an entity within a read-write transaction.
+        /// 読み書きトランザクション内でエンティティを作成します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="entity">The entity to create.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">An entity with the same key already exists or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="entity">作成するエンティティ。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">同じキーを持つエンティティがすでに存在するか、トランザクションが無効です。</exception>
         public void Create(IReadWriteTx tx, TEntity entity)
         {
             if (entity is null)
@@ -75,12 +75,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Updates an entity within a read-write transaction.
+        /// 読み書きトランザクション内でエンティティを更新します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="entity">The replacement entity.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">The entity does not exist or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="entity">置き換え後のエンティティ。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">エンティティが存在しないか、トランザクションが無効です。</exception>
         public void Update(IReadWriteTx tx, TEntity entity)
         {
             if (entity is null)
@@ -99,11 +99,11 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Deletes an entity within a read-write transaction.
+        /// 読み書きトランザクション内でエンティティを削除します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="key">The key of the entity to delete.</param>
-        /// <exception cref="InvalidOperationException">The entity does not exist or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="key">削除するエンティティのキー。</param>
+        /// <exception cref="InvalidOperationException">エンティティが存在しないか、トランザクションが無効です。</exception>
         public void Delete(IReadWriteTx tx, TKey key)
         {
             var overlay = GetWriteOverlay(tx);
@@ -116,11 +116,11 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Returns a snapshot of all entities visible within the supplied transaction.
+        /// 指定されたトランザクション内で可視な全エンティティのスナップショットを返します。
         /// </summary>
-        /// <param name="tx">The transaction to read through.</param>
-        /// <returns>A materialized list of entities.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
+        /// <param name="tx">読み取りに使用するトランザクション。</param>
+        /// <returns>実体化されたエンティティ一覧。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="tx"/> が <see langword="null"/> です。</exception>
         public IReadOnlyList<TEntity> All(IReadOnlyTx tx)
         {
             if (tx is null)
@@ -137,18 +137,18 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Extracts the repository key from an entity instance.
+        /// エンティティインスタンスからリポジトリキーを取り出します。
         /// </summary>
-        /// <param name="entity">The entity whose key should be returned.</param>
-        /// <returns>The entity key.</returns>
+        /// <param name="entity">キーを返す対象のエンティティ。</param>
+        /// <returns>エンティティキー。</returns>
         protected abstract TKey GetKey(TEntity entity);
 
         /// <summary>
-        /// Persists the prepared state before it becomes the new committed snapshot.
+        /// 準備済みの状態が新しい確定済みスナップショットになる前に永続化します。
         /// </summary>
-        /// <param name="state">The dictionary that is about to become visible to readers.</param>
-        /// <param name="ct">A token that can cancel persistence.</param>
-        /// <returns>A task that completes when persistence finishes.</returns>
+        /// <param name="state">これから読み取り側に見えるようになる辞書。</param>
+        /// <param name="ct">永続化を取り消せるトークン。</param>
+        /// <returns>永続化が完了したときに完了するタスク。</returns>
         protected virtual UniTask PersistStateAsync(Dictionary<TKey, TEntity> state, CancellationToken ct)
         {
             return UniTask.CompletedTask;

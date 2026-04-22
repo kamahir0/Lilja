@@ -3,10 +3,10 @@ using System;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Represents a read-only repository transaction scope.
+    /// 読み取り専用のリポジトリトランザクションスコープを表します。
     /// </summary>
     /// <remarks>
-    /// Instances are created by <see cref="TxManager"/> and should be treated as short-lived.
+    /// インスタンスは <see cref="TxManager"/> によって生成されるため、短命なものとして扱う必要があります。
     /// </remarks>
     public interface IReadOnlyTx : IDisposable
     {

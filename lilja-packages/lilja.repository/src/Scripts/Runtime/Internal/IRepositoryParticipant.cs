@@ -4,22 +4,22 @@ using Cysharp.Threading.Tasks;
 namespace Lilja.Repository.Internal
 {
     /// <summary>
-    /// Defines the hooks a repository uses to participate in a transaction commit.
+    /// リポジトリがトランザクションコミットへ参加するためのフックを定義します。
     /// </summary>
     internal interface IRepositoryParticipant
     {
         /// <summary>
-        /// Prepares the repository-specific transaction state for commit.
+        /// コミットに向けてリポジトリ固有のトランザクション状態を準備します。
         /// </summary>
-        /// <param name="transactionState">The state created for the current transaction.</param>
-        /// <param name="ct">A token that can cancel preparation.</param>
-        /// <returns>A task that completes when preparation finishes.</returns>
+        /// <param name="transactionState">現在のトランザクション用に作成された状態。</param>
+        /// <param name="ct">準備処理を取り消せるトークン。</param>
+        /// <returns>準備処理が完了したときに完了するタスク。</returns>
         UniTask PrepareCommitAsync(object transactionState, CancellationToken ct);
 
         /// <summary>
-        /// Applies a previously prepared transaction state to the committed repository state.
+        /// 事前に準備したトランザクション状態を、確定済みのリポジトリ状態へ反映します。
         /// </summary>
-        /// <param name="transactionState">The state created for the current transaction.</param>
+        /// <param name="transactionState">現在のトランザクション用に作成された状態。</param>
         void ApplyCommit(object transactionState);
     }
 }

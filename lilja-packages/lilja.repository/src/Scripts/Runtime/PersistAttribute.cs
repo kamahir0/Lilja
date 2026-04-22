@@ -3,16 +3,16 @@ using System;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Marks a field or auto-property for persistence and defines its serialized order.
+    /// フィールドまたは自動実装プロパティを永続化対象として示し、そのシリアライズ順を定義します。
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public sealed class PersistAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PersistAttribute"/> class.
+        /// <see cref="PersistAttribute"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         /// <param name="index">
-        /// The zero-based position used when the generator orders persisted members.
+        /// ジェネレーターが永続化対象メンバーを並べる際に使う 0 始まりの位置。
         /// </param>
         public PersistAttribute(int index)
         {
@@ -20,7 +20,7 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Gets the zero-based persistence order for the annotated member.
+        /// 注釈が付いたメンバーの 0 始まりの永続化順序を取得します。
         /// </summary>
         public int Index { get; }
     }

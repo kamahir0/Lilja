@@ -13,7 +13,7 @@ using UnityEngine;
 namespace Lilja.Repository.Editor
 {
     /// <summary>
-    /// Displays live repositories and persisted repository files inside the Unity Editor.
+    /// Unity エディター内で稼働中のリポジトリと永続化されたリポジトリファイルを表示します。
     /// </summary>
     public sealed class RepositoryViewer : EditorWindow
     {
@@ -28,7 +28,7 @@ namespace Lilja.Repository.Editor
         private string _selectedDetailText = string.Empty;
 
         /// <summary>
-        /// Opens the repository viewer window.
+        /// Repository Viewer ウィンドウを開きます。
         /// </summary>
         [MenuItem("Lilja/Repository/Repository Viewer")]
         public static void Open()

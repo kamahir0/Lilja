@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Lilja.Repository.Analyzer;
 
 /// <summary>
-/// Generates repository implementations, DTOs, and persistence helpers for <c>[Entity]</c>-annotated types.
+/// <c>[Entity]</c> が付いた型に対して、リポジトリ実装、DTO、永続化ヘルパーを生成します。
 /// </summary>
 [Generator]
 public sealed partial class LiljaRepositoryGenerator : IIncrementalGenerator
@@ -18,9 +18,9 @@ public sealed partial class LiljaRepositoryGenerator : IIncrementalGenerator
     private static readonly SymbolDisplayFormat FullyQualifiedTypeFormat = SymbolDisplayFormat.FullyQualifiedFormat;
 
     /// <summary>
-    /// Configures the incremental pipeline that analyzes entity declarations and emits generated sources.
+    /// エンティティ宣言を解析して生成ソースを出力するインクリメンタルパイプラインを構成します。
     /// </summary>
-    /// <param name="context">The generator initialization context.</param>
+    /// <param name="context">ジェネレーター初期化コンテキスト。</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var entityAnalyses = context.SyntaxProvider.ForAttributeWithMetadataName(

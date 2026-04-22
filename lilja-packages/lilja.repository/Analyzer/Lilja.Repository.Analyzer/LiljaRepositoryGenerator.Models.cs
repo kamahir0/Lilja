@@ -7,15 +7,15 @@ namespace Lilja.Repository.Analyzer;
 public sealed partial class LiljaRepositoryGenerator
 {
     /// <summary>
-    /// Wraps the generated entity model together with diagnostics emitted during analysis.
+    /// 生成されたエンティティモデルと、解析中に出力された診断をまとめて保持します。
     /// </summary>
     private sealed class EntityAnalysis
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="EntityAnalysis"/> class.
+        /// <see cref="EntityAnalysis"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
-        /// <param name="model">The generated entity model, when analysis succeeds.</param>
-        /// <param name="diagnostics">Diagnostics emitted during analysis.</param>
+        /// <param name="model">解析成功時に得られる生成エンティティモデル。</param>
+        /// <param name="diagnostics">解析中に出力された診断。</param>
         public EntityAnalysis(EntityModel? model, ImmutableArray<Diagnostic> diagnostics)
         {
             Model = model;
@@ -23,23 +23,23 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         /// <summary>
-        /// Gets the analyzed entity model, or <see langword="null"/> when generation should be skipped.
+        /// 解析済みのエンティティモデルを取得します。生成をスキップすべき場合は <see langword="null"/> です。
         /// </summary>
         public EntityModel? Model { get; }
 
         /// <summary>
-        /// Gets the diagnostics emitted while analyzing the entity.
+        /// エンティティ解析中に出力された診断を取得します。
         /// </summary>
         public ImmutableArray<Diagnostic> Diagnostics { get; }
     }
 
     /// <summary>
-    /// Describes all metadata required to generate repositories and storage helpers for an entity.
+    /// エンティティ用のリポジトリとストレージ補助コードを生成するために必要な、すべてのメタデータを表します。
     /// </summary>
     private sealed class EntityModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="EntityModel"/> class.
+        /// <see cref="EntityModel"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         public EntityModel(
             INamedTypeSymbol symbol,
@@ -80,123 +80,123 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         /// <summary>
-        /// Gets the original Roslyn symbol for the entity.
+        /// エンティティに対応する元の Roslyn シンボルを取得します。
         /// </summary>
         public INamedTypeSymbol Symbol { get; }
 
         /// <summary>
-        /// Gets the entity namespace, or an empty string when the entity is in the global namespace.
+        /// エンティティの名前空間を取得します。グローバル名前空間にある場合は空文字列です。
         /// </summary>
         public string NamespaceName { get; }
 
         /// <summary>
-        /// Gets the stable identifier used for persisted file names and generated hint names.
+        /// 永続化ファイル名と生成ヒント名に使う安定した識別子を取得します。
         /// </summary>
         public string StorageIdentifier { get; }
 
         /// <summary>
-        /// Gets the entity type name without namespace qualification.
+        /// 名前空間を含まないエンティティ型名を取得します。
         /// </summary>
         public string EntityName { get; }
 
         /// <summary>
-        /// Gets the fully qualified entity type name.
+        /// 完全修飾されたエンティティ型名を取得します。
         /// </summary>
         public string EntityTypeName { get; }
 
         /// <summary>
-        /// Gets the namespace used for generated repository types.
+        /// 生成リポジトリ型で使う名前空間を取得します。
         /// </summary>
         public string RepositoryNamespace { get; }
 
         /// <summary>
-        /// Gets the namespace used for generated DTO types.
+        /// 生成 DTO 型で使う名前空間を取得します。
         /// </summary>
         public string DtoNamespace { get; }
 
         /// <summary>
-        /// Gets the namespace used for generated storage envelope types.
+        /// 生成ストレージエンベロープ型で使う名前空間を取得します。
         /// </summary>
         public string StorageNamespace { get; }
 
         /// <summary>
-        /// Gets the namespace used for generated formatter types.
+        /// 生成フォーマッター型で使う名前空間を取得します。
         /// </summary>
         public string FormatterNamespace { get; }
 
         /// <summary>
-        /// Gets the fully qualified generated DTO type name.
+        /// 完全修飾された生成 DTO 型名を取得します。
         /// </summary>
         public string DtoTypeName { get; }
 
         /// <summary>
-        /// Gets the generated DTO type name without namespace qualification.
+        /// 名前空間を含まない生成 DTO 型名を取得します。
         /// </summary>
         public string DtoTypeNameWithoutNamespace { get; }
 
         /// <summary>
-        /// Gets the fully qualified generated storage envelope type name.
+        /// 完全修飾された生成ストレージエンベロープ型名を取得します。
         /// </summary>
         public string StorageEnvelopeTypeName { get; }
 
         /// <summary>
-        /// Gets the generated storage envelope type name without namespace qualification.
+        /// 名前空間を含まない生成ストレージエンベロープ型名を取得します。
         /// </summary>
         public string StorageEnvelopeTypeNameWithoutNamespace { get; }
 
         /// <summary>
-        /// Gets the generated DTO formatter type name without namespace qualification.
+        /// 名前空間を含まない生成 DTO フォーマッター型名を取得します。
         /// </summary>
         public string DtoFormatterTypeNameWithoutNamespace { get; }
 
         /// <summary>
-        /// Gets the generated storage envelope formatter type name without namespace qualification.
+        /// 名前空間を含まない生成ストレージエンベロープフォーマッター型名を取得します。
         /// </summary>
         public string StorageEnvelopeFormatterTypeNameWithoutNamespace { get; }
 
         /// <summary>
-        /// Gets the generated key type expression used by repository signatures.
+        /// リポジトリシグネチャで使用される生成キー型式を取得します。
         /// </summary>
         public string KeyTypeName { get; }
 
         /// <summary>
-        /// Gets the members annotated with <c>[Key]</c>.
+        /// <c>[Key]</c> が付いたメンバーを取得します。
         /// </summary>
         public ImmutableArray<MemberModel> KeyMembers { get; }
 
         /// <summary>
-        /// Gets the members annotated with <c>[Persist]</c>.
+        /// <c>[Persist]</c> が付いたメンバーを取得します。
         /// </summary>
         public ImmutableArray<MemberModel> PersistedMembers { get; }
 
         /// <summary>
-        /// Gets the flattened DTO fields emitted for every persisted member.
+        /// 各永続化対象メンバーに対して出力される、展開済み DTO フィールドを取得します。
         /// </summary>
         public ImmutableArray<DtoFieldModel> AllDtoFields { get; }
 
         /// <summary>
-        /// Gets a value indicating whether a private constructor must be generated for DTO rehydration.
+        /// DTO からの再構築のために private コンストラクタを生成する必要があるかどうかを示す値を取得します。
         /// </summary>
         public bool NeedsGeneratedConstructor { get; }
 
         /// <summary>
-        /// Gets a value indicating whether any members are persisted.
+        /// 永続化対象のメンバーが存在するかどうかを示す値を取得します。
         /// </summary>
         public bool IsPersisted => PersistedMembers.Length > 0;
 
         /// <summary>
-        /// Gets a value indicating whether the entity is keyed.
+        /// エンティティがキー付きかどうかを示す値を取得します。
         /// </summary>
         public bool IsKeyed => KeyMembers.Length > 0;
     }
 
     /// <summary>
-    /// Describes one entity member that participates in generated repository behavior.
+    /// 生成されるリポジトリ動作に参加する 1 つのエンティティメンバーを表します。
     /// </summary>
     private sealed class MemberModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemberModel"/> class.
+        /// <see cref="MemberModel"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         public MemberModel(
             string name,
@@ -225,68 +225,68 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         /// <summary>
-        /// Gets the declared member name.
+        /// 宣言されたメンバー名を取得します。
         /// </summary>
         public string Name { get; }
 
         /// <summary>
-        /// Gets the escaped member name used in generated source.
+        /// 生成ソースで使うエスケープ済みメンバー名を取得します。
         /// </summary>
         public string AccessibleName { get; }
 
         /// <summary>
-        /// Gets the Roslyn type symbol for the member.
+        /// メンバーに対応する Roslyn 型シンボルを取得します。
         /// </summary>
         public ITypeSymbol TypeSymbol { get; }
 
         /// <summary>
-        /// Gets the fully qualified type name used in generated source.
+        /// 生成ソースで使う完全修飾型名を取得します。
         /// </summary>
         public string TypeName { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the member is a property.
+        /// メンバーがプロパティかどうかを示す値を取得します。
         /// </summary>
         public bool IsProperty { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the member participates in the generated key.
+        /// メンバーが生成されるキーに参加するかどうかを示す値を取得します。
         /// </summary>
         public bool HasKey { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the member is persisted.
+        /// メンバーが永続化対象かどうかを示す値を取得します。
         /// </summary>
         public bool HasPersist { get; }
 
         /// <summary>
-        /// Gets the declared persistence index, when present.
+        /// 宣言された永続化インデックスを取得します。存在しない場合もあります。
         /// </summary>
         public int? PersistIndex { get; }
 
         /// <summary>
-        /// Gets the value-object conversion metadata, when the member is flattened to primitive DTO fields.
+        /// メンバーがプリミティブ DTO フィールドへ展開される場合の、値オブジェクト変換メタデータを取得します。
         /// </summary>
         public ValueObjectShape? ValueObjectShape { get; }
 
         /// <summary>
-        /// Gets the DTO fields generated from this member.
+        /// このメンバーから生成された DTO フィールドを取得します。
         /// </summary>
         public ImmutableArray<DtoFieldModel> DtoFields { get; }
 
         /// <summary>
-        /// Gets the location used when reporting diagnostics for the member.
+        /// メンバーに対する診断を報告するときに使う位置情報を取得します。
         /// </summary>
         public Location Location { get; }
     }
 
     /// <summary>
-    /// Describes how a value object converts to and from primitive DTO fields.
+    /// 値オブジェクトがプリミティブ DTO フィールドへ変換され、そこから復元される方法を表します。
     /// </summary>
     private sealed class ValueObjectShape
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ValueObjectShape"/> class.
+        /// <see cref="ValueObjectShape"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         public ValueObjectShape(
             string toPrimitiveMethodName,
@@ -301,33 +301,33 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         /// <summary>
-        /// Gets the method name used to expose primitive values.
+        /// プリミティブ値を公開するために使うメソッド名を取得します。
         /// </summary>
         public string ToPrimitiveMethodName { get; }
 
         /// <summary>
-        /// Gets the strategy used to reconstruct the value object.
+        /// 値オブジェクトを復元するために使う戦略を取得します。
         /// </summary>
         public ValueObjectCreationKind CreationKind { get; }
 
         /// <summary>
-        /// Gets the static factory name used for reconstruction when applicable.
+        /// 該当する場合に復元で使う静的ファクトリ名を取得します。
         /// </summary>
         public string CreationMemberName { get; }
 
         /// <summary>
-        /// Gets the primitive DTO parts emitted for the value object.
+        /// 値オブジェクトに対して出力されるプリミティブ DTO 要素を取得します。
         /// </summary>
         public ImmutableArray<PrimitivePartModel> PrimitiveParts { get; }
     }
 
     /// <summary>
-    /// Describes one primitive piece of a value-object representation.
+    /// 値オブジェクト表現を構成する 1 つのプリミティブ要素を表します。
     /// </summary>
     private sealed class PrimitivePartModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PrimitivePartModel"/> class.
+        /// <see cref="PrimitivePartModel"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         public PrimitivePartModel(ITypeSymbol typeSymbol, string typeName, string accessName, string dtoSuffixName)
         {
@@ -338,33 +338,33 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         /// <summary>
-        /// Gets the Roslyn type symbol for the primitive part.
+        /// プリミティブ要素に対応する Roslyn 型シンボルを取得します。
         /// </summary>
         public ITypeSymbol TypeSymbol { get; }
 
         /// <summary>
-        /// Gets the fully qualified type name used in generated source.
+        /// 生成ソースで使う完全修飾型名を取得します。
         /// </summary>
         public string TypeName { get; }
 
         /// <summary>
-        /// Gets the tuple accessor used when reading a multi-part primitive value.
+        /// 複数要素のプリミティブ値を読み取るときに使うタプルアクセサを取得します。
         /// </summary>
         public string AccessName { get; }
 
         /// <summary>
-        /// Gets the suffix appended to generated DTO field names.
+        /// 生成 DTO フィールド名へ付与される接尾辞を取得します。
         /// </summary>
         public string DtoSuffixName { get; }
     }
 
     /// <summary>
-    /// Describes one generated field on a DTO type.
+    /// DTO 型上に生成される 1 つのフィールドを表します。
     /// </summary>
     private sealed class DtoFieldModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DtoFieldModel"/> class.
+        /// <see cref="DtoFieldModel"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
         public DtoFieldModel(string name, string typeName, string tupleAccessName)
         {
@@ -374,23 +374,23 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         /// <summary>
-        /// Gets the generated field name.
+        /// 生成されるフィールド名を取得します。
         /// </summary>
         public string Name { get; }
 
         /// <summary>
-        /// Gets the fully qualified field type name.
+        /// 完全修飾されたフィールド型名を取得します。
         /// </summary>
         public string TypeName { get; }
 
         /// <summary>
-        /// Gets the tuple member accessor used when mapping multi-part primitives.
+        /// 複数要素のプリミティブをマッピングするときに使うタプルメンバーアクセサを取得します。
         /// </summary>
         public string TupleAccessName { get; }
     }
 
     /// <summary>
-    /// Identifies how a value object is recreated from primitive DTO fields.
+    /// 値オブジェクトがプリミティブ DTO フィールドからどのように再生成されるかを識別します。
     /// </summary>
     private enum ValueObjectCreationKind
     {

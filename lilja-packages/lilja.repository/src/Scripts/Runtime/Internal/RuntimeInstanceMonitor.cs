@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Lilja.Repository.Internal
 {
     /// <summary>
-    /// Tracks live runtime instances in development builds to surface accidental duplication.
+    /// 開発ビルドで生存中の実行時インスタンスを追跡し、意図しない重複を可視化します。
     /// </summary>
     internal static class RuntimeInstanceMonitor
     {
@@ -15,9 +15,9 @@ namespace Lilja.Repository.Internal
         private static readonly Dictionary<string, List<WeakReference>> PersistedRepositories = new Dictionary<string, List<WeakReference>>();
 
         /// <summary>
-        /// Tracks a <see cref="TxManager"/> instance and warns when more than one is live.
+        /// <see cref="TxManager"/> インスタンスを追跡し、複数が生存している場合は警告します。
         /// </summary>
-        /// <param name="instance">The instance to register.</param>
+        /// <param name="instance">登録するインスタンス。</param>
         public static void TrackTxManager(object instance)
         {
     #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -35,11 +35,11 @@ namespace Lilja.Repository.Internal
         }
 
         /// <summary>
-        /// Tracks a persisted repository instance and warns when the same store is opened multiple times.
+        /// 永続化リポジトリインスタンスを追跡し、同じ保存先が複数回開かれた場合は警告します。
         /// </summary>
-        /// <param name="repositoryType">The runtime repository type.</param>
-        /// <param name="filePath">The storage path used by the repository.</param>
-        /// <param name="instance">The instance to register.</param>
+        /// <param name="repositoryType">実行時のリポジトリ型。</param>
+        /// <param name="filePath">リポジトリが使う保存先パス。</param>
+        /// <param name="instance">登録するインスタンス。</param>
         public static void TrackPersistedRepository(Type repositoryType, string filePath, object instance)
         {
     #if UNITY_EDITOR || DEVELOPMENT_BUILD

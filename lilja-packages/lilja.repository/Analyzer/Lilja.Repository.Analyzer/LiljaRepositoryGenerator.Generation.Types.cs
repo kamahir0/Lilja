@@ -6,10 +6,10 @@ namespace Lilja.Repository.Analyzer;
 public sealed partial class LiljaRepositoryGenerator
 {
     /// <summary>
-    /// Generates the DTO type used to persist an entity.
+    /// エンティティの永続化に使う DTO 型を生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateDto(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -31,10 +31,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the storage envelope type used to represent persisted keyed or singleton state.
+    /// 永続化されたキー付き状態またはシングルトン状態を表すストレージエンベロープ型を生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateStorageEnvelope(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -59,10 +59,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates entity partial methods that convert between entities and DTOs.
+    /// エンティティと DTO の相互変換を行う partial メソッドを生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateConverterPartial(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -144,10 +144,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates entity partial methods that expose keys from entities and DTOs.
+    /// エンティティと DTO からキーを取得する partial メソッドを生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateKeyAccessorPartial(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -173,10 +173,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the MessagePack formatter for the entity DTO type.
+    /// エンティティ DTO 型用の MessagePack フォーマッターを生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateDtoFormatter(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -237,10 +237,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Generates the MessagePack formatter for the entity storage envelope type.
+    /// エンティティのストレージエンベロープ型用の MessagePack フォーマッターを生成します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>The generated source code.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>生成されたソースコード。</returns>
     private static string GenerateStorageEnvelopeFormatter(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -318,13 +318,13 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Builds the expression used to map an entity member into its DTO field.
+    /// エンティティメンバーを DTO フィールドへマッピングする式を構築します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <param name="member">The member being converted.</param>
-    /// <param name="memberIndex">The member index within the persisted member list.</param>
-    /// <param name="fieldIndex">The field index within the flattened DTO field list for the member.</param>
-    /// <returns>A C# expression string.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <param name="member">変換対象のメンバー。</param>
+    /// <param name="memberIndex">永続化対象メンバー一覧内でのメンバーインデックス。</param>
+    /// <param name="fieldIndex">そのメンバーに対応する展開済み DTO フィールド一覧内でのフィールドインデックス。</param>
+    /// <returns>C# の式文字列。</returns>
     private static string GetToDtoExpression(EntityModel model, MemberModel member, int memberIndex, int fieldIndex)
     {
         if (member.ValueObjectShape is null)
@@ -341,10 +341,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Builds the expression used to reconstruct one constructor argument from a DTO.
+    /// DTO から 1 つのコンストラクタ引数を復元する式を構築します。
     /// </summary>
-    /// <param name="member">The member being reconstructed.</param>
-    /// <returns>A C# expression string.</returns>
+    /// <param name="member">再構築対象のメンバー。</param>
+    /// <returns>C# の式文字列。</returns>
     private static string GetFromDtoArgumentExpression(MemberModel member)
     {
         if (member.ValueObjectShape is null)
@@ -362,11 +362,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Creates the expression that reconstructs a value object from primitive DTO arguments.
+    /// プリミティブ DTO 引数から値オブジェクトを復元する式を作成します。
     /// </summary>
-    /// <param name="member">The member whose value object should be created.</param>
-    /// <param name="argumentExpressions">The primitive argument expressions.</param>
-    /// <returns>A C# expression string.</returns>
+    /// <param name="member">値オブジェクトを生成する対象のメンバー。</param>
+    /// <param name="argumentExpressions">プリミティブ引数の式。</param>
+    /// <returns>C# の式文字列。</returns>
     private static string CreateValueObjectExpression(MemberModel member, IReadOnlyList<string> argumentExpressions)
     {
         var arguments = string.Join(", ", argumentExpressions);
@@ -379,10 +379,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Builds the expression used to read an entity key from an entity instance.
+    /// エンティティインスタンスからエンティティキーを読み取る式を構築します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>A C# expression string.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>C# の式文字列。</returns>
     private static string GetEntityKeyExpression(EntityModel model)
     {
         if (model.KeyMembers.Length == 1)
@@ -394,10 +394,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Builds the expression used to read an entity key from a DTO instance.
+    /// DTO インスタンスからエンティティキーを読み取る式を構築します。
     /// </summary>
-    /// <param name="model">The analyzed entity model.</param>
-    /// <returns>A C# expression string.</returns>
+    /// <param name="model">解析済みのエンティティモデル。</param>
+    /// <returns>C# の式文字列。</returns>
     private static string GetDtoKeyExpression(EntityModel model)
     {
         if (model.KeyMembers.Length == 1)

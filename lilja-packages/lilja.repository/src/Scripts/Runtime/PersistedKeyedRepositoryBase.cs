@@ -8,11 +8,11 @@ using Lilja.Repository.Internal;
 namespace Lilja.Repository
 {
     /// <summary>
-    /// Provides transactional CRUD behavior for a keyed repository backed by persisted DTO payloads.
+    /// 永続化された DTO ペイロードをバックエンドに持つ、キー付きリポジトリ向けのトランザクション対応 CRUD 振る舞いを提供します。
     /// </summary>
-    /// <typeparam name="TEntity">The entity type managed by the repository.</typeparam>
-    /// <typeparam name="TKey">The key used to identify entities.</typeparam>
-    /// <typeparam name="TDto">The DTO type written to and read from storage.</typeparam>
+    /// <typeparam name="TEntity">リポジトリが管理するエンティティ型。</typeparam>
+    /// <typeparam name="TKey">エンティティの識別に使うキー型。</typeparam>
+    /// <typeparam name="TDto">保存先への書き込みと読み込みに使う DTO 型。</typeparam>
     public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepositoryParticipant
         where TEntity : class
         where TKey : notnull
@@ -23,10 +23,10 @@ namespace Lilja.Repository
         private bool _initialized;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PersistedKeyedRepositoryBase{TEntity, TKey, TDto}"/> class.
+        /// <see cref="PersistedKeyedRepositoryBase{TEntity, TKey, TDto}"/> クラスの新しいインスタンスを初期化します。
         /// </summary>
-        /// <param name="filePath">The file path used for persistence.</param>
-        /// <exception cref="ArgumentException"><paramref name="filePath"/> is blank.</exception>
+        /// <param name="filePath">永続化に使うファイルパス。</param>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> が空白です。</exception>
         protected PersistedKeyedRepositoryBase(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -39,15 +39,15 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Gets the file path used by the repository backend.
+        /// リポジトリバックエンドで使用するファイルパスを取得します。
         /// </summary>
         protected string FilePath { get; }
 
         /// <summary>
-        /// Loads persisted state into memory before the repository is used.
+        /// リポジトリを使用する前に、永続化された状態をメモリへ読み込みます。
         /// </summary>
-        /// <param name="ct">A token that can cancel initialization.</param>
-        /// <returns>A task that completes when the initial load has finished.</returns>
+        /// <param name="ct">初期化を取り消せるトークン。</param>
+        /// <returns>初回読み込みが完了したときに完了するタスク。</returns>
         public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             if (_initialized)
@@ -90,13 +90,13 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Reads an entity visible within the supplied transaction.
+        /// 指定されたトランザクション内で可視なエンティティを読み取ります。
         /// </summary>
-        /// <param name="tx">The transaction to read through.</param>
-        /// <param name="key">The entity key.</param>
-        /// <returns>The committed or staged entity, or <see langword="null"/> when no entity exists.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">The repository has not been initialized.</exception>
+        /// <param name="tx">読み取りに使用するトランザクション。</param>
+        /// <param name="key">エンティティキー。</param>
+        /// <returns>確定済みまたはステージング済みのエンティティ。存在しない場合は <see langword="null"/>。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="tx"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">リポジトリが初期化されていません。</exception>
         public TEntity? Read(IReadOnlyTx tx, TKey key)
         {
             if (tx is null)
@@ -115,12 +115,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Creates an entity within a read-write transaction.
+        /// 読み書きトランザクション内でエンティティを作成します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="entity">The entity to create.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">The repository has not been initialized, an entity with the same key already exists, or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="entity">作成するエンティティ。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">リポジトリが初期化されていないか、同じキーを持つエンティティがすでに存在するか、トランザクションが無効です。</exception>
         public void Create(IReadWriteTx tx, TEntity entity)
         {
             if (entity is null)
@@ -140,12 +140,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Updates an entity within a read-write transaction.
+        /// 読み書きトランザクション内でエンティティを更新します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="entity">The replacement entity.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">The repository has not been initialized, the entity does not exist, or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="entity">置き換え後のエンティティ。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">リポジトリが初期化されていないか、エンティティが存在しないか、トランザクションが無効です。</exception>
         public void Update(IReadWriteTx tx, TEntity entity)
         {
             if (entity is null)
@@ -165,11 +165,11 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Deletes an entity within a read-write transaction.
+        /// 読み書きトランザクション内でエンティティを削除します。
         /// </summary>
-        /// <param name="tx">The transaction that stages the change.</param>
-        /// <param name="key">The key of the entity to delete.</param>
-        /// <exception cref="InvalidOperationException">The repository has not been initialized, the entity does not exist, or the transaction is invalid.</exception>
+        /// <param name="tx">変更をステージングするトランザクション。</param>
+        /// <param name="key">削除するエンティティのキー。</param>
+        /// <exception cref="InvalidOperationException">リポジトリが初期化されていないか、エンティティが存在しないか、トランザクションが無効です。</exception>
         public void Delete(IReadWriteTx tx, TKey key)
         {
             EnsureInitialized();
@@ -183,12 +183,12 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Returns a snapshot of all entities visible within the supplied transaction.
+        /// 指定されたトランザクション内で可視な全エンティティのスナップショットを返します。
         /// </summary>
-        /// <param name="tx">The transaction to read through.</param>
-        /// <returns>A materialized list of entities.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
-        /// <exception cref="InvalidOperationException">The repository has not been initialized.</exception>
+        /// <param name="tx">読み取りに使用するトランザクション。</param>
+        /// <returns>実体化されたエンティティ一覧。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="tx"/> が <see langword="null"/> です。</exception>
+        /// <exception cref="InvalidOperationException">リポジトリが初期化されていません。</exception>
         public IReadOnlyList<TEntity> All(IReadOnlyTx tx)
         {
             if (tx is null)
@@ -207,39 +207,39 @@ namespace Lilja.Repository
         }
 
         /// <summary>
-        /// Converts an entity instance to the DTO persisted by this repository.
+        /// エンティティインスタンスを、このリポジトリが永続化する DTO へ変換します。
         /// </summary>
-        /// <param name="entity">The entity to convert.</param>
-        /// <returns>The DTO representation.</returns>
+        /// <param name="entity">変換するエンティティ。</param>
+        /// <returns>DTO 表現。</returns>
         protected abstract TDto ToDto(TEntity entity);
 
         /// <summary>
-        /// Rebuilds an entity instance from the persisted DTO representation.
+        /// 永続化された DTO 表現からエンティティインスタンスを再構築します。
         /// </summary>
-        /// <param name="dto">The DTO to convert.</param>
-        /// <returns>The reconstructed entity.</returns>
+        /// <param name="dto">変換する DTO。</param>
+        /// <returns>再構築されたエンティティ。</returns>
         protected abstract TEntity FromDto(TDto dto);
 
         /// <summary>
-        /// Extracts the repository key from a persisted DTO.
+        /// 永続化された DTO からリポジトリキーを取り出します。
         /// </summary>
-        /// <param name="dto">The DTO whose key should be returned.</param>
-        /// <returns>The entity key.</returns>
+        /// <param name="dto">キーを返す対象の DTO。</param>
+        /// <returns>エンティティキー。</returns>
         protected abstract TKey GetKeyFromDto(TDto dto);
 
         /// <summary>
-        /// Loads all persisted DTOs from storage.
+        /// 保存先から、永続化されたすべての DTO を読み込みます。
         /// </summary>
-        /// <param name="ct">A token that can cancel the load.</param>
-        /// <returns>The stored DTOs, or <see langword="null"/> when no state exists.</returns>
+        /// <param name="ct">読み込みを取り消せるトークン。</param>
+        /// <returns>保存された DTO 一覧。状態が存在しない場合は <see langword="null"/>。</returns>
         protected abstract UniTask<IReadOnlyList<TDto>?> LoadItemsAsync(CancellationToken ct);
 
         /// <summary>
-        /// Saves the prepared DTO snapshot to storage during commit.
+        /// コミット中に準備済み DTO スナップショットを保存先へ保存します。
         /// </summary>
-        /// <param name="items">The DTOs to persist.</param>
-        /// <param name="ct">A token that can cancel the save.</param>
-        /// <returns>A task that completes when persistence finishes.</returns>
+        /// <param name="items">永続化する DTO 一覧。</param>
+        /// <param name="ct">保存を取り消せるトークン。</param>
+        /// <returns>永続化が完了したときに完了するタスク。</returns>
         protected abstract UniTask SaveItemsAsync(IReadOnlyList<TDto> items, CancellationToken ct);
 
         UniTask IRepositoryParticipant.PrepareCommitAsync(object transactionState, CancellationToken ct)

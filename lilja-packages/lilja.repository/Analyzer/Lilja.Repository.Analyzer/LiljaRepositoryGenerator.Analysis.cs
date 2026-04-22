@@ -9,10 +9,10 @@ namespace Lilja.Repository.Analyzer;
 public sealed partial class LiljaRepositoryGenerator
 {
     /// <summary>
-    /// Analyzes a single entity declaration and produces the model required for code generation.
+    /// 単一のエンティティ宣言を解析し、コード生成に必要なモデルを作成します。
     /// </summary>
-    /// <param name="entitySymbol">The entity symbol to analyze.</param>
-    /// <returns>The generated model together with any diagnostics discovered during analysis.</returns>
+    /// <param name="entitySymbol">解析するエンティティシンボル。</param>
+    /// <returns>解析中に検出された診断を含む生成モデル。</returns>
     private static EntityAnalysis AnalyzeEntity(INamedTypeSymbol entitySymbol)
     {
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
@@ -48,11 +48,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Validates entity-level constraints such as partial declarations and unsupported generic parameters.
+    /// partial 宣言や未対応のジェネリック型引数など、エンティティレベルの制約を検証します。
     /// </summary>
-    /// <param name="entitySymbol">The entity being analyzed.</param>
-    /// <param name="entityLocation">The location used for diagnostics.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <param name="entitySymbol">解析対象のエンティティ。</param>
+    /// <param name="entityLocation">診断に使う位置情報。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
     private static void ValidateEntity(
         INamedTypeSymbol entitySymbol,
         Location entityLocation,
@@ -70,12 +70,12 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Examines a member for repository annotations and records supported metadata.
+    /// メンバーに付いたリポジトリ注釈を調べ、対応しているメタデータを記録します。
     /// </summary>
-    /// <param name="member">The member to inspect.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
-    /// <param name="keyMembers">The collected key members.</param>
-    /// <param name="persistedMembers">The collected persisted members.</param>
+    /// <param name="member">確認するメンバー。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
+    /// <param name="keyMembers">収集されたキーメンバー。</param>
+    /// <param name="persistedMembers">収集された永続化対象メンバー。</param>
     private static void AnalyzeAnnotatedMember(
         ISymbol member,
         ImmutableArray<Diagnostic>.Builder diagnostics,
@@ -114,15 +114,15 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Converts a supported field or auto-property into a generator member model.
+    /// 対応しているフィールドまたは自動実装プロパティを、ジェネレーター用のメンバーモデルへ変換します。
     /// </summary>
-    /// <param name="member">The member to model.</param>
-    /// <param name="hasKey">Whether the member has a <c>[Key]</c> attribute.</param>
-    /// <param name="hasPersist">Whether the member has a <c>[Persist]</c> attribute.</param>
-    /// <param name="persistIndex">The declared persistence index, when present.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
-    /// <param name="memberLocation">The location used for diagnostics.</param>
-    /// <returns>A member model, or <see langword="null"/> when the member is unsupported.</returns>
+    /// <param name="member">モデル化するメンバー。</param>
+    /// <param name="hasKey">メンバーが <c>[Key]</c> 属性を持つかどうか。</param>
+    /// <param name="hasPersist">メンバーが <c>[Persist]</c> 属性を持つかどうか。</param>
+    /// <param name="persistIndex">存在する場合の、宣言された永続化インデックス。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
+    /// <param name="memberLocation">診断に使う位置情報。</param>
+    /// <returns>メンバーモデル。メンバーが未対応の場合は <see langword="null"/>。</returns>
     private static MemberModel? TryCreateSupportedMemberModel(
         ISymbol member,
         bool hasKey,
@@ -147,11 +147,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Reports that a member cannot participate in generated repositories because it is unsupported.
+    /// メンバーが未対応であるため、生成されるリポジトリに参加できないことを報告します。
     /// </summary>
-    /// <param name="memberLocation">The location used for diagnostics.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
-    /// <returns>Always <see langword="null"/>.</returns>
+    /// <param name="memberLocation">診断に使う位置情報。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
+    /// <returns>常に <see langword="null"/>。</returns>
     private static MemberModel? ReportUnsupportedMember(
         Location memberLocation,
         ImmutableArray<Diagnostic>.Builder diagnostics)
@@ -161,11 +161,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Validates cross-member persistence rules after all annotated members have been collected.
+    /// 注釈付きメンバーをすべて収集したあとで、メンバー横断の永続化ルールを検証します。
     /// </summary>
-    /// <param name="keyMembers">The collected key members.</param>
-    /// <param name="persistedMembers">The collected persisted members.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <param name="keyMembers">収集されたキーメンバー。</param>
+    /// <param name="persistedMembers">収集された永続化対象メンバー。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
     private static void ValidatePersistedMembers(
         IReadOnlyList<MemberModel> keyMembers,
         List<MemberModel> persistedMembers,
@@ -196,14 +196,14 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Creates a generator model for a field or auto-property, including any value-object shape information.
+    /// 値オブジェクト形状の情報も含めて、フィールドまたは自動実装プロパティ用のジェネレーターモデルを作成します。
     /// </summary>
-    /// <param name="member">The member to model.</param>
-    /// <param name="hasKey">Whether the member has a <c>[Key]</c> attribute.</param>
-    /// <param name="hasPersist">Whether the member has a <c>[Persist]</c> attribute.</param>
-    /// <param name="persistIndex">The declared persistence index, when present.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
-    /// <returns>A populated member model, or <see langword="null"/> when the member is unsupported.</returns>
+    /// <param name="member">モデル化するメンバー。</param>
+    /// <param name="hasKey">メンバーが <c>[Key]</c> 属性を持つかどうか。</param>
+    /// <param name="hasPersist">メンバーが <c>[Persist]</c> 属性を持つかどうか。</param>
+    /// <param name="persistIndex">存在する場合の、宣言された永続化インデックス。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
+    /// <returns>内容が設定されたメンバーモデル。メンバーが未対応の場合は <see langword="null"/>。</returns>
     private static MemberModel? CreateMemberModel(
         ISymbol member,
         bool hasKey,
@@ -250,12 +250,12 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Analyzes value-object conversion metadata used to flatten persisted members into primitive DTO fields.
+    /// 永続化対象メンバーをプリミティブな DTO フィールドへ展開するための値オブジェクト変換メタデータを解析します。
     /// </summary>
-    /// <param name="typeSymbol">The member type being inspected.</param>
-    /// <param name="location">The location used for diagnostics.</param>
-    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
-    /// <returns>The discovered value-object shape, or <see langword="null"/> when the type uses direct persistence.</returns>
+    /// <param name="typeSymbol">確認対象のメンバー型。</param>
+    /// <param name="location">診断に使う位置情報。</param>
+    /// <param name="diagnostics">解析エラーを格納する診断先。</param>
+    /// <returns>検出された値オブジェクト形状。型が直接永続化を使う場合は <see langword="null"/>。</returns>
     private static ValueObjectShape? AnalyzeValueObject(
         ITypeSymbol typeSymbol,
         Location location,
@@ -334,11 +334,11 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Checks whether a factory or constructor signature matches the primitive DTO shape.
+    /// ファクトリまたはコンストラクタのシグネチャがプリミティブ DTO の形と一致するかを確認します。
     /// </summary>
-    /// <param name="parameters">The parameters to compare.</param>
-    /// <param name="primitiveParts">The primitive parts produced by <c>[ToPrimitive]</c>.</param>
-    /// <returns><see langword="true"/> when the signatures match; otherwise <see langword="false"/>.</returns>
+    /// <param name="parameters">比較する引数一覧。</param>
+    /// <param name="primitiveParts"><c>[ToPrimitive]</c> によって生成されたプリミティブ要素。</param>
+    /// <returns>シグネチャが一致する場合は <see langword="true"/>、それ以外は <see langword="false"/>。</returns>
     private static bool ParametersMatchPrimitiveParts(
         ImmutableArray<IParameterSymbol> parameters,
         ImmutableArray<PrimitivePartModel> primitiveParts)
@@ -360,10 +360,10 @@ public sealed partial class LiljaRepositoryGenerator
     }
 
     /// <summary>
-    /// Breaks a primitive representation into DTO field parts, expanding tuples into individual elements.
+    /// プリミティブ表現を DTO フィールドの構成要素へ分解し、タプルは個別の要素へ展開します。
     /// </summary>
-    /// <param name="typeSymbol">The primitive return type exposed by <c>[ToPrimitive]</c>.</param>
-    /// <returns>The primitive DTO parts used for serialization.</returns>
+    /// <param name="typeSymbol"><c>[ToPrimitive]</c> が公開するプリミティブ戻り値型。</param>
+    /// <returns>シリアライズに使うプリミティブ DTO 要素。</returns>
     private static ImmutableArray<PrimitivePartModel> GetPrimitiveParts(ITypeSymbol typeSymbol)
     {
         if (typeSymbol is INamedTypeSymbol namedType && namedType.IsTupleType)
