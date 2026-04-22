@@ -6,16 +6,31 @@ using Lilja.Repository.Internal;
 
 namespace Lilja.Repository
 {
+/// <summary>
+/// Provides transactional CRUD behavior for a singleton repository stored entirely in memory.
+/// </summary>
+/// <typeparam name="TEntity">The entity type managed by the repository.</typeparam>
 public abstract class InMemorySingletonRepositoryBase<TEntity> : IRepositoryParticipant
     where TEntity : class
 {
     private TEntity? _committedValue;
 
+    /// <summary>
+    /// Initializes the repository before first use.
+    /// </summary>
+    /// <param name="ct">A token that can cancel initialization.</param>
+    /// <returns>A completed task for the in-memory implementation.</returns>
     public UniTask InitializeAsync(CancellationToken ct = default)
     {
         return UniTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Reads the current entity value visible within the supplied transaction.
+    /// </summary>
+    /// <param name="tx">The transaction to read through.</param>
+    /// <returns>The committed or staged entity, or <see langword="null"/> when no value exists.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
     public TEntity? Read(IReadOnlyTx tx)
     {
         if (tx is null)
@@ -31,6 +46,13 @@ public abstract class InMemorySingletonRepositoryBase<TEntity> : IRepositoryPart
         return _committedValue;
     }
 
+    /// <summary>
+    /// Creates the singleton value within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="entity">The entity to create.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">A value already exists or the transaction is invalid.</exception>
     public void Create(IReadWriteTx tx, TEntity entity)
     {
         if (entity is null)
@@ -48,6 +70,13 @@ public abstract class InMemorySingletonRepositoryBase<TEntity> : IRepositoryPart
         state.HasValue = true;
     }
 
+    /// <summary>
+    /// Replaces the singleton value within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="entity">The replacement entity.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">No value exists or the transaction is invalid.</exception>
     public void Update(IReadWriteTx tx, TEntity entity)
     {
         if (entity is null)
@@ -65,6 +94,11 @@ public abstract class InMemorySingletonRepositoryBase<TEntity> : IRepositoryPart
         state.HasValue = true;
     }
 
+    /// <summary>
+    /// Deletes the singleton value within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <exception cref="InvalidOperationException">No value exists or the transaction is invalid.</exception>
     public void Delete(IReadWriteTx tx)
     {
         var state = GetWriteState(tx);
@@ -77,6 +111,12 @@ public abstract class InMemorySingletonRepositoryBase<TEntity> : IRepositoryPart
         state.HasValue = false;
     }
 
+    /// <summary>
+    /// Persists the prepared state before it becomes the new committed value.
+    /// </summary>
+    /// <param name="state">The value that is about to become visible to readers.</param>
+    /// <param name="ct">A token that can cancel persistence.</param>
+    /// <returns>A task that completes when persistence finishes.</returns>
     protected virtual UniTask PersistStateAsync(TEntity? state, CancellationToken ct)
     {
         return UniTask.CompletedTask;

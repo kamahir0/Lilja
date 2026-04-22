@@ -5,12 +5,19 @@ using UnityEngine;
 
 namespace Lilja.Repository.Internal
 {
+/// <summary>
+/// Tracks live runtime instances in development builds to surface accidental duplication.
+/// </summary>
 internal static class RuntimeInstanceMonitor
 {
     private static readonly object SyncRoot = new object();
     private static readonly List<WeakReference> TxManagers = new List<WeakReference>();
     private static readonly Dictionary<string, List<WeakReference>> PersistedRepositories = new Dictionary<string, List<WeakReference>>();
 
+    /// <summary>
+    /// Tracks a <see cref="TxManager"/> instance and warns when more than one is live.
+    /// </summary>
+    /// <param name="instance">The instance to register.</param>
     public static void TrackTxManager(object instance)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -27,6 +34,12 @@ internal static class RuntimeInstanceMonitor
 #endif
     }
 
+    /// <summary>
+    /// Tracks a persisted repository instance and warns when the same store is opened multiple times.
+    /// </summary>
+    /// <param name="repositoryType">The runtime repository type.</param>
+    /// <param name="filePath">The storage path used by the repository.</param>
+    /// <param name="instance">The instance to register.</param>
     public static void TrackPersistedRepository(Type repositoryType, string filePath, object instance)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

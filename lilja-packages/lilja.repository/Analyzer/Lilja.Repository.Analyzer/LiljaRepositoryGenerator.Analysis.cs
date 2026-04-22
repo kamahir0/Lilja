@@ -8,6 +8,11 @@ namespace Lilja.Repository.Analyzer;
 
 public sealed partial class LiljaRepositoryGenerator
 {
+    /// <summary>
+    /// Analyzes a single entity declaration and produces the model required for code generation.
+    /// </summary>
+    /// <param name="entitySymbol">The entity symbol to analyze.</param>
+    /// <returns>The generated model together with any diagnostics discovered during analysis.</returns>
     private static EntityAnalysis AnalyzeEntity(INamedTypeSymbol entitySymbol)
     {
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
@@ -42,6 +47,12 @@ public sealed partial class LiljaRepositoryGenerator
             diagnostics.ToImmutable());
     }
 
+    /// <summary>
+    /// Validates entity-level constraints such as partial declarations and unsupported generic parameters.
+    /// </summary>
+    /// <param name="entitySymbol">The entity being analyzed.</param>
+    /// <param name="entityLocation">The location used for diagnostics.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
     private static void ValidateEntity(
         INamedTypeSymbol entitySymbol,
         Location entityLocation,
@@ -58,6 +69,13 @@ public sealed partial class LiljaRepositoryGenerator
         }
     }
 
+    /// <summary>
+    /// Examines a member for repository annotations and records supported metadata.
+    /// </summary>
+    /// <param name="member">The member to inspect.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <param name="keyMembers">The collected key members.</param>
+    /// <param name="persistedMembers">The collected persisted members.</param>
     private static void AnalyzeAnnotatedMember(
         ISymbol member,
         ImmutableArray<Diagnostic>.Builder diagnostics,
@@ -95,6 +113,16 @@ public sealed partial class LiljaRepositoryGenerator
         }
     }
 
+    /// <summary>
+    /// Converts a supported field or auto-property into a generator member model.
+    /// </summary>
+    /// <param name="member">The member to model.</param>
+    /// <param name="hasKey">Whether the member has a <c>[Key]</c> attribute.</param>
+    /// <param name="hasPersist">Whether the member has a <c>[Persist]</c> attribute.</param>
+    /// <param name="persistIndex">The declared persistence index, when present.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <param name="memberLocation">The location used for diagnostics.</param>
+    /// <returns>A member model, or <see langword="null"/> when the member is unsupported.</returns>
     private static MemberModel? TryCreateSupportedMemberModel(
         ISymbol member,
         bool hasKey,
@@ -118,6 +146,12 @@ public sealed partial class LiljaRepositoryGenerator
         };
     }
 
+    /// <summary>
+    /// Reports that a member cannot participate in generated repositories because it is unsupported.
+    /// </summary>
+    /// <param name="memberLocation">The location used for diagnostics.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <returns>Always <see langword="null"/>.</returns>
     private static MemberModel? ReportUnsupportedMember(
         Location memberLocation,
         ImmutableArray<Diagnostic>.Builder diagnostics)
@@ -126,6 +160,12 @@ public sealed partial class LiljaRepositoryGenerator
         return null;
     }
 
+    /// <summary>
+    /// Validates cross-member persistence rules after all annotated members have been collected.
+    /// </summary>
+    /// <param name="keyMembers">The collected key members.</param>
+    /// <param name="persistedMembers">The collected persisted members.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
     private static void ValidatePersistedMembers(
         IReadOnlyList<MemberModel> keyMembers,
         List<MemberModel> persistedMembers,
@@ -155,6 +195,15 @@ public sealed partial class LiljaRepositoryGenerator
         }
     }
 
+    /// <summary>
+    /// Creates a generator model for a field or auto-property, including any value-object shape information.
+    /// </summary>
+    /// <param name="member">The member to model.</param>
+    /// <param name="hasKey">Whether the member has a <c>[Key]</c> attribute.</param>
+    /// <param name="hasPersist">Whether the member has a <c>[Persist]</c> attribute.</param>
+    /// <param name="persistIndex">The declared persistence index, when present.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <returns>A populated member model, or <see langword="null"/> when the member is unsupported.</returns>
     private static MemberModel? CreateMemberModel(
         ISymbol member,
         bool hasKey,
@@ -200,6 +249,13 @@ public sealed partial class LiljaRepositoryGenerator
             GetPrimaryLocation(member));
     }
 
+    /// <summary>
+    /// Analyzes value-object conversion metadata used to flatten persisted members into primitive DTO fields.
+    /// </summary>
+    /// <param name="typeSymbol">The member type being inspected.</param>
+    /// <param name="location">The location used for diagnostics.</param>
+    /// <param name="diagnostics">The diagnostic sink for analysis errors.</param>
+    /// <returns>The discovered value-object shape, or <see langword="null"/> when the type uses direct persistence.</returns>
     private static ValueObjectShape? AnalyzeValueObject(
         ITypeSymbol typeSymbol,
         Location location,
@@ -277,6 +333,12 @@ public sealed partial class LiljaRepositoryGenerator
             primitiveParts);
     }
 
+    /// <summary>
+    /// Checks whether a factory or constructor signature matches the primitive DTO shape.
+    /// </summary>
+    /// <param name="parameters">The parameters to compare.</param>
+    /// <param name="primitiveParts">The primitive parts produced by <c>[ToPrimitive]</c>.</param>
+    /// <returns><see langword="true"/> when the signatures match; otherwise <see langword="false"/>.</returns>
     private static bool ParametersMatchPrimitiveParts(
         ImmutableArray<IParameterSymbol> parameters,
         ImmutableArray<PrimitivePartModel> primitiveParts)
@@ -297,6 +359,11 @@ public sealed partial class LiljaRepositoryGenerator
         return true;
     }
 
+    /// <summary>
+    /// Breaks a primitive representation into DTO field parts, expanding tuples into individual elements.
+    /// </summary>
+    /// <param name="typeSymbol">The primitive return type exposed by <c>[ToPrimitive]</c>.</param>
+    /// <returns>The primitive DTO parts used for serialization.</returns>
     private static ImmutableArray<PrimitivePartModel> GetPrimitiveParts(ITypeSymbol typeSymbol)
     {
         if (typeSymbol is INamedTypeSymbol namedType && namedType.IsTupleType)

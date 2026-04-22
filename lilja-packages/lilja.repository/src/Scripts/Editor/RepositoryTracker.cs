@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace Lilja.Repository.Diagnostics
 {
+/// <summary>
+/// Tracks live repository instances so editor tooling can inspect them during play mode.
+/// </summary>
 public static class RepositoryTracker
 {
     private static readonly object SyncRoot = new object();
@@ -14,6 +17,9 @@ public static class RepositoryTracker
         { RepositoryType.MessagePack, new List<WeakReference>() },
     };
 
+    /// <summary>
+    /// Identifies the backing storage strategy used by a repository.
+    /// </summary>
     public enum RepositoryType
     {
         InMemory,
@@ -21,6 +27,12 @@ public static class RepositoryTracker
         MessagePack,
     }
 
+    /// <summary>
+    /// Registers a repository instance for diagnostics.
+    /// </summary>
+    /// <param name="repository">The repository instance to track.</param>
+    /// <param name="type">The repository storage type.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="repository"/> is <see langword="null"/>.</exception>
     public static void Track(object repository, RepositoryType type)
     {
         if (repository is null)
@@ -36,6 +48,11 @@ public static class RepositoryTracker
         }
     }
 
+    /// <summary>
+    /// Returns all currently live repository instances for the requested storage type.
+    /// </summary>
+    /// <param name="type">The repository storage type.</param>
+    /// <returns>A snapshot of live repository instances.</returns>
     public static IEnumerable<object> GetAll(RepositoryType type)
     {
         lock (SyncRoot)

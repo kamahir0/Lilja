@@ -7,6 +7,12 @@ using Lilja.Repository.Internal;
 
 namespace Lilja.Repository
 {
+/// <summary>
+/// Provides transactional CRUD behavior for a keyed repository backed by persisted DTO payloads.
+/// </summary>
+/// <typeparam name="TEntity">The entity type managed by the repository.</typeparam>
+/// <typeparam name="TKey">The key used to identify entities.</typeparam>
+/// <typeparam name="TDto">The DTO type written to and read from storage.</typeparam>
 public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepositoryParticipant
     where TEntity : class
     where TKey : notnull
@@ -16,6 +22,11 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
     private Dictionary<TKey, TEntity> _committedState = new Dictionary<TKey, TEntity>();
     private bool _initialized;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PersistedKeyedRepositoryBase{TEntity, TKey, TDto}"/> class.
+    /// </summary>
+    /// <param name="filePath">The file path used for persistence.</param>
+    /// <exception cref="ArgumentException"><paramref name="filePath"/> is blank.</exception>
     protected PersistedKeyedRepositoryBase(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -27,8 +38,16 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         RuntimeInstanceMonitor.TrackPersistedRepository(GetType(), filePath, this);
     }
 
+    /// <summary>
+    /// Gets the file path used by the repository backend.
+    /// </summary>
     protected string FilePath { get; }
 
+    /// <summary>
+    /// Loads persisted state into memory before the repository is used.
+    /// </summary>
+    /// <param name="ct">A token that can cancel initialization.</param>
+    /// <returns>A task that completes when the initial load has finished.</returns>
     public async UniTask InitializeAsync(CancellationToken ct = default)
     {
         if (_initialized)
@@ -70,6 +89,14 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         }
     }
 
+    /// <summary>
+    /// Reads an entity visible within the supplied transaction.
+    /// </summary>
+    /// <param name="tx">The transaction to read through.</param>
+    /// <param name="key">The entity key.</param>
+    /// <returns>The committed or staged entity, or <see langword="null"/> when no entity exists.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized.</exception>
     public TEntity? Read(IReadOnlyTx tx, TKey key)
     {
         if (tx is null)
@@ -87,6 +114,13 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         return _committedState.TryGetValue(key, out var entity) ? entity : null;
     }
 
+    /// <summary>
+    /// Creates an entity within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="entity">The entity to create.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized, an entity with the same key already exists, or the transaction is invalid.</exception>
     public void Create(IReadWriteTx tx, TEntity entity)
     {
         if (entity is null)
@@ -105,6 +139,13 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         overlay.Upsert(key, entity);
     }
 
+    /// <summary>
+    /// Updates an entity within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="entity">The replacement entity.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized, the entity does not exist, or the transaction is invalid.</exception>
     public void Update(IReadWriteTx tx, TEntity entity)
     {
         if (entity is null)
@@ -123,6 +164,12 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         overlay.Upsert(key, entity);
     }
 
+    /// <summary>
+    /// Deletes an entity within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="key">The key of the entity to delete.</param>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized, the entity does not exist, or the transaction is invalid.</exception>
     public void Delete(IReadWriteTx tx, TKey key)
     {
         EnsureInitialized();
@@ -135,6 +182,13 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         overlay.Delete(key);
     }
 
+    /// <summary>
+    /// Returns a snapshot of all entities visible within the supplied transaction.
+    /// </summary>
+    /// <param name="tx">The transaction to read through.</param>
+    /// <returns>A materialized list of entities.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized.</exception>
     public IReadOnlyList<TEntity> All(IReadOnlyTx tx)
     {
         if (tx is null)
@@ -152,14 +206,40 @@ public abstract class PersistedKeyedRepositoryBase<TEntity, TKey, TDto> : IRepos
         return new List<TEntity>(_committedState.Values);
     }
 
+    /// <summary>
+    /// Converts an entity instance to the DTO persisted by this repository.
+    /// </summary>
+    /// <param name="entity">The entity to convert.</param>
+    /// <returns>The DTO representation.</returns>
     protected abstract TDto ToDto(TEntity entity);
 
+    /// <summary>
+    /// Rebuilds an entity instance from the persisted DTO representation.
+    /// </summary>
+    /// <param name="dto">The DTO to convert.</param>
+    /// <returns>The reconstructed entity.</returns>
     protected abstract TEntity FromDto(TDto dto);
 
+    /// <summary>
+    /// Extracts the repository key from a persisted DTO.
+    /// </summary>
+    /// <param name="dto">The DTO whose key should be returned.</param>
+    /// <returns>The entity key.</returns>
     protected abstract TKey GetKeyFromDto(TDto dto);
 
+    /// <summary>
+    /// Loads all persisted DTOs from storage.
+    /// </summary>
+    /// <param name="ct">A token that can cancel the load.</param>
+    /// <returns>The stored DTOs, or <see langword="null"/> when no state exists.</returns>
     protected abstract UniTask<IReadOnlyList<TDto>?> LoadItemsAsync(CancellationToken ct);
 
+    /// <summary>
+    /// Saves the prepared DTO snapshot to storage during commit.
+    /// </summary>
+    /// <param name="items">The DTOs to persist.</param>
+    /// <param name="ct">A token that can cancel the save.</param>
+    /// <returns>A task that completes when persistence finishes.</returns>
     protected abstract UniTask SaveItemsAsync(IReadOnlyList<TDto> items, CancellationToken ct);
 
     UniTask IRepositoryParticipant.PrepareCommitAsync(object transactionState, CancellationToken ct)

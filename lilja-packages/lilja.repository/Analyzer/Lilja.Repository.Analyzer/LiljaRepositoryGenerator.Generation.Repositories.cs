@@ -6,6 +6,12 @@ namespace Lilja.Repository.Analyzer;
 
 public sealed partial class LiljaRepositoryGenerator
 {
+    /// <summary>
+    /// Emits every generated source file required for a validated entity model.
+    /// </summary>
+    /// <param name="context">The Roslyn source production context.</param>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="hasMessagePack">Whether MessagePack support is available in the compilation.</param>
     private static void EmitEntity(SourceProductionContext context, EntityModel model, bool hasMessagePack)
     {
         AddSource(context, model, $"I{model.EntityName}Repository.g.cs", GenerateInterface(model));
@@ -35,12 +41,24 @@ public sealed partial class LiljaRepositoryGenerator
         AddSource(context, model, $"MessagePack{model.EntityName}Repository.g.cs", GenerateMessagePackRepository(model));
     }
 
+    /// <summary>
+    /// Adds one generated source file using a namespace-qualified hint name when necessary.
+    /// </summary>
+    /// <param name="context">The Roslyn source production context.</param>
+    /// <param name="model">The entity model that owns the generated file.</param>
+    /// <param name="fileName">The generated file name.</param>
+    /// <param name="source">The generated source text.</param>
     private static void AddSource(SourceProductionContext context, EntityModel model, string fileName, string source)
     {
         var hintName = string.IsNullOrEmpty(model.NamespaceName) ? fileName : model.StorageIdentifier + "." + fileName;
         context.AddSource(hintName, SourceText.From(source, Encoding.UTF8));
     }
 
+    /// <summary>
+    /// Generates the repository interface exposed for an entity.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateInterface(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -69,6 +87,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates the in-memory repository implementation for an entity.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateInMemoryRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -98,6 +121,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates the JSON-backed repository implementation for an entity.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateJsonRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -134,6 +162,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates the MessagePack-backed repository implementation for an entity.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateMessagePackRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -172,6 +205,12 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Appends the parameterless constructor used by generated in-memory repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="typeName">The generated repository type name.</param>
+    /// <param name="repositoryType">The editor diagnostics repository type enum member.</param>
     private static void AppendTrackerConstructor(StringBuilder sb, string typeName, string repositoryType)
     {
         sb.Append("    public ").Append(typeName).AppendLine("()");
@@ -183,6 +222,14 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("    }");
     }
 
+    /// <summary>
+    /// Appends the parameterless constructor used by generated persisted repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="typeName">The generated repository type name.</param>
+    /// <param name="extension">The file extension used by the repository.</param>
+    /// <param name="repositoryType">The editor diagnostics repository type enum member.</param>
+    /// <param name="storageIdentifier">The storage identifier used for the file name.</param>
     private static void AppendPersistedConstructor(
         StringBuilder sb,
         string typeName,
@@ -202,6 +249,12 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine();
     }
 
+    /// <summary>
+    /// Appends the constructor and resolver setup used by generated MessagePack repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="typeName">The generated repository type name.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendMessagePackConstructor(StringBuilder sb, string typeName, EntityModel model)
     {
         sb.Append("    public ").Append(typeName).AppendLine("()");
@@ -225,6 +278,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine();
     }
 
+    /// <summary>
+    /// Appends the <c>ToDto</c> override that delegates to the generated entity helper.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendToDtoOverride(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override ").Append(model.DtoTypeName).Append(" ToDto(").Append(model.EntityTypeName).AppendLine(" entity)");
@@ -234,6 +292,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine();
     }
 
+    /// <summary>
+    /// Appends the <c>FromDto</c> override that delegates to the generated entity helper.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendFromDtoOverride(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override ").Append(model.EntityTypeName).Append(" FromDto(").Append(model.DtoTypeName).AppendLine(" dto)");
@@ -243,6 +306,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine();
     }
 
+    /// <summary>
+    /// Appends JSON load and save overrides for keyed repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendJsonKeyedLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<global::System.Collections.Generic.IReadOnlyList<").Append(model.DtoTypeName)
@@ -281,6 +349,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("    }");
     }
 
+    /// <summary>
+    /// Appends JSON load and save overrides for singleton repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendJsonSingletonLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<").Append(model.DtoTypeName)
@@ -324,6 +397,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("    }");
     }
 
+    /// <summary>
+    /// Appends MessagePack load and save overrides for keyed repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendMessagePackKeyedLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<global::System.Collections.Generic.IReadOnlyList<").Append(model.DtoTypeName)
@@ -358,6 +436,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("    }");
     }
 
+    /// <summary>
+    /// Appends MessagePack load and save overrides for singleton repositories.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="model">The analyzed entity model.</param>
     private static void AppendMessagePackSingletonLoadSave(StringBuilder sb, EntityModel model)
     {
         sb.Append("    protected override global::Cysharp.Threading.Tasks.UniTask<").Append(model.DtoTypeName)
@@ -397,6 +480,10 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("    }");
     }
 
+    /// <summary>
+    /// Creates a source builder initialized with the common auto-generated file header.
+    /// </summary>
+    /// <returns>The initialized source builder.</returns>
     private static StringBuilder CreateSourceBuilder()
     {
         var sb = new StringBuilder();
@@ -406,6 +493,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb;
     }
 
+    /// <summary>
+    /// Appends a namespace declaration when the generated type is not in the global namespace.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="namespaceName">The namespace to open.</param>
     private static void AppendNamespaceStart(StringBuilder sb, string namespaceName)
     {
         if (string.IsNullOrEmpty(namespaceName))
@@ -417,6 +509,11 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("{");
     }
 
+    /// <summary>
+    /// Appends the closing brace for a previously opened namespace declaration.
+    /// </summary>
+    /// <param name="sb">The destination source builder.</param>
+    /// <param name="namespaceName">The namespace being closed.</param>
     private static void AppendNamespaceEnd(StringBuilder sb, string namespaceName)
     {
         if (string.IsNullOrEmpty(namespaceName))

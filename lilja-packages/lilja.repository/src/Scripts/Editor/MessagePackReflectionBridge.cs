@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace Lilja.Repository.Editor
 {
+/// <summary>
+/// Accesses MessagePack APIs through reflection so the editor tooling can work when the package is optional.
+/// </summary>
 internal static class MessagePackReflectionBridge
 {
     private static readonly Type? SerializerType = FindType("MessagePack.MessagePackSerializer");
@@ -21,6 +24,9 @@ internal static class MessagePackReflectionBridge
     private static readonly PropertyInfo? StandardOptionsProperty = SerializerOptionsType?.GetProperty("Standard", BindingFlags.Public | BindingFlags.Static);
     private static readonly PropertyInfo? StandardResolverProperty = StandardResolverType?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
 
+    /// <summary>
+    /// Gets a value indicating whether the required MessagePack runtime types are available.
+    /// </summary>
     public static bool IsAvailable =>
         SerializerType is not null &&
         SerializerOptionsType is not null &&
@@ -34,6 +40,11 @@ internal static class MessagePackReflectionBridge
         StandardOptionsProperty is not null &&
         StandardResolverProperty is not null;
 
+    /// <summary>
+    /// Creates serializer options that include the supplied formatter types when MessagePack is available.
+    /// </summary>
+    /// <param name="formatterTypes">Formatter types that should be registered ahead of the standard resolver.</param>
+    /// <returns>The configured options object, or the standard options when custom registration is unavailable.</returns>
     public static object? CreateOptions(params Type[] formatterTypes)
     {
         try
@@ -79,6 +90,13 @@ internal static class MessagePackReflectionBridge
         }
     }
 
+    /// <summary>
+    /// Deserializes MessagePack bytes into the requested runtime type.
+    /// </summary>
+    /// <param name="bytes">The serialized payload.</param>
+    /// <param name="targetType">The runtime type to deserialize.</param>
+    /// <param name="options">The serializer options to use.</param>
+    /// <returns>The deserialized value, or <see langword="null"/> when deserialization cannot be performed.</returns>
     public static object? Deserialize(byte[] bytes, Type targetType, object? options)
     {
         try

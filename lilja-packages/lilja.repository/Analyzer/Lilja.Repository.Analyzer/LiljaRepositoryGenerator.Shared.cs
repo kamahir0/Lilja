@@ -7,6 +7,11 @@ namespace Lilja.Repository.Analyzer;
 
 public sealed partial class LiljaRepositoryGenerator
 {
+    /// <summary>
+    /// Determines whether any declaration of the entity is marked as <c>partial</c>.
+    /// </summary>
+    /// <param name="entitySymbol">The entity symbol to inspect.</param>
+    /// <returns><see langword="true"/> when a partial declaration exists; otherwise <see langword="false"/>.</returns>
     private static bool IsPartial(INamedTypeSymbol entitySymbol)
     {
         foreach (var syntaxReference in entitySymbol.DeclaringSyntaxReferences)
@@ -21,6 +26,12 @@ public sealed partial class LiljaRepositoryGenerator
         return false;
     }
 
+    /// <summary>
+    /// Determines whether a symbol has an attribute with the supplied metadata name.
+    /// </summary>
+    /// <param name="symbol">The symbol to inspect.</param>
+    /// <param name="metadataName">The fully qualified attribute metadata name.</param>
+    /// <returns><see langword="true"/> when the attribute is present; otherwise <see langword="false"/>.</returns>
     private static bool HasAttribute(ISymbol symbol, string metadataName)
     {
         foreach (var attributeData in symbol.GetAttributes())
@@ -34,6 +45,12 @@ public sealed partial class LiljaRepositoryGenerator
         return false;
     }
 
+    /// <summary>
+    /// Attempts to read the constructor index from a <c>[Persist]</c> attribute.
+    /// </summary>
+    /// <param name="symbol">The symbol to inspect.</param>
+    /// <param name="index">The extracted persistence index when available.</param>
+    /// <returns><see langword="true"/> when a valid index is present; otherwise <see langword="false"/>.</returns>
     private static bool TryGetPersistIndex(ISymbol symbol, out int? index)
     {
         foreach (var attributeData in symbol.GetAttributes())
@@ -55,16 +72,31 @@ public sealed partial class LiljaRepositoryGenerator
         return false;
     }
 
+    /// <summary>
+    /// Returns the first source location for a symbol, or <see cref="Location.None"/> when unavailable.
+    /// </summary>
+    /// <param name="symbol">The symbol whose location is required.</param>
+    /// <returns>The primary location used for diagnostics.</returns>
     private static Location GetPrimaryLocation(ISymbol symbol)
     {
         return symbol.Locations.FirstOrDefault() ?? Location.None;
     }
 
+    /// <summary>
+    /// Formats a type symbol using the fully qualified display format required by generated source.
+    /// </summary>
+    /// <param name="typeSymbol">The type symbol to format.</param>
+    /// <returns>The fully qualified type name.</returns>
     private static string GetTypeName(ITypeSymbol typeSymbol)
     {
         return typeSymbol.ToDisplayString(FullyQualifiedTypeFormat);
     }
 
+    /// <summary>
+    /// Escapes C# keywords so generated identifiers remain valid source.
+    /// </summary>
+    /// <param name="identifier">The identifier to escape.</param>
+    /// <returns>The original or escaped identifier.</returns>
     private static string EscapeIdentifier(string identifier)
     {
         if (string.IsNullOrEmpty(identifier))
@@ -78,6 +110,11 @@ public sealed partial class LiljaRepositoryGenerator
             : identifier;
     }
 
+    /// <summary>
+    /// Converts an identifier to PascalCase for generated type and field names.
+    /// </summary>
+    /// <param name="identifier">The identifier to convert.</param>
+    /// <returns>The PascalCase identifier.</returns>
     private static string ToPascalCase(string identifier)
     {
         if (string.IsNullOrEmpty(identifier))
@@ -93,6 +130,11 @@ public sealed partial class LiljaRepositoryGenerator
         return char.ToUpperInvariant(identifier[0]) + identifier.Substring(1);
     }
 
+    /// <summary>
+    /// Converts an identifier to camelCase for generated local variables and constructor parameters.
+    /// </summary>
+    /// <param name="identifier">The identifier to convert.</param>
+    /// <returns>The camelCase identifier.</returns>
     private static string ToCamelCase(string identifier)
     {
         var trimmed = identifier.TrimStart('_');

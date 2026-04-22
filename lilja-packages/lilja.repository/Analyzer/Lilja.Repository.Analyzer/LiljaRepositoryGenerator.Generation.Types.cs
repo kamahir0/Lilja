@@ -5,6 +5,11 @@ namespace Lilja.Repository.Analyzer;
 
 public sealed partial class LiljaRepositoryGenerator
 {
+    /// <summary>
+    /// Generates the DTO type used to persist an entity.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateDto(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -25,6 +30,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates the storage envelope type used to represent persisted keyed or singleton state.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateStorageEnvelope(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -48,6 +58,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates entity partial methods that convert between entities and DTOs.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateConverterPartial(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -128,6 +143,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates entity partial methods that expose keys from entities and DTOs.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateKeyAccessorPartial(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -152,6 +172,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates the MessagePack formatter for the entity DTO type.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateDtoFormatter(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -211,6 +236,11 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Generates the MessagePack formatter for the entity storage envelope type.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>The generated source code.</returns>
     private static string GenerateStorageEnvelopeFormatter(EntityModel model)
     {
         var sb = CreateSourceBuilder();
@@ -287,6 +317,14 @@ public sealed partial class LiljaRepositoryGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Builds the expression used to map an entity member into its DTO field.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <param name="member">The member being converted.</param>
+    /// <param name="memberIndex">The member index within the persisted member list.</param>
+    /// <param name="fieldIndex">The field index within the flattened DTO field list for the member.</param>
+    /// <returns>A C# expression string.</returns>
     private static string GetToDtoExpression(EntityModel model, MemberModel member, int memberIndex, int fieldIndex)
     {
         if (member.ValueObjectShape is null)
@@ -302,6 +340,11 @@ public sealed partial class LiljaRepositoryGenerator
         return "primitive" + memberIndex + "." + member.DtoFields[fieldIndex].TupleAccessName;
     }
 
+    /// <summary>
+    /// Builds the expression used to reconstruct one constructor argument from a DTO.
+    /// </summary>
+    /// <param name="member">The member being reconstructed.</param>
+    /// <returns>A C# expression string.</returns>
     private static string GetFromDtoArgumentExpression(MemberModel member)
     {
         if (member.ValueObjectShape is null)
@@ -318,6 +361,12 @@ public sealed partial class LiljaRepositoryGenerator
         return CreateValueObjectExpression(member, arguments);
     }
 
+    /// <summary>
+    /// Creates the expression that reconstructs a value object from primitive DTO arguments.
+    /// </summary>
+    /// <param name="member">The member whose value object should be created.</param>
+    /// <param name="argumentExpressions">The primitive argument expressions.</param>
+    /// <returns>A C# expression string.</returns>
     private static string CreateValueObjectExpression(MemberModel member, IReadOnlyList<string> argumentExpressions)
     {
         var arguments = string.Join(", ", argumentExpressions);
@@ -329,6 +378,11 @@ public sealed partial class LiljaRepositoryGenerator
         return "new " + member.TypeName + "(" + arguments + ")";
     }
 
+    /// <summary>
+    /// Builds the expression used to read an entity key from an entity instance.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>A C# expression string.</returns>
     private static string GetEntityKeyExpression(EntityModel model)
     {
         if (model.KeyMembers.Length == 1)
@@ -339,6 +393,11 @@ public sealed partial class LiljaRepositoryGenerator
         return "(" + string.Join(", ", model.KeyMembers.Select(static member => "entity." + member.AccessibleName)) + ")";
     }
 
+    /// <summary>
+    /// Builds the expression used to read an entity key from a DTO instance.
+    /// </summary>
+    /// <param name="model">The analyzed entity model.</param>
+    /// <returns>A C# expression string.</returns>
     private static string GetDtoKeyExpression(EntityModel model)
     {
         if (model.KeyMembers.Length == 1)

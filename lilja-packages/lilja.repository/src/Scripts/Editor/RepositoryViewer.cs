@@ -12,6 +12,9 @@ using UnityEngine;
 
 namespace Lilja.Repository.Editor
 {
+/// <summary>
+/// Displays live repositories and persisted repository files inside the Unity Editor.
+/// </summary>
 public sealed class RepositoryViewer : EditorWindow
 {
     private const int PreviewLimit = 200;
@@ -24,6 +27,9 @@ public sealed class RepositoryViewer : EditorWindow
     private object? _selectedDetailValue;
     private string _selectedDetailText = string.Empty;
 
+    /// <summary>
+    /// Opens the repository viewer window.
+    /// </summary>
     [MenuItem("Lilja/Repository/Repository Viewer")]
     public static void Open()
     {

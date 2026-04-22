@@ -6,6 +6,11 @@ using Lilja.Repository.Internal;
 
 namespace Lilja.Repository
 {
+/// <summary>
+/// Provides transactional CRUD behavior for a singleton repository backed by a persisted DTO payload.
+/// </summary>
+/// <typeparam name="TEntity">The entity type managed by the repository.</typeparam>
+/// <typeparam name="TDto">The DTO type written to and read from storage.</typeparam>
 public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IRepositoryParticipant
     where TEntity : class
     where TDto : class
@@ -14,6 +19,11 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
     private TEntity? _committedValue;
     private bool _initialized;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PersistedSingletonRepositoryBase{TEntity, TDto}"/> class.
+    /// </summary>
+    /// <param name="filePath">The file path used for persistence.</param>
+    /// <exception cref="ArgumentException"><paramref name="filePath"/> is blank.</exception>
     protected PersistedSingletonRepositoryBase(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -25,8 +35,16 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
         RuntimeInstanceMonitor.TrackPersistedRepository(GetType(), filePath, this);
     }
 
+    /// <summary>
+    /// Gets the file path used by the repository backend.
+    /// </summary>
     protected string FilePath { get; }
 
+    /// <summary>
+    /// Loads persisted state into memory before the repository is used.
+    /// </summary>
+    /// <param name="ct">A token that can cancel initialization.</param>
+    /// <returns>A task that completes when the initial load has finished.</returns>
     public async UniTask InitializeAsync(CancellationToken ct = default)
     {
         if (_initialized)
@@ -53,6 +71,13 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
         }
     }
 
+    /// <summary>
+    /// Reads the current entity value visible within the supplied transaction.
+    /// </summary>
+    /// <param name="tx">The transaction to read through.</param>
+    /// <returns>The committed or staged entity, or <see langword="null"/> when no value exists.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="tx"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized.</exception>
     public TEntity? Read(IReadOnlyTx tx)
     {
         if (tx is null)
@@ -70,6 +95,13 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
         return _committedValue;
     }
 
+    /// <summary>
+    /// Creates the singleton value within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="entity">The entity to create.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized, a value already exists, or the transaction is invalid.</exception>
     public void Create(IReadWriteTx tx, TEntity entity)
     {
         if (entity is null)
@@ -88,6 +120,13 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
         state.HasValue = true;
     }
 
+    /// <summary>
+    /// Replaces the singleton value within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <param name="entity">The replacement entity.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized, no value exists, or the transaction is invalid.</exception>
     public void Update(IReadWriteTx tx, TEntity entity)
     {
         if (entity is null)
@@ -106,6 +145,11 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
         state.HasValue = true;
     }
 
+    /// <summary>
+    /// Deletes the singleton value within a read-write transaction.
+    /// </summary>
+    /// <param name="tx">The transaction that stages the change.</param>
+    /// <exception cref="InvalidOperationException">The repository has not been initialized, no value exists, or the transaction is invalid.</exception>
     public void Delete(IReadWriteTx tx)
     {
         EnsureInitialized();
@@ -119,12 +163,33 @@ public abstract class PersistedSingletonRepositoryBase<TEntity, TDto> : IReposit
         state.HasValue = false;
     }
 
+    /// <summary>
+    /// Converts an entity instance to the DTO persisted by this repository.
+    /// </summary>
+    /// <param name="entity">The entity to convert.</param>
+    /// <returns>The DTO representation.</returns>
     protected abstract TDto ToDto(TEntity entity);
 
+    /// <summary>
+    /// Rebuilds an entity instance from the persisted DTO representation.
+    /// </summary>
+    /// <param name="dto">The DTO to convert.</param>
+    /// <returns>The reconstructed entity.</returns>
     protected abstract TEntity FromDto(TDto dto);
 
+    /// <summary>
+    /// Loads the persisted DTO from storage.
+    /// </summary>
+    /// <param name="ct">A token that can cancel the load.</param>
+    /// <returns>The stored DTO, or <see langword="null"/> when no value exists.</returns>
     protected abstract UniTask<TDto?> LoadValueAsync(CancellationToken ct);
 
+    /// <summary>
+    /// Saves the prepared DTO to storage during commit.
+    /// </summary>
+    /// <param name="value">The DTO to persist, or <see langword="null"/> to clear the value.</param>
+    /// <param name="ct">A token that can cancel the save.</param>
+    /// <returns>A task that completes when persistence finishes.</returns>
     protected abstract UniTask SaveValueAsync(TDto? value, CancellationToken ct);
 
     UniTask IRepositoryParticipant.PrepareCommitAsync(object transactionState, CancellationToken ct)
