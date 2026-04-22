@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <DefineConstants>$(DefineConstants);UNITY_EDITOR</DefineConstants>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,30 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lilja.Repository.Analyzer\Lilja.Repository.Analyzer.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="true" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Attributes\*.cs"
-             Link="Runtime\Attributes\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Diagnostics\*.cs"
-             Link="Runtime\Diagnostics\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\IO\*.cs"
-             Link="Runtime\IO\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Repositories\*.cs"
-             Link="Runtime\Repositories\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Transactions\*.cs"
-             Link="Runtime\Transactions\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Editor\RuntimeTypeCache.cs"
-             Link="Editor\RuntimeTypeCache.cs" />
-    <Compile Include="..\..\src\Scripts\Editor\MessagePackReflectionBridge.cs"
-             Link="Editor\MessagePackReflectionBridge.cs" />
-    <Compile Include="..\..\src\Scripts\Editor\RepositoryTreeDataLoader.cs"
-             Link="Editor\RepositoryTreeDataLoader.cs" />
-    <Compile Include="..\..\src\Scripts\Editor\RepositoryTrackerViewItem.cs"
-             Link="Editor\RepositoryTrackerViewItem.cs" />
+    <ProjectReference Include="..\Lilja.Repository.Analyzer\Lilja.Repository.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>

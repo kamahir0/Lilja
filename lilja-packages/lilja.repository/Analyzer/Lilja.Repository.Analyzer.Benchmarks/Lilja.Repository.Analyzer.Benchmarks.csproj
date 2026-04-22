@@ -8,30 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Lilja.Repository.Analyzer\Lilja.Repository.Analyzer.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="true" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Attributes\*.cs"
-             Link="Runtime\Attributes\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Diagnostics\*.cs"
-             Link="Runtime\Diagnostics\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\IO\*.cs"
-             Link="Runtime\IO\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Repositories\*.cs"
-             Link="Runtime\Repositories\%(Filename)%(Extension)" />
-    <Compile Include="..\..\src\Scripts\Runtime\Core\Transactions\*.cs"
-             Link="Runtime\Transactions\%(Filename)%(Extension)" />
-    <Compile Include="..\Lilja.Repository.Analyzer.Test\FrameworkStubs.cs"
-             Link="Shared\FrameworkStubs.cs" />
-    <Compile Include="..\Lilja.Repository.Analyzer.Test\SampleEntities.cs"
-             Link="Shared\SampleEntities.cs" />
+    <ProjectReference Include="..\Lilja.Repository.Analyzer\Lilja.Repository.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,68 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+
+namespace Lilja.Repository.Diagnostics
+{
+public static class RepositoryTracker
+{
+    private static readonly object SyncRoot = new object();
+    private static readonly Dictionary<RepositoryType, List<WeakReference>> Repositories = new Dictionary<RepositoryType, List<WeakReference>>
+    {
+        { RepositoryType.InMemory, new List<WeakReference>() },
+        { RepositoryType.Json, new List<WeakReference>() },
+        { RepositoryType.MessagePack, new List<WeakReference>() },
+    };
+
+    public enum RepositoryType
+    {
+        InMemory,
+        Json,
+        MessagePack,
+    }
+
+    public static void Track(object repository, RepositoryType type)
+    {
+        if (repository is null)
+        {
+            throw new ArgumentNullException(nameof(repository));
+        }
+
+        lock (SyncRoot)
+        {
+            var references = Repositories[type];
+            Cleanup(references);
+            references.Add(new WeakReference(repository));
+        }
+    }
+
+    public static IEnumerable<object> GetAll(RepositoryType type)
+    {
+        lock (SyncRoot)
+        {
+            var liveObjects = new List<object>();
+            foreach (var reference in Repositories[type])
+            {
+                if (reference.Target is object repository)
+                {
+                    liveObjects.Add(repository);
+                }
+            }
+
+            return liveObjects;
+        }
+    }
+
+    private static void Cleanup(List<WeakReference> references)
+    {
+        for (var index = references.Count - 1; index >= 0; index--)
+        {
+            if (!references[index].IsAlive)
+            {
+                references.RemoveAt(index);
+            }
+        }
+    }
+}
+}
+#endif

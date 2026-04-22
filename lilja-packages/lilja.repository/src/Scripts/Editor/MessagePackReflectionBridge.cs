@@ -1,126 +1,200 @@
+#nullable enable
+#if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace Lilja.Repository.Editor
 {
-    internal static class MessagePackReflectionBridge
+internal static class MessagePackReflectionBridge
+{
+    private static readonly Type? SerializerType = FindType("MessagePack.MessagePackSerializer");
+    private static readonly Type? SerializerOptionsType = FindType("MessagePack.MessagePackSerializerOptions");
+    private static readonly Type? CompositeResolverType = FindType("MessagePack.Resolvers.CompositeResolver");
+    private static readonly Type? StandardResolverType = FindType("MessagePack.Resolvers.StandardResolver");
+    private static readonly Type? FormatterType = FindType("MessagePack.Formatters.IMessagePackFormatter");
+    private static readonly Type? ResolverType = FindType("MessagePack.IFormatterResolver");
+    private static readonly MethodInfo? DeserializeMethod = FindDeserializeMethod();
+    private static readonly MethodInfo? CreateResolverMethod = FindCreateResolverMethod();
+    private static readonly MethodInfo? WithResolverMethod = FindWithResolverMethod();
+    private static readonly PropertyInfo? StandardOptionsProperty = SerializerOptionsType?.GetProperty("Standard", BindingFlags.Public | BindingFlags.Static);
+    private static readonly PropertyInfo? StandardResolverProperty = StandardResolverType?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
+
+    public static bool IsAvailable =>
+        SerializerType is not null &&
+        SerializerOptionsType is not null &&
+        CompositeResolverType is not null &&
+        StandardResolverType is not null &&
+        FormatterType is not null &&
+        ResolverType is not null &&
+        DeserializeMethod is not null &&
+        CreateResolverMethod is not null &&
+        WithResolverMethod is not null &&
+        StandardOptionsProperty is not null &&
+        StandardResolverProperty is not null;
+
+    public static object? CreateOptions(params Type[] formatterTypes)
     {
-        private static readonly Type SerializerType = RuntimeTypeCache.FindType("MessagePackSerializer");
-        private static readonly Type SerializerOptionsType = RuntimeTypeCache.FindType("MessagePackSerializerOptions");
-        private static readonly Type CompositeResolverType = RuntimeTypeCache.FindType("CompositeResolver");
-        private static readonly Type StandardResolverType = RuntimeTypeCache.FindType("StandardResolver");
-        private static readonly Type FormatterInterfaceType = RuntimeTypeCache.FindType("IMessagePackFormatter");
-        private static readonly Type FormatterResolverType = RuntimeTypeCache.FindType("IFormatterResolver");
-
-        public static bool IsAvailable =>
-            SerializerType != null &&
-            SerializerOptionsType != null &&
-            CompositeResolverType != null &&
-            StandardResolverType != null &&
-            FormatterInterfaceType != null &&
-            FormatterResolverType != null;
-
-        public static object CreateOptions(params Type[] formatterTypes)
+        try
         {
-            if (!IsAvailable)
+            var standardOptions = GetStandardOptions();
+            if (!IsAvailable || standardOptions is null || FormatterType is null || ResolverType is null || CreateResolverMethod is null || WithResolverMethod is null)
             {
-                return null;
+                return standardOptions;
             }
 
-            var options = SerializerOptionsType.GetProperty("Standard", BindingFlags.Public | BindingFlags.Static)
-                ?.GetValue(null);
-            if (options == null)
+            var formatterArray = Array.CreateInstance(FormatterType, formatterTypes.Length);
+            for (var index = 0; index < formatterTypes.Length; index++)
             {
-                return null;
-            }
-
-            if (formatterTypes == null || formatterTypes.Length == 0)
-            {
-                return options;
-            }
-
-            try
-            {
-                var formatterInstances = new List<object>();
-                foreach (var formatterType in formatterTypes)
+                var formatterInstance = Activator.CreateInstance(formatterTypes[index], true);
+                if (formatterInstance is null)
                 {
-                    if (formatterType == null)
-                    {
-                        continue;
-                    }
-
-                    var formatterInstance = Activator.CreateInstance(formatterType);
-                    if (formatterInstance != null && FormatterInterfaceType.IsInstanceOfType(formatterInstance))
-                    {
-                        formatterInstances.Add(formatterInstance);
-                    }
+                    return standardOptions;
                 }
 
-                if (formatterInstances.Count == 0)
-                {
-                    return options;
-                }
-
-                var formatters = Array.CreateInstance(FormatterInterfaceType, formatterInstances.Count);
-                for (var index = 0; index < formatterInstances.Count; index++)
-                {
-                    formatters.SetValue(formatterInstances[index], index);
-                }
-
-                var standardResolver = StandardResolverType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
-                    ?.GetValue(null);
-                var resolvers = Array.CreateInstance(FormatterResolverType, 1);
-                resolvers.SetValue(standardResolver, 0);
-
-                var createMethod = CompositeResolverType.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .FirstOrDefault(method => method.Name == "Create" && method.GetParameters().Length == 2);
-                if (createMethod == null)
-                {
-                    return options;
-                }
-
-                var resolver = createMethod.Invoke(null, new object[] { formatters, resolvers });
-                var withResolverMethod = SerializerOptionsType.GetMethod("WithResolver", new[] { FormatterResolverType });
-                return withResolverMethod?.Invoke(options, new[] { resolver }) ?? options;
+                formatterArray.SetValue(formatterInstance, index);
             }
-            catch
+
+            var standardResolver = GetStandardResolver();
+            if (standardResolver is null)
             {
-                return options;
+                return standardOptions;
             }
+
+            var resolverArray = Array.CreateInstance(ResolverType, 1);
+            resolverArray.SetValue(standardResolver, 0);
+
+            var compositeResolver = CreateResolverMethod.Invoke(null, new object[] { formatterArray, resolverArray });
+            if (compositeResolver is null)
+            {
+                return standardOptions;
+            }
+
+            return WithResolverMethod.Invoke(standardOptions, new[] { compositeResolver });
         }
-
-        public static object Deserialize(byte[] bytes, Type targetType, object options)
+        catch
         {
-            if (!IsAvailable || targetType == null)
-            {
-                return null;
-            }
-
-            var deserializeMethod = SerializerType.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .FirstOrDefault(method =>
-                    method.Name == "Deserialize" &&
-                    method.IsGenericMethodDefinition &&
-                    method.GetParameters().Length >= 2 &&
-                    method.GetParameters()[0].ParameterType == typeof(byte[]));
-            if (deserializeMethod == null)
-            {
-                throw new MissingMethodException("MessagePackSerializer.Deserialize<byte[]> overload was not found.");
-            }
-
-            var genericMethod = deserializeMethod.MakeGenericMethod(targetType);
-            var parameters = genericMethod.GetParameters();
-            var arguments = new object[parameters.Length];
-            arguments[0] = bytes;
-            arguments[1] = options;
-
-            for (var index = 2; index < parameters.Length; index++)
-            {
-                arguments[index] = parameters[index].HasDefaultValue ? parameters[index].DefaultValue : Type.Missing;
-            }
-
-            return genericMethod.Invoke(null, arguments);
+            return GetStandardOptions();
         }
     }
+
+    public static object? Deserialize(byte[] bytes, Type targetType, object? options)
+    {
+        try
+        {
+            if (!IsAvailable || DeserializeMethod is null)
+            {
+                return null;
+            }
+
+            var closedMethod = DeserializeMethod.MakeGenericMethod(targetType);
+            var parameters = closedMethod.GetParameters();
+            if (parameters.Length == 2)
+            {
+                return closedMethod.Invoke(null, new object?[] { bytes, options });
+            }
+
+            if (parameters.Length == 3)
+            {
+                return closedMethod.Invoke(null, new object?[] { bytes, options, CancellationToken.None });
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static object? GetStandardOptions()
+    {
+        return StandardOptionsProperty?.GetValue(null);
+    }
+
+    private static object? GetStandardResolver()
+    {
+        return StandardResolverProperty?.GetValue(null);
+    }
+
+    private static Type? FindType(string fullName)
+    {
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var type = assembly.GetType(fullName, false);
+            if (type is not null)
+            {
+                return type;
+            }
+        }
+
+        return null;
+    }
+
+    private static MethodInfo? FindDeserializeMethod()
+    {
+        if (SerializerType is null || SerializerOptionsType is null)
+        {
+            return null;
+        }
+
+        return SerializerType
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(method =>
+            {
+                if (!method.IsGenericMethodDefinition || method.Name != "Deserialize")
+                {
+                    return false;
+                }
+
+                var parameters = method.GetParameters();
+                if (parameters.Length < 2 || parameters.Length > 3)
+                {
+                    return false;
+                }
+
+                return parameters[0].ParameterType == typeof(byte[]) &&
+                       parameters[1].ParameterType == SerializerOptionsType;
+            });
+    }
+
+    private static MethodInfo? FindCreateResolverMethod()
+    {
+        if (CompositeResolverType is null || FormatterType is null || ResolverType is null)
+        {
+            return null;
+        }
+
+        return CompositeResolverType
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(method =>
+            {
+                if (method.Name != "Create")
+                {
+                    return false;
+                }
+
+                var parameters = method.GetParameters();
+                if (parameters.Length != 2)
+                {
+                    return false;
+                }
+
+                return parameters[0].ParameterType == FormatterType.MakeArrayType() &&
+                       parameters[1].ParameterType == ResolverType.MakeArrayType();
+            });
+    }
+
+    private static MethodInfo? FindWithResolverMethod()
+    {
+        if (SerializerOptionsType is null || ResolverType is null)
+        {
+            return null;
+        }
+
+        return SerializerOptionsType.GetMethod("WithResolver", BindingFlags.Public | BindingFlags.Instance, null, new[] { ResolverType }, null);
+    }
 }
+}
+#endif

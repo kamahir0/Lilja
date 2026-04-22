@@ -1,3 +1,8 @@
-using BenchmarkDotNet.Running;
+namespace Lilja.Repository.Analyzer.Benchmarks;
 
-BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+internal static class Program
+{
+    private static void Main()
+    {
+    }
+}
