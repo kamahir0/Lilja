@@ -1227,12 +1227,38 @@ EditorWindow `RepositoryViewer` はメニュー `Lilja/Repository/Repository Vie
 
 主機能:
 
-1. repository type 切り替え
-2. reload
+1. `InMemory` / `Json` / `MessagePack` 切り替え
+2. `AutoReload` toggle と `Reload`
 3. play mode 中の live repository 表示
 4. edit mode 中の persisted file 表示
-5. persisted type での `Open Directory`
-6. detail pane による JSON 表示
+5. `OpenDirectory`
+6. `A1/A2/B` 3-pane layout
+
+ヘッダには以下を左から順に表示する。
+
+1. backend dropdown
+2. `AutoReload` toggle
+3. `Reload` button
+4. `OpenDirectory` button
+
+`OpenDirectory` button は常時表示されるが、`InMemory` 選択時は disabled。
+`AutoReload` の初期値は ON。
+
+content area は以下の 3 pane で構成する。
+
+- `A`: top area
+- `B`: bottom preview area
+- `A` 内はさらに `A1` / `A2` に分かれる
+
+`A/B` と `A1/A2` の divider はどちらも drag でサイズ変更可能で、divider state は `viewDataKey` により復元対象とする。
+
+各 pane の責務:
+
+- `A1`: repository selection list
+- `A2`: selected repository の record list
+- `B`: selected record preview
+
+`A1` / `A2` は `ListView` ベースで、各要素は button として描画する。
 
 ### 22.2 データソース
 
@@ -1244,12 +1270,23 @@ EditorWindow `RepositoryViewer` はメニュー `Lilja/Repository/Repository Vie
   - `InMemory` は表示しない
   - `Json` / `MessagePack` は `Application.persistentDataPath` の file 群から読む
 
+Viewer UI と data loading は分離し、data source 層は UI 非依存の snapshot model を返す。
+
+最低限の snapshot 単位:
+
+- repository snapshot
+- record snapshot
+
+repository selection は stable id で保持し、reload 後は可能な限り選択中 repository / record を復元する。
+
 ### 22.3 MessagePack optionality
 
 #### 仕様
 
 - MessagePack runtime 型が reflection で見つからない場合、Editor 側は MessagePack を compile-time 必須にしない
-- `MessagePackReflectionBridge.IsAvailable == false` なら MessagePack persisted file 読み込みを行わない
+- `MessagePackReflectionBridge.IsAvailable == false` の場合:
+  - dropdown に `MessagePack` を表示しない
+  - MessagePack persisted file 読み込みを行わない
 
 ### 22.4 Persisted file type resolution
 
@@ -1260,6 +1297,8 @@ EditorWindow `RepositoryViewer` はメニュー `Lilja/Repository/Repository Vie
 - keyed DTO の item key 表示には generated `GetKeyFromDto` があればそれを優先する
 - fallback key 候補は `Id`, `Key`, `Name`, `id`, `key`, `name`
 - どれも取れなければ `Item {index}` を表示する
+
+live repository の keyed item label は、repository 側の non-public `GetKey(entity)` を reflection で優先し、取得できない場合のみ fallback key 候補へフォールバックする。
 
 ### 22.5 Unknown / error handling
 
@@ -1274,11 +1313,25 @@ EditorWindow `RepositoryViewer` はメニュー `Lilja/Repository/Repository Vie
   - `Type = "Error"`
   - detail には error message を表示
 
+preview pane は selected record を read-only multiline text として表示する。
+
+- `string` / raw text はそのまま表示
+- serializable object は `JsonUtility.ToJson(value, true)` を優先
+- `JsonUtility` で整形できない場合は collection / object を再帰的に JSON-like text へ整形
+- selected record が存在しない場合は empty state を表示
+
+`AutoReload` が ON のとき、Viewer は約 1.5 秒ごとに再読込を行う。以下は poll を待たず即時 refresh 対象:
+
+- backend 切り替え
+- `Reload`
+- play mode 遷移
+- window focus 復帰
+
 ### 実装由来の注記
 
 - live repository 読み取り時、Viewer は snapshot-aware transaction を作らず、空の `IReadOnlyTx` 実装を使う。そのため表示対象は current committed state であり、RO snapshot semantics を再現するものではない。
-- persisted JSON preview は 200 文字で切り詰める。
-- detail pane 表示は `JsonUtility.ToJson(selectedValue, true)` を優先し、失敗したら `ToString()` へフォールバックする。
+- repository / record list button の preview text は短縮表示される。
+- singleton repository に値が存在しない場合、record list は空表示になる。
 
 ### 非保証
 
