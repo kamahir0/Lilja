@@ -62,7 +62,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateInterface(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.RepositoryNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.RepositoryNamespace);
         sb.Append("public interface I").Append(model.EntityName).AppendLine("Repository");
         sb.AppendLine("{");
         sb.AppendLine("    global::Cysharp.Threading.Tasks.UniTask InitializeAsync(global::System.Threading.CancellationToken ct = default);");
@@ -83,7 +83,7 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.RepositoryNamespace);
+        AppendNamespaceEnd(sb, model.RepositoryNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -95,7 +95,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateInMemoryRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.RepositoryNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.RepositoryNamespace);
         if (model.IsKeyed)
         {
             sb.Append("public sealed class InMemory").Append(model.EntityName).Append("Repository : global::Lilja.Repository.InMemoryKeyedRepositoryBase<")
@@ -117,7 +117,7 @@ public sealed partial class LiljaRepositoryGenerator
             sb.AppendLine("}");
         }
 
-        AppendNamespaceEnd(sb, model.RepositoryNamespace);
+        AppendNamespaceEnd(sb, model.RepositoryNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -129,7 +129,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateJsonRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.RepositoryNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.RepositoryNamespace);
         if (model.IsKeyed)
         {
             sb.Append("public sealed class Json").Append(model.EntityName).Append("Repository : global::Lilja.Repository.PersistedKeyedRepositoryBase<")
@@ -158,7 +158,7 @@ public sealed partial class LiljaRepositoryGenerator
             sb.AppendLine("}");
         }
 
-        AppendNamespaceEnd(sb, model.RepositoryNamespace);
+        AppendNamespaceEnd(sb, model.RepositoryNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -170,7 +170,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateMessagePackRepository(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.RepositoryNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.RepositoryNamespace);
         if (model.IsKeyed)
         {
             sb.Append("public sealed class MessagePack").Append(model.EntityName).Append("Repository : global::Lilja.Repository.PersistedKeyedRepositoryBase<")
@@ -201,7 +201,7 @@ public sealed partial class LiljaRepositoryGenerator
             sb.AppendLine("}");
         }
 
-        AppendNamespaceEnd(sb, model.RepositoryNamespace);
+        AppendNamespaceEnd(sb, model.RepositoryNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -498,15 +498,16 @@ public sealed partial class LiljaRepositoryGenerator
     /// </summary>
     /// <param name="sb">出力先のソースビルダー。</param>
     /// <param name="namespaceName">開く名前空間。</param>
-    private static void AppendNamespaceStart(StringBuilder sb, string namespaceName)
+    private static int AppendNamespaceStart(StringBuilder sb, string namespaceName)
     {
         if (string.IsNullOrEmpty(namespaceName))
         {
-            return;
+            return -1;
         }
 
         sb.Append("namespace ").Append(namespaceName).AppendLine();
         sb.AppendLine("{");
+        return sb.Length;
     }
 
     /// <summary>
@@ -514,13 +515,86 @@ public sealed partial class LiljaRepositoryGenerator
     /// </summary>
     /// <param name="sb">出力先のソースビルダー。</param>
     /// <param name="namespaceName">閉じる対象の名前空間。</param>
-    private static void AppendNamespaceEnd(StringBuilder sb, string namespaceName)
+    /// <param name="namespaceBodyStart">名前空間の本文が始まる位置。</param>
+    private static void AppendNamespaceEnd(StringBuilder sb, string namespaceName, int namespaceBodyStart)
     {
         if (string.IsNullOrEmpty(namespaceName))
         {
             return;
         }
 
+        IndentNonEmptyLines(sb, namespaceBodyStart, sb.Length, "    ");
         sb.AppendLine("}");
+    }
+
+    /// <summary>
+    /// 指定範囲にある空行以外の各行へインデントを付与します。
+    /// </summary>
+    /// <param name="sb">出力先のソースビルダー。</param>
+    /// <param name="start">インデント対象範囲の開始位置。</param>
+    /// <param name="end">インデント対象範囲の終了位置。</param>
+    /// <param name="indent">付与するインデント文字列。</param>
+    private static void IndentNonEmptyLines(StringBuilder sb, int start, int end, string indent)
+    {
+        var index = start;
+        while (index < end)
+        {
+            var lineEnd = index;
+            while (lineEnd < end && sb[lineEnd] != '\r' && sb[lineEnd] != '\n')
+            {
+                lineEnd++;
+            }
+
+            var hasContent = false;
+            for (var i = index; i < lineEnd; i++)
+            {
+                if (!char.IsWhiteSpace(sb[i]))
+                {
+                    hasContent = true;
+                    break;
+                }
+            }
+
+            if (hasContent && !IsPreprocessorDirectiveLine(sb, index, lineEnd))
+            {
+                sb.Insert(index, indent);
+                end += indent.Length;
+                lineEnd += indent.Length;
+            }
+
+            if (lineEnd < end && sb[lineEnd] == '\r')
+            {
+                lineEnd++;
+            }
+
+            if (lineEnd < end && sb[lineEnd] == '\n')
+            {
+                lineEnd++;
+            }
+
+            index = lineEnd;
+        }
+    }
+
+    /// <summary>
+    /// 指定行がプリプロセッサディレクティブかどうかを判定します。
+    /// </summary>
+    /// <param name="sb">確認対象のソースビルダー。</param>
+    /// <param name="lineStart">確認する行の開始位置。</param>
+    /// <param name="lineEnd">確認する行の終了位置。</param>
+    /// <returns>行頭空白を除いた最初の文字が <c>#</c> なら <see langword="true"/>。</returns>
+    private static bool IsPreprocessorDirectiveLine(StringBuilder sb, int lineStart, int lineEnd)
+    {
+        for (var i = lineStart; i < lineEnd; i++)
+        {
+            if (char.IsWhiteSpace(sb[i]))
+            {
+                continue;
+            }
+
+            return sb[i] == '#';
+        }
+
+        return false;
     }
 }

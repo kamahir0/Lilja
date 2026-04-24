@@ -13,7 +13,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateDto(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.DtoNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.DtoNamespace);
         sb.AppendLine("[global::System.Serializable]");
         sb.Append("public sealed class ").Append(model.DtoTypeNameWithoutNamespace).AppendLine();
         sb.AppendLine("{");
@@ -26,7 +26,7 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.DtoNamespace);
+        AppendNamespaceEnd(sb, model.DtoNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -38,7 +38,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateStorageEnvelope(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.StorageNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.StorageNamespace);
         sb.AppendLine("[global::System.Serializable]");
         sb.Append("internal sealed class ").Append(model.StorageEnvelopeTypeNameWithoutNamespace).AppendLine();
         sb.AppendLine("{");
@@ -54,7 +54,7 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.StorageNamespace);
+        AppendNamespaceEnd(sb, model.StorageNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -66,7 +66,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateConverterPartial(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.NamespaceName);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.NamespaceName);
         sb.Append("public partial class ").Append(model.EntityName).AppendLine();
         sb.AppendLine("{");
         sb.Append("    internal static ").Append(model.DtoTypeName).Append(" ToDto(").Append(model.EntityTypeName).AppendLine(" entity)");
@@ -139,7 +139,7 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.NamespaceName);
+        AppendNamespaceEnd(sb, model.NamespaceName, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -151,7 +151,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateKeyAccessorPartial(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.NamespaceName);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.NamespaceName);
         sb.Append("public partial class ").Append(model.EntityName).AppendLine();
         sb.AppendLine("{");
         sb.Append("    internal static ").Append(model.KeyTypeName).Append(" GetKey(").Append(model.EntityTypeName).AppendLine(" entity)");
@@ -168,7 +168,7 @@ public sealed partial class LiljaRepositoryGenerator
         }
 
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.NamespaceName);
+        AppendNamespaceEnd(sb, model.NamespaceName, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -180,7 +180,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateDtoFormatter(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.FormatterNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.FormatterNamespace);
         sb.Append("public sealed class ").Append(model.DtoFormatterTypeNameWithoutNamespace).Append(" : global::MessagePack.Formatters.IMessagePackFormatter<")
             .Append(model.DtoTypeName).AppendLine(">");
         sb.AppendLine("{");
@@ -232,7 +232,7 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("        return value;");
         sb.AppendLine("    }");
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.FormatterNamespace);
+        AppendNamespaceEnd(sb, model.FormatterNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
@@ -244,7 +244,7 @@ public sealed partial class LiljaRepositoryGenerator
     private static string GenerateStorageEnvelopeFormatter(EntityModel model)
     {
         var sb = CreateSourceBuilder();
-        AppendNamespaceStart(sb, model.FormatterNamespace);
+        var namespaceBodyStart = AppendNamespaceStart(sb, model.FormatterNamespace);
         sb.Append("internal sealed class ").Append(model.StorageEnvelopeFormatterTypeNameWithoutNamespace).Append(" : global::MessagePack.Formatters.IMessagePackFormatter<")
             .Append(model.StorageEnvelopeTypeName).AppendLine(">");
         sb.AppendLine("{");
@@ -313,7 +313,7 @@ public sealed partial class LiljaRepositoryGenerator
         sb.AppendLine("        return value;");
         sb.AppendLine("    }");
         sb.AppendLine("}");
-        AppendNamespaceEnd(sb, model.FormatterNamespace);
+        AppendNamespaceEnd(sb, model.FormatterNamespace, namespaceBodyStart);
         return sb.ToString();
     }
 
