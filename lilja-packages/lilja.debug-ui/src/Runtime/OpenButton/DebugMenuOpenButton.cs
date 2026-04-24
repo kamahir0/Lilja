@@ -15,16 +15,26 @@ namespace Lilja.DebugUI
 
     /// <summary>
     /// 指定回数タップしたらデバッグメニューを開くボタン。
-    /// UIDocument コンポーネントと同じ GameObject に配置し、
-    /// Source UXML に DebugMenuOpenButton.uxml を設定して使う。
+    /// シーンに配置するか、Instantiate() で生成して使う。
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class DebugMenuOpenButton : MonoBehaviour
     {
-        [Header("ボタン設定")]
-        [SerializeField] private DebugMenuButtonPosition buttonPosition = DebugMenuButtonPosition.BottomLeft;
-        [SerializeField, Min(0.01f)] private float thresholdSeconds = 0.5f;
-        [SerializeField, Min(2)] private int requiredClicks = 3;
+        /// <summary>
+        /// インスタンスを生成する
+        /// </summary>
+        public static DebugMenuOpenButton Instantiate()
+        {
+            if (_instance != null) return _instance;
+
+            var go = new GameObject("[DebugMenuOpenButton]");
+            go.AddComponent<UIDocument>();
+            return go.AddComponent<DebugMenuOpenButton>();
+        }
+
+        [SerializeField] private DebugMenuButtonPosition _buttonPosition = DebugMenuButtonPosition.BottomLeft;
+        [SerializeField, Min(0.01f)] private float _thresholdSeconds = 0.75f;
+        [SerializeField, Min(2)] private int _requiredClicks = 3;
 
         private Button _button;
         private int _clickCount;
@@ -36,7 +46,51 @@ namespace Lilja.DebugUI
 
         private static DebugMenuOpenButton _instance;
 
-        private void Awake()
+        /// <summary>
+        /// ボタンの配置場所
+        /// </summary>
+        public DebugMenuButtonPosition ButtonPosition
+        {
+            get => _buttonPosition;
+            set
+            {
+                if (_buttonPosition == value) return;
+                _buttonPosition = value;
+                ApplyButtonPositionIfReady();
+            }
+        }
+
+        /// <summary>
+        /// タップ間隔(秒)
+        /// </summary>
+        public float ThresholdSeconds
+        {
+            get => _thresholdSeconds;
+            set
+            {
+                var clampedValue = Mathf.Max(0.01f, value);
+                if (Mathf.Approximately(_thresholdSeconds, clampedValue)) return;
+                _thresholdSeconds = clampedValue;
+                ResetClickSequence();
+            }
+        }
+
+        /// <summary>
+        /// タップ回数
+        /// </summary>
+        public int RequiredClicks
+        {
+            get => _requiredClicks;
+            set
+            {
+                var clampedValue = Mathf.Max(2, value);
+                if (_requiredClicks == clampedValue) return;
+                _requiredClicks = clampedValue;
+                ResetClickSequence();
+            }
+        }
+
+        private void Start()
         {
             if (_instance != null)
             {
@@ -46,9 +100,7 @@ namespace Lilja.DebugUI
             _instance = this;
             DontDestroyOnLoad(gameObject);
 
-            var uiDoc = GetComponent<UIDocument>();
-            if (uiDoc.panelSettings == null) uiDoc.panelSettings = DebugMenuResources.LoadDefaultPanelSettings();
-            if (uiDoc.visualTreeAsset == null) uiDoc.visualTreeAsset = DebugMenuResources.LoadOpenButtonVisualTree();
+            ConfigureDocument();
         }
 
         private void OnDestroy()
@@ -58,13 +110,24 @@ namespace Lilja.DebugUI
 
         private void Reset()
         {
-            var uiDoc = GetComponent<UIDocument>();
-            uiDoc.visualTreeAsset = DebugMenuResources.LoadOpenButtonVisualTree();
-            uiDoc.panelSettings = DebugMenuResources.LoadDefaultPanelSettings();
+            ConfigureDocument(force: true);
+            NormalizeSerializedFields();
+            ResetClickSequence();
+            ApplyButtonPositionIfReady();
+        }
+
+        private void OnValidate()
+        {
+            ConfigureDocument();
+            NormalizeSerializedFields();
+            ResetClickSequence();
+            ApplyButtonPositionIfReady();
         }
 
         private void OnEnable()
         {
+            ConfigureDocument();
+
             var uiDocument = GetComponent<UIDocument>();
             var root = uiDocument.rootVisualElement;
             _button = root.Q<Button>(ButtonName);
@@ -101,7 +164,7 @@ namespace Lilja.DebugUI
         {
             var now = Time.unscaledTime;
 
-            if (_clickCount == 0 || now - _firstClickTime > thresholdSeconds)
+            if (_clickCount == 0 || now - _firstClickTime > _thresholdSeconds)
             {
                 _clickCount = 1;
                 _firstClickTime = now;
@@ -110,19 +173,53 @@ namespace Lilja.DebugUI
 
             _clickCount++;
 
-            if (_clickCount >= requiredClicks)
+            if (_clickCount >= _requiredClicks)
             {
                 _clickCount = 0;
                 DebugMenu.Show();
             }
         }
 
+        private void ConfigureDocument(bool force = false)
+        {
+            if (!TryGetComponent<UIDocument>(out var uiDoc)) return;
+
+            if (force || uiDoc.panelSettings == null)
+                uiDoc.panelSettings = DebugMenuResources.LoadDefaultPanelSettings();
+
+            if (force || uiDoc.visualTreeAsset == null)
+                uiDoc.visualTreeAsset = DebugMenuResources.LoadOpenButtonVisualTree();
+        }
+
+        private void NormalizeSerializedFields()
+        {
+            _thresholdSeconds = Mathf.Max(0.01f, _thresholdSeconds);
+            _requiredClicks = Mathf.Max(2, _requiredClicks);
+        }
+
+        private void ResetClickSequence()
+        {
+            _clickCount = 0;
+            _firstClickTime = 0f;
+        }
+
+        private void ApplyButtonPositionIfReady()
+        {
+            if (!isActiveAndEnabled) return;
+            if (!TryGetComponent<UIDocument>(out var uiDocument)) return;
+            if (uiDocument.rootVisualElement == null) return;
+
+            ApplyButtonPosition(uiDocument.rootVisualElement);
+        }
+
         private void ApplyButtonPosition(VisualElement root)
         {
+            if (root == null) return;
+
             var overlay = root.Q<VisualElement>(className: OverlayClass);
             if (overlay == null) return;
 
-            var (justify, align) = buttonPosition switch
+            var (justify, align) = _buttonPosition switch
             {
                 DebugMenuButtonPosition.TopLeft => (Justify.FlexStart, Align.FlexStart),
                 DebugMenuButtonPosition.TopRight => (Justify.FlexStart, Align.FlexEnd),
