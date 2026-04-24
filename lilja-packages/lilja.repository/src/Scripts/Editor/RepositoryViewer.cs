@@ -29,10 +29,6 @@ namespace Lilja.Repository.Editor
             ? new Color(0.24f, 0.49f, 0.90f, 1f)
             : new Color(0.15f, 0.41f, 0.83f, 1f);
 
-        private static Color RowBackgroundColor => EditorGUIUtility.isProSkin
-            ? new Color(1f, 1f, 1f, 0.02f)
-            : new Color(0f, 0f, 0f, 0.02f);
-
         private static Color SelectedRowBackgroundColor => EditorGUIUtility.isProSkin
             ? new Color(0.24f, 0.49f, 0.90f, 0.20f)
             : new Color(0.15f, 0.41f, 0.83f, 0.12f);
@@ -215,7 +211,7 @@ namespace Lilja.Repository.Editor
             {
                 selectionType = SelectionType.None,
                 fixedItemHeight = ListItemHeight,
-                showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly,
+                showAlternatingRowBackgrounds = AlternatingRowBackground.None,
             };
             listView.style.flexGrow = 1f;
             listView.style.marginLeft = 4f;
@@ -707,7 +703,7 @@ namespace Lilja.Repository.Editor
             {
                 _index = index;
                 _button.tooltip = tooltip;
-                _button.style.backgroundColor = selected ? SelectedRowBackgroundColor : RowBackgroundColor;
+                _button.style.backgroundColor = selected ? SelectedRowBackgroundColor : Color.clear;
                 _titleLabel.text = title;
                 _titleLabel.style.unityFontStyleAndWeight = selected ? FontStyle.Bold : FontStyle.Normal;
                 _previewLabel.text = preview;
