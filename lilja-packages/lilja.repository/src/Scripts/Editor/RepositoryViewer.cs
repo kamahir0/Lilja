@@ -278,11 +278,18 @@ namespace Lilja.Repository.Editor
         {
             var header = new Toolbar();
             header.style.flexShrink = 0f;
+            header.style.alignItems = Align.Center;
+            header.style.minHeight = 22f;
             header.style.paddingLeft = 2f;
 
             var titleLabel = new Label(title);
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             titleLabel.style.marginLeft = 4f;
+            titleLabel.style.marginTop = 0f;
+            titleLabel.style.marginBottom = 0f;
+            titleLabel.style.paddingTop = 0f;
+            titleLabel.style.paddingBottom = 0f;
             header.Add(titleLabel);
 
             return header;
