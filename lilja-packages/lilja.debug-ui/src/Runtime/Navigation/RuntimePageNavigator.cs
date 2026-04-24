@@ -58,8 +58,8 @@ namespace Lilja.DebugUI
         {
             _contentContainer = contentContainer;
             _animationScheduler = animationScheduler;
-            _onLabelChanged = onLabelChanged;
-            _onBackVisibilityChanged = onBackVisibilityChanged;
+            _onLabelChanged = onLabelChanged ?? throw new ArgumentNullException(nameof(onLabelChanged));
+            _onBackVisibilityChanged = onBackVisibilityChanged ?? throw new ArgumentNullException(nameof(onBackVisibilityChanged));
         }
 
         // ── 初期化 ───────────────────────────────────────────────────────────
@@ -84,6 +84,7 @@ namespace Lilja.DebugUI
             _contentContainer.Add(rootPage);
             ShowPageImmediately(rootPage, PagePosition.In);
             rootPage.OnShown();
+            _onLabelChanged(rootPage.name);
             NotifyBackVisibility();
 
             // 全ページを OutR 位置に事前アタッチし、パネル接続コストを起動時に分散させる
@@ -261,8 +262,8 @@ namespace Lilja.DebugUI
                 ShowPageImmediately(page, PagePosition.OutR);
             }
 
-            _onLabelChanged?.Invoke(RootPageName);
-            _onBackVisibilityChanged?.Invoke(false);
+            _onLabelChanged(RootPageName);
+            _onBackVisibilityChanged(false);
         }
 
         // ── プライベート ─────────────────────────────────────────────────────
