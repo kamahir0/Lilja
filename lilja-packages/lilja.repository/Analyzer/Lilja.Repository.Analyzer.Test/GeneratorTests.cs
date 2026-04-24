@@ -273,21 +273,35 @@ public partial class Monster
 
     private static GeneratorRunResult RunGenerator(string source, bool includeMessagePack)
     {
+        var syntaxTrees = new List<SyntaxTree>();
+        if (includeMessagePack)
+        {
+            syntaxTrees.Add(CSharpSyntaxTree.ParseText(MessagePackStubSource, new CSharpParseOptions(LanguageVersion.Preview)));
+        }
+
+        return RunGenerator(source, GetReferences(), syntaxTrees);
+    }
+
+    private static GeneratorRunResult RunGenerator(
+        string source,
+        IEnumerable<MetadataReference> references,
+        IEnumerable<SyntaxTree>? additionalSyntaxTrees = null)
+    {
         var syntaxTrees = new List<SyntaxTree>
         {
             CSharpSyntaxTree.ParseText(RuntimeStubSource, new CSharpParseOptions(LanguageVersion.Preview)),
             CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)),
         };
 
-        if (includeMessagePack)
+        if (additionalSyntaxTrees is not null)
         {
-            syntaxTrees.Add(CSharpSyntaxTree.ParseText(MessagePackStubSource, new CSharpParseOptions(LanguageVersion.Preview)));
+            syntaxTrees.AddRange(additionalSyntaxTrees);
         }
 
         var compilation = CSharpCompilation.Create(
             "GeneratorTests",
             syntaxTrees,
-            GetReferences(),
+            references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(new LiljaRepositoryGenerator());
@@ -343,6 +357,7 @@ namespace Lilja.Repository
     private const string MessagePackStubSource = """
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace MessagePack
 {
@@ -367,8 +382,8 @@ namespace MessagePack
 
     public static class MessagePackSerializer
     {
-        public static byte[] Serialize<T>(T value, MessagePackSerializerOptions options) => Array.Empty<byte>();
-        public static T Deserialize<T>(byte[] bytes, MessagePackSerializerOptions options) => default!;
+        public static byte[] Serialize<T>(T value, MessagePackSerializerOptions options, CancellationToken cancellationToken = default) => Array.Empty<byte>();
+        public static T Deserialize<T>(ReadOnlyMemory<byte> bytes, MessagePackSerializerOptions options, CancellationToken cancellationToken = default) => default!;
     }
 
     public struct MessagePackWriter
@@ -432,7 +447,7 @@ namespace MessagePack.Resolvers
 
     public sealed class StandardResolver : MessagePack.IFormatterResolver
     {
-        public static StandardResolver Instance { get; } = new StandardResolver();
+        public static readonly StandardResolver Instance = new StandardResolver();
 
         public IMessagePackFormatter<T>? GetFormatter<T>()
         {
@@ -600,15 +615,54 @@ using System.Collections.Generic;
 
 namespace UnityEngine
 {
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class SerializeField : Attribute
+    {
+    }
+
     public struct Vector2
     {
         public float x;
         public float y;
+
+        public Vector2(float x, float y)
+        {
+            this.x = x;
+            this.y = y;
+        }
     }
 
     public struct Rect
     {
         public float width;
+    }
+
+    public struct Color
+    {
+        public Color(float r, float g, float b, float a = 1f)
+        {
+        }
+
+        public static Color white => default;
+    }
+
+    public sealed class GUIContent
+    {
+        public GUIContent(string text)
+        {
+        }
+    }
+
+    public enum FontStyle
+    {
+        Normal,
+        Bold,
+    }
+
+    public enum TextAnchor
+    {
+        UpperLeft,
+        MiddleLeft,
     }
 
     public sealed class GUILayoutOption
@@ -640,9 +694,263 @@ namespace UnityEngine
     }
 }
 
+namespace UnityEngine.UIElements
+{
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
+
+    public enum DisplayStyle
+    {
+        None,
+        Flex,
+    }
+
+    public enum FlexDirection
+    {
+        Row,
+        Column,
+    }
+
+    public enum Align
+    {
+        Center,
+    }
+
+    public enum WhiteSpace
+    {
+        Normal,
+        NoWrap,
+    }
+
+    public enum Overflow
+    {
+        Hidden,
+    }
+
+    public enum Visibility
+    {
+        Visible,
+        Hidden,
+    }
+
+    public enum PickingMode
+    {
+        Ignore,
+        Position,
+    }
+
+    public enum Justify
+    {
+        Center,
+    }
+
+    public enum SelectionType
+    {
+        None,
+    }
+
+    public enum AlternatingRowBackground
+    {
+        None,
+        ContentOnly,
+    }
+
+    public enum TwoPaneSplitViewOrientation
+    {
+        Horizontal,
+        Vertical,
+    }
+
+    public sealed class ChangeEvent<T>
+    {
+        public T newValue = default!;
+    }
+
+    public sealed class Style
+    {
+        public object? alignItems { get; set; }
+        public object? backgroundColor { get; set; }
+        public object? borderBottomLeftRadius { get; set; }
+        public object? borderBottomRightRadius { get; set; }
+        public object? borderBottomWidth { get; set; }
+        public object? borderLeftWidth { get; set; }
+        public object? borderRightWidth { get; set; }
+        public object? borderTopLeftRadius { get; set; }
+        public object? borderTopRightRadius { get; set; }
+        public object? borderTopWidth { get; set; }
+        public object? color { get; set; }
+        public object? display { get; set; }
+        public object? flexDirection { get; set; }
+        public object? flexGrow { get; set; }
+        public object? flexShrink { get; set; }
+        public object? fontSize { get; set; }
+        public object? justifyContent { get; set; }
+        public object? marginBottom { get; set; }
+        public object? marginLeft { get; set; }
+        public object? marginRight { get; set; }
+        public object? marginTop { get; set; }
+        public object? minHeight { get; set; }
+        public object? minWidth { get; set; }
+        public object? overflow { get; set; }
+        public object? paddingBottom { get; set; }
+        public object? paddingLeft { get; set; }
+        public object? paddingRight { get; set; }
+        public object? paddingTop { get; set; }
+        public object? unityFontStyleAndWeight { get; set; }
+        public object? unityTextAlign { get; set; }
+        public object? visibility { get; set; }
+        public object? whiteSpace { get; set; }
+        public object? width { get; set; }
+    }
+
+    public class VisualElement
+    {
+        private readonly List<VisualElement> _children = new List<VisualElement>();
+
+        public Style style { get; } = new Style();
+
+        public int childCount => _children.Count;
+
+        public string? viewDataKey { get; set; }
+
+        public PickingMode pickingMode { get; set; }
+
+        public virtual void Add(VisualElement child)
+        {
+            _children.Add(child);
+        }
+
+        public void Clear()
+        {
+            _children.Clear();
+        }
+    }
+
+    public class Label : VisualElement
+    {
+        public Label()
+        {
+        }
+
+        public Label(string text)
+        {
+            this.text = text;
+        }
+
+        public string text { get; set; } = string.Empty;
+    }
+
+    public class HelpBox : VisualElement
+    {
+        public HelpBox(string text, UnityEditor.UIElements.HelpBoxMessageType messageType)
+        {
+            this.text = text;
+        }
+
+        public string text { get; set; } = string.Empty;
+    }
+
+    public class TextField : VisualElement
+    {
+        public bool multiline { get; set; }
+        public bool isReadOnly { get; set; }
+
+        public void SetValueWithoutNotify(string value)
+        {
+        }
+    }
+
+    public class Button : VisualElement
+    {
+        private readonly Action? _action;
+
+        public Button()
+        {
+        }
+
+        public Button(Action action)
+        {
+            _action = action;
+        }
+
+        public string text { get; set; } = string.Empty;
+        public string tooltip { get; set; } = string.Empty;
+
+        public void SetEnabled(bool enabled)
+        {
+        }
+    }
+
+    public class Toggle : VisualElement
+    {
+        public Toggle()
+        {
+        }
+
+        public Toggle(string text)
+        {
+            this.text = text;
+        }
+
+        public bool value { get; set; }
+        public string text { get; set; } = string.Empty;
+
+        public void RegisterValueChangedCallback(Action<ChangeEvent<bool>> callback)
+        {
+        }
+
+        public void SetValueWithoutNotify(bool value)
+        {
+            this.value = value;
+        }
+    }
+
+    public class DropdownField : VisualElement
+    {
+        public string label { get; set; } = string.Empty;
+        public List<string> choices { get; set; } = new List<string>();
+
+        public void RegisterValueChangedCallback(Action<ChangeEvent<string>> callback)
+        {
+        }
+
+        public void SetValueWithoutNotify(string value)
+        {
+        }
+    }
+
+    public class ListView : VisualElement
+    {
+        public SelectionType selectionType { get; set; }
+        public float fixedItemHeight { get; set; }
+        public AlternatingRowBackground showAlternatingRowBackgrounds { get; set; }
+        public IList? itemsSource { get; set; }
+        public Func<VisualElement>? makeItem { get; set; }
+        public Action<VisualElement, int>? bindItem { get; set; }
+
+        public void Rebuild()
+        {
+        }
+    }
+
+    public class Box : VisualElement
+    {
+    }
+
+    public class TwoPaneSplitView : VisualElement
+    {
+        public TwoPaneSplitView(int fixedPaneIndex, float fixedPaneInitialDimension, TwoPaneSplitViewOrientation orientation)
+        {
+        }
+    }
+}
+
 namespace UnityEditor
 {
     using UnityEngine;
+    using UnityEngine.UIElements;
 
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class MenuItemAttribute : Attribute
@@ -660,6 +968,9 @@ namespace UnityEditor
     public class EditorWindow
     {
         public Rect position => default;
+        public VisualElement rootVisualElement { get; } = new VisualElement();
+        public GUIContent? titleContent { get; set; }
+        public Vector2 minSize { get; set; }
 
         protected static T GetWindow<T>(string title) where T : EditorWindow, new()
         {
@@ -742,6 +1053,51 @@ namespace UnityEditor
         public static void RevealInFinder(string path)
         {
         }
+    }
+
+    public enum PlayModeStateChange
+    {
+        EnteredEditMode,
+        EnteredPlayMode,
+    }
+
+    public static class EditorApplication
+    {
+        public static event Action<PlayModeStateChange>? playModeStateChanged;
+        public static event Action? update;
+        public static double timeSinceStartup => 0d;
+    }
+
+    public static class EditorGUIUtility
+    {
+        public static bool isProSkin => false;
+    }
+}
+
+namespace UnityEditor.UIElements
+{
+    using System;
+    using UnityEngine.UIElements;
+
+    public enum HelpBoxMessageType
+    {
+        Info,
+    }
+
+    public class Toolbar : VisualElement
+    {
+    }
+
+    public class ToolbarButton : Button
+    {
+        public ToolbarButton(Action action)
+            : base(action)
+        {
+        }
+    }
+
+    public class ToolbarToggle : Toggle
+    {
     }
 }
 """;

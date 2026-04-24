@@ -47,7 +47,11 @@
 
 ### 実装由来の注記
 
-- MessagePack は package dependency としては宣言されていない。generator はコンパイル参照内に `MessagePack.Formatters.IMessagePackFormatter<T>` が存在する場合のみ MessagePack 用生成物を出力する。
+- MessagePack は package dependency としては宣言されていない。generator は compile-time で MessagePack compatibility contract を満たす参照が存在する場合のみ MessagePack 用生成物を出力する。
+- サポート行列は以下。
+- `Guaranteed`: MessagePack `3.1.x`
+- `Supported`: MessagePack `2.5.x`
+- `Not promised`: MessagePack `2.0-2.4`, `4.x+`
 
 ### 非保証
 
@@ -538,11 +542,12 @@ Entity 条件ごとの生成物は以下。
 | key を持つ | `{Entity}.GetKey` |
 | persisted (`[Persist]` あり) | `{Entity}Dto`, `{Entity}.ToDto`, `{Entity}.FromDto`, `{Entity}StorageEnvelope`, `Json{Entity}Repository` |
 | persisted かつ key あり | `{Entity}.GetKeyFromDto` |
-| persisted かつ MessagePack 参照あり | `{Entity}DtoFormatter`, `{Entity}StorageEnvelopeFormatter`, `MessagePack{Entity}Repository` |
+| persisted かつ MessagePack compatibility contract あり | `{Entity}DtoFormatter`, `{Entity}StorageEnvelopeFormatter`, `MessagePack{Entity}Repository` |
 
 ### 実装由来の注記
 
-- MessagePack 判定は compilation 全体に `MessagePack.Formatters.IMessagePackFormatter<T>` が存在するかどうかだけで決まる。
+- MessagePack 判定は compilation 全体が MessagePack compatibility contract を満たすかどうかで決まる。
+- compatibility contract には `MessagePackSerializer`, `MessagePackSerializerOptions`, `CompositeResolver`, `StandardResolver`, `IFormatterResolver`, `IMessagePackFormatter<T>`, `MessagePackWriter`, `MessagePackReader`, `MessagePackSerializationException` が含まれる。
 - persisted でない Entity に formatter は生成されない。
 
 ### 非保証
@@ -707,7 +712,7 @@ load/save contract:
 
 #### 仕様
 
-生成条件は MessagePack formatter interface 参照が compilation に存在すること。
+生成条件は compilation が MessagePack compatibility contract を満たすこと。
 
 constructor は parameterless であり、base constructor へ以下の file path を渡す。
 
@@ -731,6 +736,7 @@ load/save contract:
 
 #### 実装由来の注記
 
+- 生成コードが依存する source surface は `CompositeResolver.Create(...)`, `StandardResolver.Instance`, `MessagePackSerializerOptions.Standard.WithResolver(...)`, `MessagePackSerializer.Serialize(...)`, `MessagePackSerializer.Deserialize<T>(...)` に固定される。
 - `TrackRepository(RepositoryTracker.RepositoryType.MessagePack)` が `UNITY_EDITOR` 時のみ constructor で呼ばれる。
 
 #### 非保証
@@ -967,7 +973,7 @@ var repository = new MessagePackItemRepository();
 await repository.InitializeAsync();
 ```
 
-MessagePack 参照が compilation に無い場合、この型は生成されない。
+MessagePack compatibility contract を満たす参照が compilation に無い場合、この型は生成されない。
 
 ### 実装由来の注記
 
@@ -1342,7 +1348,9 @@ preview pane は selected record を read-only multiline text として表示す
 ### 仕様
 
 Editor は MessagePack に compile-time 依存しない。  
-`MessagePackReflectionBridge` は runtime reflection で以下の型を解決できた場合のみ有効になる。
+`MessagePackReflectionBridge` は runtime reflection で MessagePack compatibility contract を解決できた場合のみ有効になる。
+
+互換契約に含まれる minimum surface は以下。
 
 1. `MessagePackSerializer`
 2. `MessagePackSerializerOptions`
@@ -1350,6 +1358,15 @@ Editor は MessagePack に compile-time 依存しない。
 4. `StandardResolver`
 5. `IMessagePackFormatter`
 6. `IFormatterResolver`
+7. `MessagePackWriter`
+8. `MessagePackReader`
+9. `MessagePackSerializationException`
+
+bridge は以下の差異を吸収する。
+
+1. `StandardResolver.Instance` の property / field 差異
+2. `CompositeResolver.Create(...)` の `IReadOnlyList<T>` / array / `IEnumerable<T>` 差異
+3. `Deserialize<T>(...)` の `ReadOnlyMemory<byte>` / `byte[]` / `Stream` 差異
 
 `CreateOptions(formatterTypes...)` は formatter instance 群と `StandardResolver.Instance` から resolver を組み立て、`MessagePackSerializerOptions.Standard.WithResolver(...)` を返す。  
 `Deserialize(bytes, targetType, options)` は generic `Deserialize<T>` を reflection で呼ぶ。
@@ -1361,7 +1378,8 @@ Editor は MessagePack に compile-time 依存しない。
 
 ### 非保証
 
-- MessagePack API の将来変更に対する forward-compatibility は保証しない。
+- MessagePack `2.0-2.4` との互換は保証しない。
+- MessagePack `4.x+` との forward-compatibility は保証しない。
 
 ## 24. 実装再現に必要なサンプル
 
@@ -1590,7 +1608,7 @@ method Cysharp.Threading.Tasks.UniTask Lilja.Repository.TxManager.BeginRWTransac
 9. dictionary enumeration order 依存の永続化順序
 10. mutable entity を安全に扱うこと
 11. Editor UI レイアウトの恒久固定
-12. MessagePack API 変更への forward-compatibility
+12. MessagePack `2.0-2.4` および `4.x+` との互換
 13. runtime build での `RepositoryTracker` 利用
 
 ## 28. 再実装チェックリスト
@@ -1604,7 +1622,7 @@ method Cysharp.Threading.Tasks.UniTask Lilja.Repository.TxManager.BeginRWTransac
 3. generator output の namespace/type/hint/storage path 規約が第 12 章と一致する
 4. strict CRUD と transaction publish sequence が第 17 章・第 18 章と一致する
 5. keyed/singleton envelope shape が第 15 章・第 20 章と一致する
-6. MessagePack optional generation が compilation 参照有無で切り替わる
+6. MessagePack optional generation が compilation の compatibility contract 有無で切り替わる
 7. same-named entity が namespace-qualified storage identifier で分離される
 8. Editor が persisted file の Unknown/Error fallback を持つ
 

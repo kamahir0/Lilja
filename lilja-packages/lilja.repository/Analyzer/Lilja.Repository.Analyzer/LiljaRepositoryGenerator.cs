@@ -34,7 +34,7 @@ public sealed partial class LiljaRepositoryGenerator : IIncrementalGenerator
         {
             var compilation = pair.Left;
             var analyses = pair.Right;
-            var hasMessagePack = compilation.GetTypeByMetadataName("MessagePack.Formatters.IMessagePackFormatter`1") is not null;
+            var hasMessagePack = MessagePackContract.HasCompatibleContract(compilation);
 
             foreach (var analysis in analyses)
             {
