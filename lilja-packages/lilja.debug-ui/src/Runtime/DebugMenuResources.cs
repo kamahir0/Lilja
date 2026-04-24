@@ -5,8 +5,12 @@ namespace Lilja.DebugUI
 {
     internal static class DebugMenuResources
     {
+        private const string DebugMenuVisualTreePath = "DebugMenu/DebugMenu";
         private const string DefaultPanelSettingsPath = "DebugMenu/DebugMenuPanelSettings";
         private const string OpenButtonVisualTreePath = "DebugMenu/DebugMenuOpenButton";
+
+        internal static VisualTreeAsset LoadDebugMenuVisualTree()
+            => Resources.Load<VisualTreeAsset>(DebugMenuVisualTreePath);
 
         internal static PanelSettings LoadDefaultPanelSettings()
             => Resources.Load<PanelSettings>(DefaultPanelSettingsPath);

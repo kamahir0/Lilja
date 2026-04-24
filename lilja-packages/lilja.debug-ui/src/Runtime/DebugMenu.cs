@@ -10,6 +10,9 @@ namespace Lilja.DebugUI
         private static DebugMenuRoot _menuRoot;
         private static int _animVersion;
 
+        private const string RootName = "debug-menu-root";
+        private const string WindowName = "debug-menu-window";
+
         /// <summary>DebugPage.AddDebugUI などから PageCache へのアクセスに使用する。</summary>
         internal static DebugPageCache CurrentCache => DebugMenuCore.Shared?.PageCache;
 
@@ -20,16 +23,36 @@ namespace Lilja.DebugUI
 
         public static void Initialize(DebugPage rootPage, PanelSettings panelSettings = null)
         {
+            if (rootPage == null) throw new ArgumentNullException(nameof(rootPage));
+
             var go = new GameObject("[DebugMenu]");
             UnityEngine.Object.DontDestroyOnLoad(go);
             var uiDoc = go.AddComponent<UIDocument>();
-            uiDoc.panelSettings = panelSettings != null
-                ? panelSettings
-                : DebugMenuResources.LoadDefaultPanelSettings();
-            Initialize(uiDoc, rootPage);
+            ConfigureDocument(uiDoc, panelSettings);
+            InitializeCore(uiDoc, rootPage);
         }
 
-        public static void Initialize(UIDocument uiDocument, DebugPage rootPage)
+        private static void ConfigureDocument(UIDocument uiDocument, PanelSettings panelSettings)
+        {
+            if (uiDocument == null) throw new ArgumentNullException(nameof(uiDocument));
+
+            var resolvedPanelSettings = panelSettings != null
+                ? panelSettings
+                : DebugMenuResources.LoadDefaultPanelSettings();
+            if (resolvedPanelSettings == null)
+                throw new InvalidOperationException("[DebugMenu] DebugMenuPanelSettings.asset が Resources/DebugMenu 配下に見つかりません。");
+
+            uiDocument.panelSettings = resolvedPanelSettings;
+
+            var visualTreeAsset = DebugMenuResources.LoadDebugMenuVisualTree();
+            if (visualTreeAsset == null)
+                throw new InvalidOperationException("[DebugMenu] DebugMenu.uxml が Resources/DebugMenu 配下に見つかりません。");
+
+            // UIDocument は Inspector 選択時に Source Asset を参照して再構築されるため、必ず明示しておく。
+            uiDocument.visualTreeAsset = visualTreeAsset;
+        }
+
+        private static void InitializeCore(UIDocument uiDocument, DebugPage rootPage)
         {
             // Core singleton を先に生成（DebugMenuWindow のコンストラクタが参照するため）
             DebugMenuCore.Destroy();
@@ -37,13 +60,16 @@ namespace Lilja.DebugUI
 
             var root = uiDocument.rootVisualElement;
             root.Clear();
+            uiDocument.visualTreeAsset.CloneTree(root);
 
-            var menuRoot = new DebugMenuRoot();
-            root.Add(menuRoot);
+            var menuRoot = root.Q<DebugMenuRoot>(RootName);
+            if (menuRoot == null)
+                throw new InvalidOperationException($"[DebugMenu] DebugMenu.uxml に '{RootName}' が見つかりません。");
             _menuRoot = menuRoot;
 
-            var window = new DebugMenuWindow();
-            menuRoot.Add(window);
+            var window = menuRoot.Q<DebugMenuWindow>(WindowName);
+            if (window == null)
+                throw new InvalidOperationException($"[DebugMenu] DebugMenu.uxml に '{WindowName}' が見つかりません。");
             _window = window;
 
             // RuntimeHost を登録して所有権を取得
