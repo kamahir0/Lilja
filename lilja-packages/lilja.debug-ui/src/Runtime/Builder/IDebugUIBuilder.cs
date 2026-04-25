@@ -6,9 +6,10 @@ namespace Lilja.DebugUI
     public interface IDebugUIBuilder
     {
         /// <summary>
-        /// VisualElement を追加する
+        /// VisualElement を追加して返す
         /// </summary>
-        void VisualElement(VisualElement visualElement);
+        T VisualElement<T>(T visualElement)
+            where T : VisualElement;
 
         /// <summary>
         /// 子を作成する
@@ -32,9 +33,11 @@ namespace Lilja.DebugUI
             _pageCache = pageCache;
         }
 
-        public void VisualElement(VisualElement visualElement)
+        public T VisualElement<T>(T visualElement)
+            where T : VisualElement
         {
             _parent.Add(visualElement);
+            return visualElement;
         }
 
         public IDebugUIBuilder CreateChildBuilder(VisualElement parent)
