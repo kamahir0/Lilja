@@ -66,6 +66,7 @@ namespace Lilja.DebugUI.Editor
             if (string.IsNullOrEmpty(pageName)) return;
 
             _history.Clear();
+            DetachCurrentPage();
             SetPage(pageName);
         }
 
