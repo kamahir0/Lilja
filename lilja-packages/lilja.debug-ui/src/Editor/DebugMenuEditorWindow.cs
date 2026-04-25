@@ -74,6 +74,7 @@ namespace Lilja.DebugUI.Editor
             if (themeUss != null) root.styleSheets.Add(themeUss);
             if (menuUss != null) root.styleSheets.Add(menuUss);
             root.AddToClassList("editor-debug-window");
+            EditorTextRenderingUtility.ApplyMode(root);
 
             BuildNotPlayingView(root);
             BuildPlayingView(root);
@@ -442,5 +443,55 @@ namespace Lilja.DebugUI.Editor
                 _pageListScrollView.Add(btn);
             }
         }
+    }
+
+    internal static class EditorTextRenderingUtility
+    {
+        internal static void ApplyMode(VisualElement root)
+        {
+            if (root == null) return;
+
+            ApplyModeTo(root);
+            root.Query<TextElement>().ForEach(ApplyModeTo);
+        }
+
+        internal static void ClearMode(VisualElement root)
+        {
+            if (root == null) return;
+
+            ClearModeFrom(root);
+            root.Query<TextElement>().ForEach(ClearModeFrom);
+        }
+
+        internal static void RefreshTextNow(VisualElement root)
+        {
+            if (root == null) return;
+
+            RefreshText(root);
+        }
+
+        private static void RefreshText(VisualElement root)
+        {
+            ApplyMode(root);
+
+            root.Query<TextElement>().ForEach(text =>
+            {
+                text.MarkDirtyText();
+                text.MarkDirtyRepaint();
+            });
+        }
+
+        private static void ApplyModeTo(VisualElement element)
+        {
+            element.style.unityTextGenerator = TextGeneratorType.Standard;
+            element.style.unityEditorTextRenderingMode = EditorTextRenderingMode.Bitmap;
+        }
+
+        private static void ClearModeFrom(VisualElement element)
+        {
+            element.style.unityTextGenerator = StyleKeyword.Null;
+            element.style.unityEditorTextRenderingMode = StyleKeyword.Null;
+        }
+
     }
 }

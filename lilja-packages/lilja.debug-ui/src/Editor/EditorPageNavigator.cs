@@ -125,8 +125,10 @@ namespace Lilja.DebugUI.Editor
                 return;
             }
 
+            EditorTextRenderingUtility.ApplyMode(page);
             _container.Add(page);
             page.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
+            EditorTextRenderingUtility.RefreshTextNow(page);
             page.OnShown();
 
             OnLabelChanged?.Invoke(pageName);
@@ -141,6 +143,7 @@ namespace Lilja.DebugUI.Editor
             if (page != null)
             {
                 page.OnHidden();
+                EditorTextRenderingUtility.ClearMode(page);
                 page.RemoveFromHierarchy();
             }
 

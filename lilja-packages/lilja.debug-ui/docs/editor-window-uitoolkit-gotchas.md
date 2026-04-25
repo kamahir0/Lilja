@@ -379,3 +379,116 @@ hover / focus も同じく `#unity-text-input` 側で完結させる。
 - `src/Editor/StyleSheets/DebugMenuEditorTheme.uss`
   - `#unity-text-input` への背景色・枠線付与
   - `Bounds` / `BoundsInt` ラッパー hover 時の透明維持
+
+---
+
+## 9. Runtime パネルから EditorWindow へ移した TextElement の縦位置ズレ
+
+### 現象
+
+Runtime では正常に見えるページを `EditorWindow` 側へ移して表示すると、
+一部のテキストだけが下付きのような位置で描画されることがある。
+
+今回確認した症状:
+
+- `RadioButtonGroup` の各ラジオボタンラベルが下付きに見える
+- カスタム `DebugToggleGroupItem` のラベルが下付きに見える
+- `Settings` ページ内の通常ボタンのラベルが下付きに見える
+- ナビゲーションボタンなど、同じページ内でも正常に見えるテキストが混在する
+
+### 重要な観察
+
+同じ `Button` や `Label` に見えても、UIToolkit 内部では実際のテキスト要素が異なる。
+
+- `Button.text` が内部に持つ `TextElement`
+- 自前で追加した `Label`
+- `RadioButtonGroup` が生成する `.unity-radio-button__text`
+- `Toggle` / `RadioButton` が持つ内部ラベル
+
+このため、同じ型の UI 要素に見えても、使用箇所によって縦位置が変わることがある。
+ただし再現箇所は deterministic で、ランダムではない。
+
+### 効かなかった対処
+
+以下は根本対処にならなかった。
+
+- `padding-top` / `padding-bottom` で押し込む
+- `translate: 0 -1px` で対象ラベルを上げる
+- 通常ボタンの `Button.text` をやめ、自前 `Label` に置き換える
+- USS のセレクタを `.unity-radio-button__label` / `.unity-radio-button__text` に広げる
+
+これらは「既に生成済みのテキストメッシュの表示位置」を見た目だけで動かそうとしており、
+EditorWindow へパネル移動した後のテキスト生成状態そのものには触れていない。
+
+### 原因の手がかり
+
+`Editor.log` に以下の警告が出ていた。
+
+```text
+Advanced Text Generator is disabled but the API is still called.
+```
+
+スタックトレース上では、Runtime 側のパネルから EditorWindow 側のパネルへ
+`DebugPage` を付け替えるタイミングで `TextElement.OnAttachToPanel` が走っていた。
+
+つまり問題は、単なる USS の上下位置ではなく、
+
+- Runtime パネルと EditorWindow パネルでテキスト生成設定が異なる
+- パネル間移動後、既存 `TextElement` のテキストメッシュが期待どおり再生成されない
+- Advanced Text Generator が無効な環境で、その経路に一部の `TextElement` が触れている
+
+という組み合わせで起きる。
+
+### 対処
+
+EditorWindow 側に表示する間だけ、対象ツリーのテキスト描画方式を明示してから
+`TextElement` を dirty にする。
+
+```csharp
+private static void ApplyModeTo(VisualElement element)
+{
+    element.style.unityTextGenerator = TextGeneratorType.Standard;
+    element.style.unityEditorTextRenderingMode = EditorTextRenderingMode.Bitmap;
+}
+
+private static void RefreshText(VisualElement root)
+{
+    root.Query<TextElement>().ForEach(text =>
+    {
+        ApplyModeTo(text);
+        text.MarkDirtyText();
+        text.MarkDirtyRepaint();
+    });
+}
+```
+
+今回の確認では、遅延再実行は不要だった。
+`RadioButtonGroup` など UI Toolkit 側が内部要素をスケジュール更新する余地はあるが、
+この縦位置ズレの修正では、EditorWindow へ attach した直後の即時 refresh だけで足りる。
+`ExecuteLater(0)` や `ExecuteLater(16)` は、実際に再発条件を確認できた場合だけ追加する。
+
+```csharp
+RefreshText(root);
+```
+
+### 所有権移譲時の注意
+
+EditorWindow 用のテキスト設定を Runtime 側へ持ち帰らない。
+`DebugPage` を EditorWindow から detach する前に、インライン指定を消す。
+
+```csharp
+element.style.unityTextGenerator = StyleKeyword.Null;
+element.style.unityEditorTextRenderingMode = StyleKeyword.Null;
+```
+
+遅延 refresh を再導入する場合は、detach 後に Runtime 側で走らないよう、
+実行時に EditorWindow 配下にいるか確認してから処理する。
+
+### 実装場所
+
+- `src/Editor/DebugMenuEditorWindow.cs`
+  - `EditorTextRenderingUtility`
+  - EditorWindow ルートへの text rendering mode 適用
+- `src/Editor/EditorPageNavigator.cs`
+  - ページを `_container` に追加する前後で text rendering mode 適用と refresh
+  - detach 前に EditorWindow 用の inline text style をクリア
