@@ -3,6 +3,7 @@ using Lilja.DebugUI;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using PackageManagerInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace Lilja.DebugUI.Editor
 {
@@ -37,9 +38,14 @@ namespace Lilja.DebugUI.Editor
 
         // ── パス定数 ──────────────────────────────────────────────────────────
 
-        private const string ThemeUssPath =
+        private const string PackageName = "com.kamahir0.lilja.debug-ui";
+        private const string ThemeUssRelativePath =
+            "Editor/StyleSheets/DebugMenuEditorTheme.uss";
+        private const string MenuUssRelativePath =
+            "Runtime/StyleSheets/DebugMenu.uss";
+        private const string LegacyThemeUssPath =
             "Assets/lilja.debug-ui/src/Editor/StyleSheets/DebugMenuEditorTheme.uss";
-        private const string MenuUssPath =
+        private const string LegacyMenuUssPath =
             "Assets/lilja.debug-ui/src/Runtime/StyleSheets/DebugMenu.uss";
         private const float PageListMinWidth = 160f;
         private const float PageContentMinWidth = 320f;
@@ -63,8 +69,8 @@ namespace Lilja.DebugUI.Editor
         {
             var root = rootVisualElement;
 
-            var themeUss = AssetDatabase.LoadAssetAtPath<StyleSheet>(ThemeUssPath);
-            var menuUss = AssetDatabase.LoadAssetAtPath<StyleSheet>(MenuUssPath);
+            var themeUss = LoadPackageStyleSheet(ThemeUssRelativePath, LegacyThemeUssPath);
+            var menuUss = LoadPackageStyleSheet(MenuUssRelativePath, LegacyMenuUssPath);
             if (themeUss != null) root.styleSheets.Add(themeUss);
             if (menuUss != null) root.styleSheets.Add(menuUss);
             root.AddToClassList("editor-debug-window");
@@ -73,6 +79,23 @@ namespace Lilja.DebugUI.Editor
             BuildPlayingView(root);
 
             RefreshPlayModeState();
+        }
+
+        private static StyleSheet LoadPackageStyleSheet(string relativePath, string legacyPath)
+        {
+            var packageInfo = PackageManagerInfo.FindForAssembly(typeof(DebugMenuEditorWindow).Assembly);
+            if (packageInfo != null && !string.IsNullOrEmpty(packageInfo.assetPath))
+            {
+                var packagePath = $"{packageInfo.assetPath}/{relativePath}";
+                var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(packagePath);
+                if (styleSheet != null) return styleSheet;
+            }
+
+            var namedPackagePath = $"Packages/{PackageName}/{relativePath}";
+            var namedPackageStyleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(namedPackagePath);
+            if (namedPackageStyleSheet != null) return namedPackageStyleSheet;
+
+            return AssetDatabase.LoadAssetAtPath<StyleSheet>(legacyPath);
         }
 
         // ── PlayMode 対応 ──────────────────────────────────────────────────────
