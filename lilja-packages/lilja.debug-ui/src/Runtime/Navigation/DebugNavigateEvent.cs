@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
@@ -16,6 +17,27 @@ namespace Lilja.DebugUI
             var evt = GetPooled();
             evt.target = target;
             evt.PageName = pageName;
+            evt.bubbles = true;
+            evt.tricklesDown = false;
+            return evt;
+        }
+    }
+
+    /// <summary>
+    /// TempNavigationButton がクリックされたときに発火するカスタムイベント。
+    /// キャッシュに登録しない一時ページを、現在表示しているホスト内で表示する。
+    /// </summary>
+    public sealed class DebugTempNavigateEvent : EventBase<DebugTempNavigateEvent>
+    {
+        public string PageName { get; private set; }
+        public Action<IDebugUIBuilder> Configure { get; private set; }
+
+        public static DebugTempNavigateEvent GetPooled(IEventHandler target, string pageName, Action<IDebugUIBuilder> configure)
+        {
+            var evt = GetPooled();
+            evt.target = target;
+            evt.PageName = pageName;
+            evt.Configure = configure;
             evt.bubbles = true;
             evt.tricklesDown = false;
             return evt;

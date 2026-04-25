@@ -98,7 +98,11 @@ namespace Lilja.DebugUI
             if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             var button = new DebugNavigationButton(pageName, icon);
-            button.clicked += () => DebugMenu.NavigateToTemp(pageName, configure);
+            button.clicked += () =>
+            {
+                using var evt = DebugTempNavigateEvent.GetPooled(button, pageName, configure);
+                button.SendEvent(evt);
+            };
             return builder.VisualElement(button);
         }
 

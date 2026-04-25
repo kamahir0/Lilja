@@ -34,7 +34,8 @@ public override void Configure(IDebugUIBuilder builder)
 }
 ```
 
-For temporary pages, use `TempNavigationButton`:
+For temporary pages, use `TempNavigationButton`. Temporary pages open in the current host
+(runtime menu or editor window) and are not added to the editor page list:
 
 ```csharp
 builder.TempNavigationButton("Monster Repository", page =>

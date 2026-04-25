@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Lilja.DebugUI;
 using UnityEditor;
@@ -217,6 +218,12 @@ namespace Lilja.DebugUI.Editor
             EditorNavigateTo(evt.PageName);
         }
 
+        private void OnTempNavigateEvent(DebugTempNavigateEvent evt)
+        {
+            evt.StopPropagation();
+            EditorNavigateToTemp(evt.PageName, evt.Configure);
+        }
+
         /// <summary>NavigationButton などページ内からの遷移（履歴 push）。</summary>
         private void EditorNavigateTo(string pageName)
         {
@@ -225,6 +232,16 @@ namespace Lilja.DebugUI.Editor
             // 所有権を取得（まだ持っていなければ RuntimeHost.OnOwnershipRevoked が走る）
             DebugMenu.RequestOwnership(HostKind.Editor);
             _navigator.Navigate(pageName);
+            ScheduleScrollbarFix();
+        }
+
+        /// <summary>TempNavigationButton からの一時ページ遷移（履歴 push）。</summary>
+        private void EditorNavigateToTemp(string pageName, Action<IDebugUIBuilder> configure)
+        {
+            if (_navigator == null || string.IsNullOrEmpty(pageName)) return;
+
+            DebugMenu.RequestOwnership(HostKind.Editor);
+            _navigator.NavigateTemp(pageName, configure);
             ScheduleScrollbarFix();
         }
 
@@ -262,13 +279,8 @@ namespace Lilja.DebugUI.Editor
         private void ScheduleScrollbarFix()
         {
             if (_navigator == null) return;
-            var pageName = _navigator.CurrentPageName;
-            if (string.IsNullOrEmpty(pageName)) return;
 
-            var core = DebugMenuCore.Shared;
-            if (core == null) return;
-
-            var page = core.PageCache.Get(pageName);
+            var page = _navigator.CurrentPage;
             if (page == null) return;
 
             SuppressScrollbarFocus(page);
@@ -276,7 +288,7 @@ namespace Lilja.DebugUI.Editor
             rootVisualElement.schedule.Execute(() =>
             {
                 // ナビゲーターが別ページに移っていたらスキップ
-                if (_navigator == null || _navigator.CurrentPageName != pageName) return;
+                if (_navigator == null || _navigator.CurrentPage != page) return;
 
                 var sv = page.Q<ScrollView>();
                 if (sv == null) return;
@@ -407,6 +419,7 @@ namespace Lilja.DebugUI.Editor
             _rightPane.style.overflow = Overflow.Hidden;
             _rightPane.style.position = Position.Relative;
             _rightPane.RegisterCallback<DebugNavigateEvent>(OnNavigateEvent);
+            _rightPane.RegisterCallback<DebugTempNavigateEvent>(OnTempNavigateEvent);
             body.Add(_rightPane);
 
             _playingView.Add(body);

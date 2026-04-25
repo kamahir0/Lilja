@@ -174,6 +174,7 @@ namespace Lilja.DebugUI
             _contentContainer.AddToClassList(ContentUssClassName);
             _contentContainer.AddToClassList(PageStackUssClassName);
             _contentContainer.RegisterCallback<DebugNavigateEvent>(OnNavigateEvent);
+            _contentContainer.RegisterCallback<DebugTempNavigateEvent>(OnTempNavigateEvent);
             hierarchy.Add(_contentContainer);
         }
 
@@ -181,6 +182,12 @@ namespace Lilja.DebugUI
         {
             evt.StopPropagation();
             Navigate(evt.PageName);
+        }
+
+        private void OnTempNavigateEvent(DebugTempNavigateEvent evt)
+        {
+            evt.StopPropagation();
+            NavigateTemp(evt.PageName, evt.Configure);
         }
     }
 }

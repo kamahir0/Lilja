@@ -14,8 +14,8 @@ namespace Lilja.DebugUI.Editor
     internal sealed class EditorPageNavigator : DebugPageNavigatorBase, IPageHost
     {
         private readonly VisualElement _container;
-        private readonly Stack<string> _history = new();
-        private string _currentPageName;
+        private readonly Stack<DebugPage> _history = new();
+        private DebugPage _currentPage;
 
         /// <summary>ページ名ラベルを更新するコールバック。</summary>
         internal Action<string> OnLabelChanged;
@@ -26,7 +26,9 @@ namespace Lilja.DebugUI.Editor
         /// <summary>ランタイムに所有権が奪われたとき（OwnershipRevoked）に呼ばれる。</summary>
         internal Action OnOwnershipLost;
 
-        internal string CurrentPageName => _currentPageName;
+        internal DebugPage CurrentPage => _currentPage;
+
+        internal string CurrentPageName => _currentPage?.name;
 
         // ── IPageHost ────────────────────────────────────────────────────────
 
@@ -43,7 +45,7 @@ namespace Lilja.DebugUI.Editor
         /// </summary>
         public void OnOwnershipRevoked()
         {
-            DetachCurrentPage();
+            Release();
             OnOwnershipLost?.Invoke();
         }
 
@@ -65,9 +67,12 @@ namespace Lilja.DebugUI.Editor
         {
             if (string.IsNullOrEmpty(pageName)) return;
 
+            var page = GetCachedPage(pageName);
+            if (page == null) return;
+
             _history.Clear();
             DetachCurrentPage();
-            SetPage(pageName);
+            SetPage(page);
         }
 
         /// <summary>ページ内の NavigationButton からの遷移（履歴に push）。</summary>
@@ -75,13 +80,20 @@ namespace Lilja.DebugUI.Editor
         {
             if (string.IsNullOrEmpty(pageName)) return;
 
-            var prevName = _currentPageName;
-            DetachCurrentPage();
+            var page = GetCachedPage(pageName);
+            if (page == null) return;
 
-            if (!string.IsNullOrEmpty(prevName) && prevName != pageName)
-                _history.Push(prevName);
+            NavigateToPage(page);
+        }
 
-            SetPage(pageName);
+        /// <summary>キャッシュに登録しない一時ページへ遷移する。</summary>
+        internal void NavigateTemp(string pageName, Action<IDebugUIBuilder> configure)
+        {
+            if (string.IsNullOrEmpty(pageName)) return;
+
+            var page = new GenericDebugPage(pageName, configure);
+            _pageCache.PreparePage(page);
+            NavigateToPage(page);
         }
 
         internal override void Back()
@@ -97,9 +109,12 @@ namespace Lilja.DebugUI.Editor
         {
             if (string.IsNullOrEmpty(RootPageName)) return;
 
+            var rootPage = GetCachedPage(RootPageName);
+            if (rootPage == null) return;
+
             _history.Clear();
             DetachCurrentPage();
-            SetPage(RootPageName);
+            SetPage(rootPage);
         }
 
         /// <summary>
@@ -114,40 +129,59 @@ namespace Lilja.DebugUI.Editor
 
         // ── プライベート ─────────────────────────────────────────────────────
 
-        private void SetPage(string pageName)
+        private DebugPage GetCachedPage(string pageName)
         {
-            _currentPageName = pageName;
-
             var page = _pageCache.Get(pageName);
             if (page == null)
             {
                 Debug.LogWarning($"[DebugMenu] EditorPageNavigator: page '{pageName}' not found.");
-                return;
+                return null;
             }
 
+            return page;
+        }
+
+        private void NavigateToPage(DebugPage page)
+        {
+            if (page == null) return;
+
+            var prevPage = _currentPage;
+            DetachCurrentPage();
+
+            if (prevPage != null && prevPage.name != page.name)
+                _history.Push(prevPage);
+
+            SetPage(page);
+        }
+
+        private void SetPage(DebugPage page)
+        {
+            if (page == null) return;
+
+            _currentPage = page;
+
             EditorTextRenderingUtility.ApplyMode(page);
-            _container.Add(page);
+            if (page.parent != _container)
+                _container.Add(page);
+
             page.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
             EditorTextRenderingUtility.RefreshTextNow(page);
             page.OnShown();
 
-            OnLabelChanged?.Invoke(pageName);
+            OnLabelChanged?.Invoke(page.name);
             OnBackVisibilityChanged?.Invoke(_history.Count > 0);
         }
 
         private void DetachCurrentPage()
         {
-            if (string.IsNullOrEmpty(_currentPageName)) return;
+            if (_currentPage == null) return;
 
-            var page = _pageCache.Get(_currentPageName);
-            if (page != null)
-            {
-                page.OnHidden();
-                EditorTextRenderingUtility.ClearMode(page);
-                page.RemoveFromHierarchy();
-            }
+            var page = _currentPage;
+            page.OnHidden();
+            EditorTextRenderingUtility.ClearMode(page);
+            page.RemoveFromHierarchy();
 
-            _currentPageName = null;
+            _currentPage = null;
         }
     }
 }
