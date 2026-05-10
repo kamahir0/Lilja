@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="EditorWindow debug menu placeholder">
+  <rect width="960" height="540" fill="#eef1f5"/>
+  <rect x="44" y="50" width="872" height="430" rx="12" fill="#2d3138" stroke="#9aa4b2" stroke-width="4" stroke-dasharray="18 12"/>
+  <rect x="44" y="50" width="872" height="44" rx="12" fill="#1f2329"/>
+  <circle cx="76" cy="72" r="7" fill="#ff5f57"/>
+  <circle cx="100" cy="72" r="7" fill="#ffbd2e"/>
+  <circle cx="124" cy="72" r="7" fill="#28c840"/>
+  <rect x="84" y="124" width="792" height="58" rx="8" fill="#3a404a"/>
+  <rect x="84" y="202" width="792" height="58" rx="8" fill="#3a404a"/>
+  <rect x="84" y="280" width="792" height="58" rx="8" fill="#3a404a"/>
+  <text x="480" y="159" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="26" font-weight="700" fill="#ffffff">EditorWindow Debug Menu</text>
+  <text x="480" y="444" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="22" font-weight="700" fill="#d5dce8">replace with assets/images/editor-window.svg</text>
+</svg>

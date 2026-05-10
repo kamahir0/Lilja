@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="placeholder image">
+  <rect width="960" height="540" fill="#eeeeec"/>
+  <rect x="32" y="32" width="896" height="476" rx="12" fill="#ffffff" stroke="#cccccc" stroke-width="4" stroke-dasharray="16 12"/>
+  <path d="M230 372l128-136 86 88 88-102 198 150H230z" fill="#d6e8ff" stroke="#8ab8f0" stroke-width="4"/>
+  <circle cx="306" cy="172" r="48" fill="#ffe3a3" stroke="#e0a82e" stroke-width="4"/>
+  <text x="480" y="450" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="34" font-weight="700" fill="#666666">image slot placeholder</text>
+  <text x="480" y="492" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="22" fill="#888888">assets/images/{slot}.png, .jpg, .webp, .svg</text>
+</svg>

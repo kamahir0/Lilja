@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "deck": "marp --server . --html --allow-local-files --theme theme.css",
+    "html": "marp slides.md --html --allow-local-files --theme theme.css -o dist/debug-menu-built-from-scratch.html",
+    "pdf": "marp slides.md --html --allow-local-files --theme theme.css -o dist/debug-menu-built-from-scratch.pdf",
+    "pptx": "marp slides.md --html --allow-local-files --theme theme.css --pptx -o dist/debug-menu-built-from-scratch.pptx",
+    "images": "powershell -NoProfile -ExecutionPolicy Bypass -File ./export-images.ps1"
+  },
+  "devDependencies": {
+    "@marp-team/marp-cli": "^4.4.0"
+  }
+}
