@@ -2,17 +2,21 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $PngDir = Join-Path $Root "dist/png"
-$LocalMarp = Join-Path $Root "node_modules/.bin/marp.cmd"
+$LocalSlidev = Join-Path $Root "node_modules/.bin/slidev.cmd"
 
-function Invoke-Marp {
+function Invoke-Slidev {
     param([string[]]$Arguments)
 
-    if (Test-Path -LiteralPath $LocalMarp) {
-        & $LocalMarp @Arguments
-        return
+    if (Test-Path -LiteralPath $LocalSlidev) {
+        & $LocalSlidev @Arguments
+    }
+    else {
+        npx @slidev/cli@52.15.2 @Arguments
     }
 
-    npx @marp-team/marp-cli@4.4.0 @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Slidev failed with exit code $LASTEXITCODE"
+    }
 }
 
 Push-Location $Root
@@ -26,18 +30,16 @@ try {
         throw "Refusing to clean outside deck root: $ResolvedPngDir"
     }
 
-    Get-ChildItem -Path $ResolvedPngDir -File -Filter "*.png" | Remove-Item -Force
+    Get-ChildItem -Path $ResolvedPngDir -Force | Remove-Item -Recurse -Force
 
-    Invoke-Marp @(
+    Invoke-Slidev @(
+        "export",
         "slides.md",
-        "--html",
-        "--allow-local-files",
-        "--theme",
-        "theme.css",
-        "--images",
+        "--format",
         "png",
-        "-o",
-        "dist/png/debug-menu-built-from-scratch.png"
+        "--per-slide",
+        "--output",
+        "dist/png"
     )
 }
 finally {

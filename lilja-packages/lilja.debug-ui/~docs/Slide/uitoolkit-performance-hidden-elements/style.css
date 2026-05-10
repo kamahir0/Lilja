@@ -1,7 +1,5 @@
-/* @theme lilja-debug-ui */
-
 :root,
-section {
+.slidev-layout {
     --slide-width: 1280px;
     --slide-height: 720px;
     --ink: #222222;
@@ -18,11 +16,12 @@ section {
     --code-ink: #f4f4f4;
 }
 
-* {
+.slidev-layout,
+.slidev-layout * {
     box-sizing: border-box;
 }
 
-section {
+.slidev-layout {
     width: var(--slide-width);
     height: var(--slide-height);
     padding: 96px 132px 76px 96px;
@@ -39,29 +38,29 @@ section {
     overflow: hidden;
 }
 
-section::after {
-    content: attr(data-marpit-pagination) " / " attr(data-marpit-pagination-total);
+.slide-page-number {
     position: absolute;
     right: 36px;
     bottom: 18px;
-    z-index: 3;
+    z-index: 30;
     color: #d0d0d0;
     font-size: 14px;
     font-weight: 700;
+    pointer-events: none;
 }
 
-section h1,
-section h2,
-section h3,
-section p,
-section ul,
-section ol,
-section pre,
-section table {
+.slidev-layout h1,
+.slidev-layout h2,
+.slidev-layout h3,
+.slidev-layout p,
+.slidev-layout ul,
+.slidev-layout ol,
+.slidev-layout pre,
+.slidev-layout table {
     margin-top: 0;
 }
 
-section h1 {
+.slidev-layout h1 {
     max-width: 920px;
     margin-bottom: 28px;
     font-size: 54px;
@@ -69,45 +68,45 @@ section h1 {
     font-weight: 850;
 }
 
-section h2 {
+.slidev-layout h2 {
     margin-bottom: 28px;
     font-size: 42px;
     line-height: 1.16;
     font-weight: 850;
 }
 
-section h3 {
+.slidev-layout h3 {
     margin-bottom: 14px;
     font-size: 24px;
     line-height: 1.2;
     font-weight: 800;
 }
 
-section p,
-section li,
-section td,
-section th {
+.slidev-layout p,
+.slidev-layout li,
+.slidev-layout td,
+.slidev-layout th {
     font-size: 24px;
     line-height: 1.5;
 }
 
-section p {
+.slidev-layout p {
     max-width: 930px;
 }
 
-section ul {
+.slidev-layout ul {
     padding-left: 30px;
 }
 
-section li {
+.slidev-layout li {
     margin-bottom: 12px;
 }
 
-section strong {
+.slidev-layout strong {
     font-weight: 850;
 }
 
-section code {
+.slidev-layout code {
     padding: 2px 6px;
     border-radius: 4px;
     background: #e9e9e6;
@@ -118,7 +117,7 @@ section code {
     word-break: break-word;
 }
 
-section pre {
+.slidev-layout pre {
     padding: 20px 24px;
     border-radius: 8px;
     background: var(--code-bg);
@@ -129,7 +128,7 @@ section pre {
     white-space: pre-wrap;
 }
 
-section pre code {
+.slidev-layout pre code {
     padding: 0;
     border-radius: 0;
     background: transparent;
@@ -137,60 +136,60 @@ section pre code {
     font-size: inherit;
 }
 
-section pre .hljs-keyword {
+.slidev-layout pre .hljs-keyword {
     color: #569cd6;
 }
 
-section pre .hljs-string {
+.slidev-layout pre .hljs-string {
     color: #ce9178;
 }
 
-section pre .hljs-title,
-section pre .hljs-title.function_ {
+.slidev-layout pre .hljs-title,
+.slidev-layout pre .hljs-title.function_ {
     color: #dcdcaa;
 }
 
-section pre .hljs-params,
-section pre .hljs-property,
-section pre .hljs-variable {
+.slidev-layout pre .hljs-params,
+.slidev-layout pre .hljs-property,
+.slidev-layout pre .hljs-variable {
     color: #9cdcfe;
 }
 
-section pre .hljs-type,
-section pre .hljs-class,
-section pre .hljs-built_in {
+.slidev-layout pre .hljs-type,
+.slidev-layout pre .hljs-class,
+.slidev-layout pre .hljs-built_in {
     color: #4ec9b0;
 }
 
-section pre .hljs-number,
-section pre .hljs-literal {
+.slidev-layout pre .hljs-number,
+.slidev-layout pre .hljs-literal {
     color: #b5cea8;
 }
 
-section pre .hljs-comment {
+.slidev-layout pre .hljs-comment {
     color: #6a9955;
     font-style: italic;
 }
 
-section pre .hljs-meta {
+.slidev-layout pre .hljs-meta {
     color: #c586c0;
 }
 
-section table {
+.slidev-layout table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
     background: var(--surface);
 }
 
-section th,
-section td {
+.slidev-layout th,
+.slidev-layout td {
     padding: 13px 14px;
     border: 1px solid var(--line);
     vertical-align: top;
 }
 
-section th {
+.slidev-layout th {
     background: #ededeb;
     font-weight: 800;
 }
@@ -568,18 +567,18 @@ section th {
     font-weight: 850;
 }
 
-section.title-slide {
+.slidev-layout.title-slide {
     background-color: #ffffff;
     padding-top: 168px;
     padding-left: 96px;
 }
 
-section.title-slide h1 {
+.slidev-layout.title-slide h1 {
     margin-bottom: 24px;
     font-size: 58px;
 }
 
-section.title-slide .subtitle {
+.slidev-layout.title-slide .subtitle {
     font-size: 28px;
     font-weight: 700;
 }
@@ -620,87 +619,87 @@ section.title-slide .subtitle {
     line-height: 1.32;
 }
 
-section.code-diagram-slide pre {
+.slidev-layout.code-diagram-slide pre {
     width: 48%;
     font-size: 18px;
     line-height: 1.32;
 }
 
-section.code-diagram-slide .side-diagram {
+.slidev-layout.code-diagram-slide .side-diagram {
     position: absolute;
     left: 650px;
     top: 178px;
     width: 500px;
 }
 
-section.initialize-slide pre {
+.slidev-layout.initialize-slide pre {
     width: 48%;
     font-size: 24px;
 }
 
-section.initialize-slide .side-flow {
+.slidev-layout.initialize-slide .side-flow {
     position: absolute;
     left: 640px;
     top: 218px;
     width: 500px;
 }
 
-section.initialize-slide .callout {
+.slidev-layout.initialize-slide .callout {
     margin-top: 34px;
 }
 
-section.dynamic-ui-slide pre {
+.slidev-layout.dynamic-ui-slide pre {
     margin-top: 28px;
     font-size: 18px;
     line-height: 1.32;
 }
 
-section.configure-slide pre {
+.slidev-layout.configure-slide pre {
     width: 58%;
     font-size: 18px;
     line-height: 1.32;
 }
 
-section.configure-slide .api-panel {
+.slidev-layout.configure-slide .api-panel {
     position: absolute;
     left: 770px;
     top: 174px;
     width: 380px;
 }
 
-section.configure-slide .api-panel h3 {
+.slidev-layout.configure-slide .api-panel h3 {
     margin-bottom: 14px;
 }
 
-section.configure-slide .api-grid {
+.slidev-layout.configure-slide .api-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
 }
 
-section.configure-slide .mini-card {
+.slidev-layout.configure-slide .mini-card {
     min-height: 104px;
     padding: 16px;
 }
 
-section.button-solution-slide pre {
+.slidev-layout.button-solution-slide pre {
     margin-top: 34px;
     font-size: 21px;
 }
 
-section.hidden-solution-slide pre {
+.slidev-layout.hidden-solution-slide pre {
     width: 48%;
     font-size: 22px;
 }
 
-section.hidden-solution-slide .side-stack {
+.slidev-layout.hidden-solution-slide .side-stack {
     position: absolute;
     left: 650px;
     top: 174px;
     width: 500px;
 }
 
-section.hidden-solution-slide .callout {
+.slidev-layout.hidden-solution-slide .callout {
     margin-top: 34px;
 }
 

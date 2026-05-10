@@ -1,14 +1,14 @@
 ---
-marp: true
-theme: lilja-debug-ui
-size: 16:9
-paginate: true
+theme: default
+aspectRatio: 16/9
+canvasWidth: 1280
+class: title-slide
+transition: none
+lineNumbers: false
 lang: ja
 title: デバッグメニュー自作してみた
-description: Lilja.DebugUI と UI Toolkit 実戦知見
+info: Lilja.DebugUI と UI Toolkit 実戦知見
 ---
-
-<!-- _class: title-slide -->
 
 # デバッグメニュー<br>自作してみた
 
@@ -45,8 +45,8 @@ description: Lilja.DebugUI と UI Toolkit 実戦知見
 <div class="callout">基本は3つ</div>
 
 ---
-
-<!-- _class: code-diagram-slide -->
+class: code-diagram-slide
+---
 
 ## 1. `DebugPage` を作る
 
@@ -70,8 +70,8 @@ public sealed class BattleDebugPage : DebugPage
 </div>
 
 ---
-
-<!-- _class: initialize-slide -->
+class: initialize-slide
+---
 
 ## 2. `Initialize` で起動する
 
@@ -90,8 +90,8 @@ DebugMenu.Initialize(root);
 </div>
 
 ---
-
-<!-- _class: configure-slide -->
+class: configure-slide
+---
 
 ## 3. `Configure` でUIを組み立てる
 
@@ -121,8 +121,8 @@ public override void Configure(IDebugUIBuilder builder)
 </div>
 
 ---
-
-<!-- _class: dynamic-ui-slide -->
+class: dynamic-ui-slide
+---
 
 ## 動的にUIを追加する
 
@@ -179,8 +179,7 @@ page.AddDebugUI(ui =>
     </div>
   </div>
   <figure class="image-frame">
-    <img src="assets/images/runtime-menu.svg" alt="Runtime debug menu screenshot">
-    <figcaption>差し替え想定: <code>assets/images/runtime-menu.svg</code></figcaption>
+    <img src="./assets/images/runtime-menu.png" alt="Runtime debug menu screenshot">
   </figure>
 </div>
 
@@ -198,8 +197,7 @@ page.AddDebugUI(ui =>
     </div>
   </div>
   <figure class="image-frame">
-    <img src="assets/images/editor-window.svg" alt="EditorWindow debug menu screenshot">
-    <figcaption>差し替え想定: <code>assets/images/editor-window.svg</code></figcaption>
+    <img src="./assets/images/editor-window.png" alt="EditorWindow debug menu screenshot">
   </figure>
 </div>
 
@@ -210,12 +208,10 @@ page.AddDebugUI(ui =>
 <div class="split-banner customization">
   <div class="banner">
     <h3>UIごと変えたい</h3>
-    <p>VisualElement であれば、自由に配置できる。</p>
-    <div class="mini-diagram">
-      DebugPage<br>
-      ├─ Custom VisualElement<br>
-      ├─ UI Toolkit 標準部品<br>
-      └─ 独自コンポーネント
+    <p>VisualElement であれば、大体自由に配置できるようになっている。</p>
+    <div class="stack compact-stack">
+      <div class="stack-row accent">標準UI</div>
+      <div class="stack-row accent">+カスタムUI</div>
     </div>
   </div>
   <div class="banner">
@@ -229,7 +225,7 @@ page.AddDebugUI(ui =>
   </div>
 </div>
 
-<div class="callout">用途に合わせて、UI構造から触るか、テーマだけで済ませるかを選べる。</div>
+<div class="callout">見た目だけならC#をいじる必要さえない</div>
 
 ---
 
@@ -272,7 +268,7 @@ page.AddDebugUI(ui =>
 
 <div class="grid-2">
   <figure class="image-frame">
-    <img src="assets/images/unity-debug-sheet-buttons.svg" alt="UnityDebugSheet button screenshot">
+    <img src="./assets/images/unity-debug-sheet-buttons.svg" alt="UnityDebugSheet button screenshot">
     <figcaption>差し替え想定: <code>assets/images/unity-debug-sheet-buttons.svg</code></figcaption>
   </figure>
   <div class="stack">
@@ -374,8 +370,8 @@ Button<br>
 </div>
 
 ---
-
-<!-- _class: button-solution-slide -->
+class: button-solution-slide
+---
 
 ## Button 対策: Clickable を差し替える
 
@@ -476,8 +472,8 @@ clickable.OnReleased += RestoreHoverColor;
 <div class="callout danger">デバッグメニューでは「開いた瞬間に重い」が一番困る。</div>
 
 ---
-
-<!-- _class: hidden-solution-slide -->
+class: hidden-solution-slide
+---
 
 ## 解決: 画面外 translate + 事前アタッチ
 
