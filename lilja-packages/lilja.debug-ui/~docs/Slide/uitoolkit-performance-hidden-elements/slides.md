@@ -232,7 +232,7 @@ UnityDebugSheetはかなりいいそこは認める
 
 <p class="section-kicker">UI Toolkit</p>
 
-## 正直、一長一短が激しい
+## 長所と短所
 
 <div class="grid-2">
   <div class="card"><h3 class="ok">良い</h3><p>AIエージェントとの相性はかなり良い</p></div>
@@ -290,10 +290,10 @@ UIToolkitはUXML/USS/C#のテキストで完結しやすいので、エージェ
 ## ただ、罠もだいぶ多かった
 
 <div class="grid-4">
-  <div class="mini-card"><h3>Button</h3><p>PointerDown が届かない</p></div>
-  <div class="mini-card"><h3>Clickable</h3><p>差し替えが必要</p></div>
-  <div class="mini-card"><h3>Slider</h3><p>PointerUp が取れない</p></div>
-  <div class="mini-card"><h3>USS</h3><p>結局C#補助が必要</p></div>
+  <div class="mini-card"><h3>USS</h3><p>背景色が標準テーマに負ける</p></div>
+  <div class="mini-card"><h3>Button</h3><p>Clickable がイベントを止める</p></div>
+  <div class="mini-card"><h3>Slider</h3><p>ClampedDragger がイベントを握る</p></div>
+  <div class="mini-card"><h3>Hidden</h3><p>初回表示の負荷が出る</p></div>
 </div>
 
 <div class="callout danger top-gap">結果から言うと、エンタープライズ開発のランタイムUIに使うのは保守が厳しいと思った</div>
@@ -306,11 +306,40 @@ UIToolkitはUXML/USS/C#のテキストで完結しやすいので、エージェ
 
 ---
 
-## Button: PointerDown が届かない
+## USS で background-color を制御しきれない
+
+<div class="flow-3">
+  <div class="node warn"><strong>:hover</strong><span>標準テーマに<br>上書きされる</span></div>
+  <div class="arrow">&gt;</div>
+  <div class="node warn"><strong>!important</strong><span>期待通り<br>勝てない</span></div>
+  <div class="arrow">&gt;</div>
+  <div class="node green"><strong>C#</strong><span>inline style で<br>直接反映</span></div>
+</div>
+
+<div class="grid-3 top-gap">
+  <div class="mini-card"><h3>やりたいこと</h3><p>hover / press の背景色変更</p></div>
+  <div class="mini-card"><h3>色定義</h3><p>USS custom property</p></div>
+  <div class="mini-card"><h3>状態反映</h3><p><code>style.backgroundColor</code></p></div>
+</div>
+
+<div class="callout top-gap">ここから Button / Slider のイベント問題につながった</div>
+
+<!--
+13:30-14:10
+最初にやりたかったのは、テーマを少し変えて、hoverやpress中の背景色を変えるだけだった
+ただ、USSの:hoverでbackground-colorを書いてもUnityのデフォルトテーマに上書きされる
+この用途では!importantも期待通りには勝てなかった
+なのでC#からinline styleでbackgroundColorを入れる必要が出てきた
+ここから「では押した瞬間や離した瞬間をどう取るのか」という話になり、ButtonとSliderの罠につながる
+-->
+
+---
+
+## Button: PointerDown イベントが取れない
 
 <div class="grid-2">
   <div>
-    <p class="big-message">標準 <code>Button</code> の BubbleUp では押下を拾えない</p>
+    <p class="big-message">標準 <code>Button</code> の <code>Clickable</code> 内部で押下が止まる</p>
   </div>
   <div class="mono-diagram">
 Button<br>
@@ -327,9 +356,10 @@ Button<br>
 </div>
 
 <!--
-13:30-14:30
+14:10-14:50
 クリックできない話ではないclickedは取れる
-押している間の色を変えるなど、押下中の状態管理をしたいときに困る
+原因はButtonのクリック処理を担当しているClickableの内部実装で、PointerDownEventがStopImmediatePropagationされること
+C#で押下中の背景色を変えようとしたときに、押した瞬間の状態管理で困った
 -->
 
 ---
@@ -354,78 +384,96 @@ clickable.OnReleased += RestoreHoverColor;
 <div class="callout top-gap">普通にイベントを購読するのではなく、標準部品の内部実装に入り込む必要があった</div>
 
 <!--
-14:30-15:10
+14:50-15:20
 Clickableを継承してProcessDownEvent / ProcessUpEventをフック
 このあたりから「驚き最小の原則」と逆方向のつらさが出てくる
 -->
 
 ---
 
-## Slider: PointerUp が release にならない
+## Slider: PointerUp イベントが取れない
 
 <div class="grid-2">
   <div>
-    <p class="lead"><code>ScrollView</code> の dragger で、押下は取れるが解放が取れない</p>
+    <p class="big-message"><code>ClampedDragger</code> により解放を拾えない</p>
     <div class="grid-2 compact-grid">
       <div class="mini-card"><h3>Down</h3><p class="ok">取れる</p></div>
       <div class="mini-card"><h3>Up</h3><p class="ng">取れない</p></div>
     </div>
   </div>
-  <div class="diagram">
-    <h3>採用したシグナル</h3>
-    <div class="node green">
-      <strong>PointerCaptureOut</strong>
-      <span>キャプチャ解放を release として扱う</span>
-    </div>
+  <div class="mono-diagram">
+ScrollView<br>
+└─ Slider<br>
+&nbsp;&nbsp;&nbsp;└─ ClampedDragger<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ PointerUpEvent<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ <span class="ng">StopImmediatePropagation()</span>
   </div>
 </div>
 
 <div class="callout top-gap">値変更ではなく、drag 中の見た目を戻すために必要だった</div>
 
 <!--
-15:10-16:00
+15:20-15:55
 SliderというよりScrollViewのdraggerで踏んだ話
-PointerUpではなくPointerCaptureOutを見る、という迂回になる
+内部的にはSliderのドラッグ操作を担当するClampedDraggerが絡んでいて、PointerUpを外側で期待通り拾えなかった
 -->
 
 ---
 
-## USS: 結局、見た目だけでは完結しない
+## Slider 対策: PointerCaptureOut を使う
 
 <div class="flow-3">
-  <div class="node warn"><strong>:hover</strong><span>背景色が<br>上書きされる</span></div>
+  <div class="node accent"><strong>Down</strong><span>親 Slider の<br>TrickleDown</span></div>
   <div class="arrow">&gt;</div>
-  <div class="node warn"><strong>!important</strong><span>期待通り<br>勝てない</span></div>
+  <div class="node"><strong>Drag</strong><span>active 色を<br>維持</span></div>
   <div class="arrow">&gt;</div>
-  <div class="node green"><strong>C#</strong><span>inline style で<br>状態反映</span></div>
+  <div class="node green"><strong>Release</strong><span>PointerCaptureOut</span></div>
 </div>
 
-<div class="split-banner top-gap">
-  <div class="banner">
-    <h3 class="ng">NG</h3>
-<pre><code>:root {
-  --hover-color: #eee;
-}</code></pre>
-    <p>C# の <code>TryGetValue</code> では読めない</p>
-  </div>
-  <div class="banner">
-    <h3 class="ok">OK</h3>
-<pre><code>.c-button--primary {
-  --hover-color: #eee;
-}</code></pre>
-    <p>対象要素に直接マッチさせる</p>
-  </div>
-</div>
+```csharp
+slider.RegisterCallback<PointerDownEvent>(
+    OnDraggerDown, TrickleDown.TrickleDown);
+
+slider.RegisterCallback<PointerCaptureOutEvent>(_ => OnRelease());
+dragger.RegisterCallback<PointerCaptureOutEvent>(_ => OnRelease());
+```
+
+<div class="callout top-gap">PointerUp そのものではなく、キャプチャ解除を drag 終了として扱った</div>
 
 <!--
-16:00-17:00
-見た目はUSS、状態遷移はC#、という分担になった
-CSSっぽく見えるが、CSSの期待値で触ると外れるところがある
+15:55-16:25
+PointerUpではなくPointerCaptureOutを見る、という迂回になる
+キャプチャ元がSlider側かdragger側かに寄るため、両方に登録してisPressedで二重実行を防いだ
 -->
 
 ---
 
-## 非表示最適化: 開いた瞬間を軽くする
+## 色を変えたいだけなのに...
+
+<div class="flow-3">
+  <div class="node"><strong>USS</strong><span>色の定義</span></div>
+  <div class="arrow">&gt;</div>
+  <div class="node warn"><strong>C#</strong><span>状態管理と<br>inline style</span></div>
+  <div class="arrow">&gt;</div>
+  <div class="node warn"><strong>内部実装</strong><span>Clickable /<br>ClampedDragger</span></div>
+</div>
+<br>
+<p class="big-message">やりたいことは背景色変更だけなのに、イベント伝播と標準部品の内部実装まで見ることになった</p>
+<br>
+<div class="callout danger top-gap">テーマ調整が USS で完結できず、結局 C# が必要</div>
+
+<!--
+16:25-17:00
+ここは総括
+USSで色を定義するところまでは自然だった
+ただ、状態管理と反映はC#側になり、ButtonではClickable、SliderではClampedDraggerの内部事情まで見ることになった
+細かいところでは、C#から読む--hover-colorや--active-colorは:rootではなく対象要素に直接マッチするセレクタへ置く必要もあった
+テーマをちょっと変えたいだけなのに、必要な知識がかなり低レイヤーまで降りてしまった、という話
+-->
+
+---
+
+## 最適化: 初回表示のスパイクを抑える
 
 <div class="flow-3">
   <div class="node"><strong>期待</strong><span>非表示中の処理を<br>止めたい</span></div>
@@ -456,119 +504,22 @@ display:noneはレンダリングやレイアウトを止められるので一�
 
 ---
 
-## まとめ
+## 結言
 
-<div class="grid-4">
-  <div class="mini-card"><h3>作ったもの</h3><p>階層式のデバッグメニュー</p></div>
-  <div class="mini-card"><h3>こだわり</h3><p>動的追加と EditorWindow 版</p></div>
-  <div class="mini-card"><h3>良かった点</h3><p>UI Toolkit は AI と相性が良い</p></div>
-  <div class="mini-card"><h3>つらかった点</h3><p>標準部品の内部実装との格闘</p></div>
+<div class="grid-2">
+  <div class="card"><h3 class="ok">UI Toolkit × AI</h3><p>UXML / USS はテキストなので、エージェントとの往復が軽い。個人開発やツール UI なら積極的に使える</p></div>
+  <div class="card"><h3 class="ng">内部実装との格闘</h3><p>Clickable・ClampedDragger・標準テーマの上書き。驚き最小の原則の逆を行く罠が多い</p></div>
 </div>
 
-<div class="quote-box top-gap">
-  <p>作る体験は良いただし、運用するには罠を吸収する設計が必要</p>
+<div class="grid-3 top-gap">
+  <div class="mini-card"><h3>個人開発</h3><p>トラブルを AI に丸投げできるならアリ</p></div>
+  <div class="mini-card"><h3>ツール UI</h3><p>用途を絞れば強いテキスト資産</p></div>
+  <div class="mini-card"><h3>大規模 Runtime</h3><p>チーム保守前提では慎重に</p></div>
 </div>
 
 <!--
-18:30-19:20
-今日話したことを一度回収する
-作ったのは階層式デバッグメニューこだわりは動的追加とEditorWindow版
+18:30-20:00
+作ったのは階層式デバッグメニューで、こだわりは動的追加と EditorWindow 版
 UI ToolkitはAIエージェントと相性が良い一方、標準部品の内部実装との格闘が多かった
-この整理を置いてから、最後の結論で採用判断の話に入る
--->
-
----
-
-## 結論
-
-<div class="grid-3">
-  <div class="card"><h3>個人開発</h3><p>AIエージェントにトラブル対応まで丸投げとかならアリかも</p></div>
-  <div class="card"><h3>ツールUI</h3><p>用途を絞れば強いテキスト資産として扱える</p></div>
-  <div class="card"><h3>大規模Runtime</h3><p>保守前提だとかなり慎重に見たい</p></div>
-</div>
-
-<div class="callout danger top-gap">便利ではあるただし、チーム開発のランタイムUI基盤として採用するには覚悟がいる</div>
-
-<!--
-19:20-20:00
-最後の結論
-個人開発で、UI ToolkitのトラブルはAIエージェント+上位モデルに任せる、ならアリかもしれない
-エンタープライズのランタイムUIとしては、保守が厳しいという締め
--->
-
----
-
-## 予備: Runtime 表示
-
-<div class="grid-2">
-  <div>
-    <p class="lead">ゲーム画面上で、その場の状態を見ながら操作する</p>
-    <div class="stack">
-      <div class="stack-row accent">実機に近い確認</div>
-      <div class="stack-row">タッチ操作</div>
-      <div class="stack-row">マウスホイール操作</div>
-    </div>
-  </div>
-  <figure class="image-frame">
-    <img src="./assets/images/runtime-menu.png" alt="Runtime debug menu screenshot">
-  </figure>
-</div>
-
-<!--
-ライブデモ失敗時の予備
-Runtimeでメニューが出ること、ページ遷移やコントロールを触れることをこの画像で説明する
--->
-
----
-
-## 予備: EditorWindow 表示
-
-<div class="grid-2">
-  <div>
-    <p class="lead">ゲーム画面を隠さず、Unity Editor 側で同じメニューを触る</p>
-    <div class="stack">
-      <div class="stack-row accent">画面を占有しない</div>
-      <div class="stack-row">同じ DebugPage</div>
-      <div class="stack-row">Editor 作業と併用</div>
-    </div>
-  </div>
-  <figure class="image-frame">
-    <img src="./assets/images/editor-window.png" alt="EditorWindow debug menu screenshot">
-  </figure>
-</div>
-
-<!--
-ライブデモ失敗時の予備
-同じDebugPageをEditor側へ借用できることを説明する
--->
-
----
-class: dynamic-ui-slide
----
-
-## 予備: 動的にUIを追加する
-
-<div class="grid-3">
-  <div class="mini-card"><h3>AddDebugUI</h3><p>ページ末尾にUIを後から追加</p></div>
-  <div class="mini-card"><h3>PlaceBehind</h3><p>既存UIの前後に差し込む</p></div>
-  <div class="mini-card"><h3>Dispose</h3><p>追加したUIを削除する</p></div>
-</div>
-
-```csharp
-var page = DebugMenu.GetPage<BattleDebugPage>();
-
-page.AddDebugUI(ui =>
-{
-    var slider = ui.Slider(
-        "Enemy HP", enemy.Hp.Value, 0, enemy.MaxHp,
-        value => enemy.Hp.Value = value);
-
-    enemy.Hp.Subscribe(hp => slider.value = hp)
-        .AddTo(enemy);
-}).AddTo(enemy);
-```
-
-<!--
-ライブデモ失敗時、または質疑で動的追加の詳細を聞かれたときの予備
-本編ではここまで読まない
+個人開発でAIにトラブル対応を丸投げするならアリ、エンタープライズのランタイムUIとしては保守が厳しい、という締め
 -->
