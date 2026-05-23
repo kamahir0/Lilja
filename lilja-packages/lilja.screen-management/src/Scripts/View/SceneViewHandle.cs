@@ -14,9 +14,10 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// シーン名指定を省略し、画面のクラス名から自動的にシーン名を推論してロードするデフォルトインスタンスを取得します。
         /// </summary>
-        public static SceneViewHandle Default => new SceneViewHandle(null);
+        public static SceneViewHandle Default => new(null);
 
         private readonly string _specifiedSceneName;
+        private readonly bool _unloadsAncestors;
         private string _resolvedSceneName;
         private Scene _loadedScene;
         private ISceneLoader _cachedLoader;
@@ -25,13 +26,24 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
+        /// <inheritdoc />
+        public bool IsLoaded => _loadedScene.IsValid() && _loadedScene.isLoaded;
+
+        /// <inheritdoc />
+        public bool IsUnloadedTemporarily { get; set; }
+
+        /// <inheritdoc />
+        public bool UnloadsAncestors => _unloadsAncestors;
+
         /// <summary>
         /// 加算ロードするシーン名を明示的に指定して、新しい <see cref="SceneViewHandle"/> インスタンスを初期化します。
         /// </summary>
         /// <param name="sceneName">シーン名（null の場合はクラス名から自動推論されます）</param>
-        public SceneViewHandle(string sceneName)
+        /// <param name="unloadsAncestors">このビューがロードされる際、先祖のビューを一時アンロードすべきかどうか</param>
+        public SceneViewHandle(string sceneName, bool unloadsAncestors = true)
         {
             _specifiedSceneName = sceneName;
+            _unloadsAncestors = unloadsAncestors;
         }
 
         /// <inheritdoc />
@@ -96,6 +108,13 @@ namespace Lilja.ScreenManagement
             _loadedScene = default;
             _cachedLoader = null;
             _rootObjects = Array.Empty<GameObject>();
+        }
+
+        /// <inheritdoc />
+        public UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
+        {
+            // シーンロードは事前ロードをサポートしていないため、何もしない（カスタム SceneLoader でのアセットダウンロード用）
+            return UniTask.CompletedTask;
         }
 
         private static string ResolveSceneNameFromType(Type ownerType)

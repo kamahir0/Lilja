@@ -16,6 +16,11 @@ namespace Lilja.ScreenManagement
     internal interface IGameScreenInternal : IGameScreen
     {
         /// <summary>
+        /// 伝播された画面遷移コンテキストを取得します。
+        /// </summary>
+        GameScreenContext Context { get; }
+
+        /// <summary>
         /// この画面が所有するビューハンドルを取得または遅延解決します。
         /// </summary>
         /// <returns>ビューハンドルインスタンス</returns>

@@ -33,6 +33,9 @@ namespace Lilja.ScreenManagement
         /// </summary>
         protected internal GameScreenContext Context { get; }
 
+        /// <inheritdoc />
+        GameScreenContext IGameScreenInternal.Context => Context;
+
         /// <summary>
         /// この画面の表示と演出（肉体）を担うビューハンドル。
         /// 派生クラスでオーバーライドしてアセットのロード方法を明示します。
@@ -53,6 +56,33 @@ namespace Lilja.ScreenManagement
                 }
             }
             return _cachedViewHandle;
+        }
+
+        /// <summary>
+        /// 画面がツリーに接続される前に、指定されたカスタムオプションを用いてビューのアセットを事前に非同期ロードしてメモリにキャッシュします。
+        /// </summary>
+        /// <param name="options">アセットロードに使用するカスタムオプション</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>非同期タスク</returns>
+        public async UniTask PreloadViewAsync(
+            GameScreenOptions options,
+            CancellationToken cancellationToken = default
+        )
+        {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            var handle = ((IGameScreenInternal)this).GetViewHandle();
+            if (handle == null)
+            {
+                return;
+            }
+
+            Context.Options = options;
+            handle.Initialize(GetType());
+            await handle.PreloadAsync(Context, cancellationToken);
         }
 
         /// <summary>
@@ -143,7 +173,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 破棄前にツリー上の接続関係などの参照を外すための内部クリーンアップ処理。
         /// </summary>
-        internal virtual void OnDispose()
+        protected virtual void OnDispose()
         {
             _cachedViewHandle = null;
         }

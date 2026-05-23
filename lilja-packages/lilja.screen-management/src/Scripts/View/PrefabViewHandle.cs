@@ -17,6 +17,7 @@ namespace Lilja.ScreenManagement
         public static PrefabViewHandle Default => new(null);
 
         private readonly string _specifiedKey;
+        private readonly bool _unloadsAncestors;
         private string _resolvedKey;
         private GameObject _instance;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
@@ -24,13 +25,24 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
+        /// <inheritdoc />
+        public bool IsLoaded => _instance != null;
+
+        /// <inheritdoc />
+        public bool IsUnloadedTemporarily { get; set; }
+
+        /// <inheritdoc />
+        public bool UnloadsAncestors => _unloadsAncestors;
+
         /// <summary>
         /// プレハブのキー（Resourcesパス等）を指定して、新しい <see cref="PrefabViewHandle"/> インスタンスを初期化します。
         /// </summary>
         /// <param name="prefabKey">プレハブのキー名（null の場合はクラス名から自動推論されます）</param>
-        public PrefabViewHandle(string prefabKey)
+        /// <param name="unloadsAncestors">このビューがロードされる際、先祖のビューを一時アンロードすべきかどうか</param>
+        public PrefabViewHandle(string prefabKey, bool unloadsAncestors = false)
         {
             _specifiedKey = prefabKey;
+            _unloadsAncestors = unloadsAncestors;
         }
 
         /// <inheritdoc />
@@ -98,7 +110,8 @@ namespace Lilja.ScreenManagement
         /// <param name="context">画面コンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        public UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
+        /// <inheritdoc />
+        public async UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
         {
             if (_resolvedKey == null)
             {
@@ -106,7 +119,7 @@ namespace Lilja.ScreenManagement
                     "PrefabViewHandle has not been initialized with a type context."
                 );
             }
-            return context.Options.PrefabProvider.LoadAsync(_resolvedKey, cancellationToken);
+            await context.Options.PrefabProvider.LoadAsync(_resolvedKey, cancellationToken);
         }
 
         private static string ResolveKeyFromType(Type ownerType)

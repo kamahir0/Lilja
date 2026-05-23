@@ -74,6 +74,9 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public sealed class GameScreenOptions
     {
+        private IPrefabProvider _prefabProvider;
+        private ISceneLoader _sceneLoader;
+
         /// <summary>
         /// 画面遷移時に使用されるトランジション演出（フェード等）。
         /// </summary>
@@ -82,20 +85,19 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// プレハブのロードに使用されるアセットプロバイダー。未設定の場合は Resources API にフォールバックします。
         /// </summary>
-        public IPrefabProvider PrefabProvider { get; set; }
+        public IPrefabProvider PrefabProvider
+        {
+            get => _prefabProvider ??= new ResourcesPrefabProvider();
+            set => _prefabProvider = value;
+        }
 
         /// <summary>
         /// シーンのロードに使用されるサービス。未設定の場合は Unity 標準の SceneManager にフォールバックします。
         /// </summary>
-        public ISceneLoader SceneLoader { get; set; }
-
-        /// <summary>
-        /// 未設定のプロバイダーに標準のデフォルト実装を割り当てて補完します。
-        /// </summary>
-        internal void ApplyDefaults()
+        public ISceneLoader SceneLoader
         {
-            PrefabProvider ??= new ResourcesPrefabProvider();
-            SceneLoader ??= new DefaultSceneLoader();
+            get => _sceneLoader ??= new DefaultSceneLoader();
+            set => _sceneLoader = value;
         }
     }
 

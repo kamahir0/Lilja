@@ -24,7 +24,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 破棄時の内部クリーンアップ処理を行います。
         /// </summary>
-        internal override void OnDispose()
+        protected override void OnDispose()
         {
             _group = null;
         }

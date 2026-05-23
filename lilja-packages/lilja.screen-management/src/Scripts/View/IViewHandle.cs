@@ -16,11 +16,34 @@ namespace Lilja.ScreenManagement
         GameObject[] RootObjects { get; }
 
         /// <summary>
+        /// ビューが現在ロードされ、有効な状態であるかどうかを取得します。
+        /// </summary>
+        bool IsLoaded { get; }
+
+        /// <summary>
+        /// メモリ確保のためにビューが一時的にアンロードされた状態であるかどうかを取得または設定します。
+        /// </summary>
+        bool IsUnloadedTemporarily { get; set; }
+
+        /// <summary>
+        /// このビューがロードされる際、メモリ確保のために先祖（親方向）のビューを一時アンロードすべきかどうかを取得します。
+        /// </summary>
+        bool UnloadsAncestors { get; }
+
+        /// <summary>
         /// 画面がインスタンス化された後、ビューのロードが始まる直前に呼び出されます。
         /// 画面の型情報を受け取って、マジックテキストを排除した自動キー解決などを行います。
         /// </summary>
         /// <param name="ownerType">このビューハンドルを所有する画面の型</param>
         void Initialize(Type ownerType);
+
+        /// <summary>
+        /// アセットデータなどをメモリに事前ロード（Preload）します。
+        /// </summary>
+        /// <param name="context">伝播された画面遷移コンテキスト</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>非同期タスク</returns>
+        UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// ビューアセットを非同期でロード（生成または加算シーンロード）します。
