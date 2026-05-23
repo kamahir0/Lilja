@@ -55,8 +55,14 @@ namespace Lilja.ScreenManagement
                         await callerScreen.PauseAsync(cancellationToken);
                     }
 
-                    // 3. 子画面ビューの遅延初期化とロード、ソート順、入力遮断、オープン演出の実行
-                    await PrepareAndOpenScreenAsync(calleeScreen, args, cancellationToken);
+                    // 3. 子画面ビューのロードと物理的セットアップ
+                    await Screen.LoadAsync(calleeScreen, cancellationToken);
+
+                    // 4. 入場演出を非同期実行
+                    await ((IGameScreenInternal<TArgs>)calleeScreen).OpenAsync(
+                        args,
+                        cancellationToken
+                    );
 
                     // 4. 結果が確定するかキャンセルされるまで非同期待機
                     var completionSource = calleeScreen.CompletionSource;
@@ -224,8 +230,14 @@ namespace Lilja.ScreenManagement
 
                     try
                     {
-                        // 4. ビューのロードとオープン演出の実行
-                        await PrepareAndOpenScreenAsync(nextScreen, args, cancellationToken);
+                        // 4. ビューのロードと物理的セットアップ
+                        await Screen.LoadAsync(nextScreen, cancellationToken);
+
+                        // 5. 入場演出を非同期実行
+                        await ((IGameScreenInternal<TArgs>)nextScreen).OpenAsync(
+                            args,
+                            cancellationToken
+                        );
                     }
                     catch
                     {
@@ -377,7 +389,7 @@ namespace Lilja.ScreenManagement
                 // 4. サブツリーの破棄完了後、一時アンロードされていた先祖のビューを安全かつ高速に復元する
                 if (parentToRestore != null)
                 {
-                    await RestoreAncestorsAsync(parentToRestore, cancellationToken);
+                    await Screen.RestoreAncestorsAsync(parentToRestore, cancellationToken);
                 }
             }
 
@@ -446,7 +458,7 @@ namespace Lilja.ScreenManagement
                         break;
                     case IGameScreenInternal screen:
                         // ビューの解放と [UnityView] の null クリアを実行し、最後に Dispose する
-                        TeardownScreen(screen);
+                        Screen.Teardown(screen);
                         break;
                 }
             }
@@ -460,180 +472,162 @@ namespace Lilja.ScreenManagement
             }
         }
 
-        #region 内部ライフサイクルプロシージャ
-
         /// <summary>
-        /// 画面アセットをロードし、依存注入、ソート順、入力遮断を適用した後に、Open演出を実行します。
+        /// 単一の画面（Screen）に対する物理的なインフラ処理（ロード・解体）を司るモジュール。
         /// </summary>
-        private static async UniTask PrepareAndOpenScreenAsync<TArgs>(
-            GameScreenBase<TArgs> screen,
-            TArgs args,
-            CancellationToken cancellationToken
-        )
+        internal static class Screen
         {
-            var viewHandle = ((IGameScreenInternal)screen).GetViewHandle();
-            if (viewHandle == null)
+            /// <summary>
+            /// 画面アセットをロードし、依存注入、ソート順、入力遮断を適用して画面を物理的に使用可能な状態にします。
+            /// </summary>
+            internal static async UniTask LoadAsync(
+                IGameScreenInternal screen,
+                CancellationToken cancellationToken
+            )
             {
-                throw new InvalidOperationException(
-                    $"ViewHandle is null in screen '{screen.GetType().Name}'."
-                );
-            }
-
-            // 1. 遅延解決 (コンストラクタの罠の完全回避)
-            viewHandle.Initialize(screen.GetType());
-
-            // 2. ビューハンドルが先祖アンロードを要求している場合、既存ビューをロード前に一時アンロードする
-            if (viewHandle.UnloadsAncestors)
-            {
-                UnloadAncestors(screen.Context.Connector);
-            }
-
-            // 3. ビューの非同期ロード
-            await viewHandle.LoadAsync(screen.Context, cancellationToken);
-
-            var rootObjects = viewHandle.RootObjects;
-
-            // 3. Canvas 描画順の適用
-            Layout.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
-
-            // 4. [UnityView] によるコンポーネント自動注入
-            UnityViewUtility.Inject(screen, rootObjects);
-
-            // 5. 重ね合わされる Overlay (Layer > 0) の場合、背面レイキャストブロッカーを生成
-            if (screen.Context.Layer > 0)
-            {
-                Layout.CreateBehindRaycastBlocker(rootObjects);
-            }
-
-            // 6. 入場演出を非同期実行
-            await ((IGameScreenInternal<TArgs>)screen).OpenAsync(args, cancellationToken);
-        }
-
-        /// <summary>
-        /// ビューアセットをアンロードし、注入された参照フィールドを null でクリアした上で、画面を破棄します。
-        /// </summary>
-        private static void TeardownScreen(IGameScreenInternal screen)
-        {
-            try
-            {
-                // [UnityView] 参照フィールドを null クリアし、メモリリークを完全に防止する
-                UnityViewUtility.Nullify(screen);
-            }
-            finally
-            {
-                try
+                var viewHandle = screen.GetViewHandle();
+                if (viewHandle == null)
                 {
-                    // インターフェース経由で直接100%安全かつ超高速にアンロード！ (リフレクション完全排除)
-                    screen.GetViewHandle()?.Unload();
+                    throw new InvalidOperationException(
+                        $"ViewHandle is null in screen '{screen.GetType().Name}'."
+                    );
                 }
-                finally
+
+                // 1. 遅延解決 (コンストラクタの罠の完全回避)
+                viewHandle.Initialize(screen.GetType());
+
+                // 2. ビューハンドルが先祖アンロードを要求している場合、既存ビューをロード前に一時アンロードする
+                if (viewHandle.UnloadsAncestors)
                 {
-                    // 画面オブジェクト自体の Dispose を実行
-                    screen.Dispose();
+                    UnloadAncestors(screen.Context.Connector);
                 }
-            }
-        }
 
-        /// <summary>
-        /// 指定されたコネクタから親（先祖）方向へ遡り、ロード済みのビューを一時アンロードしてフラグを設定します。
-        /// </summary>
-        private static void UnloadAncestors(GameScreenConnector startConnector)
-        {
-            for (var parent = startConnector.Parent; parent != null; parent = parent.Parent)
-            {
-                if (parent.Owner is IGameScreenInternal screen)
-                {
-                    var handle = screen.GetViewHandle();
-                    if (handle != null && handle.IsLoaded)
-                    {
-                        // [UnityView] 参照フィールドを一旦 null クリア
-                        UnityViewUtility.Nullify(screen);
-                        
-                        // ビューを物理的にアンロード
-                        handle.Unload();
-                        
-                        // 一時アンロード状態を記録
-                        handle.IsUnloadedTemporarily = true;
-                    }
-                }
-            }
-        }
+                // 3. ビューの非同期ロード
+                await viewHandle.LoadAsync(screen.Context, cancellationToken);
 
-        /// <summary>
-        /// 一時アンロードされていた先祖のビューを、並列ロードと直列インスタンス化のハイブリッドで安全かつ超高速に復元します。
-        /// </summary>
-        private static async UniTask RestoreAncestorsAsync(
-            GameScreenConnector startConnector,
-            CancellationToken cancellationToken
-        )
-        {
-            var pendingScreens = new List<IGameScreenInternal>();
-            for (var parent = startConnector; parent != null; parent = parent.Parent)
-            {
-                if (parent.Owner is IGameScreenInternal screen)
-                {
-                    var handle = screen.GetViewHandle();
-                    if (handle != null)
-                    {
-                        if (handle.IsUnloadedTemporarily)
-                        {
-                            pendingScreens.Add(screen);
-                        }
+                var rootObjects = viewHandle.RootObjects;
 
-                        // [境界の打ち切り]
-                        // 先祖アンロードを行う画面（重い画面 h）に遭遇した場合、
-                        // その画面自体の復元までをこのライフサイクルで処理し、それより親の領域は探索を打ち切ります。
-                        if (handle.UnloadsAncestors)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (pendingScreens.Count == 0)
-            {
-                return;
-            }
-
-            // 1. [並列アセットロード] すべての一時アンロード画面のアセット事前ロードを一斉に並列実行（WhenAll）
-            var preloadTasks = new List<UniTask>(pendingScreens.Count);
-            foreach (var screen in pendingScreens)
-            {
-                var handle = screen.GetViewHandle();
-                preloadTasks.Add(handle.PreloadAsync(screen.Context, cancellationToken));
-            }
-            await UniTask.WhenAll(preloadTasks);
-
-            // 2. [直列インスタンス化] アセットがメモリに載った状態で、最親から順に 1 つずつ直列にインスタンス化/アクティベート
-            for (var i = pendingScreens.Count - 1; i >= 0; i--)
-            {
-                var screen = pendingScreens[i];
-                var handle = screen.GetViewHandle();
-
-                // ビューのロード（アセットはすでに Preload されているため、Instantiate/シーン有効化のみが直列で走る）
-                await handle.LoadAsync(screen.Context, cancellationToken);
-                handle.IsUnloadedTemporarily = false;
-
-                var rootObjects = handle.RootObjects;
-
-                // Canvas 描画順の適用
+                // 4. Canvas 描画順の適用
                 Layout.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
 
-                // [UnityView] によるコンポーネント自動注入
+                // 5. [UnityView] によるコンポーネント自動注入
                 UnityViewUtility.Inject(screen, rootObjects);
 
-                // 重ね合わされる Overlay (Layer > 0) の場合、背面レイキャストブロッカーを復元
+                // 6. 重ね合わされる Overlay (Layer > 0) の場合、背面レイキャストブロッカーを生成
                 if (screen.Context.Layer > 0)
                 {
                     Layout.CreateBehindRaycastBlocker(rootObjects);
                 }
             }
+
+            /// <summary>
+            /// ビューアセットをアンロードし、注入された参照フィールドを null でクリアした上で、画面を破棄します。
+            /// </summary>
+            internal static void Teardown(IGameScreenInternal screen)
+            {
+                try
+                {
+                    // [UnityView] 参照フィールドを null クリアし、メモリリークを完全に防止する
+                    UnityViewUtility.Nullify(screen);
+                }
+                finally
+                {
+                    try
+                    {
+                        // インターフェース経由で直接100%安全かつ超高速にアンロード！ (リフレクション完全排除)
+                        screen.GetViewHandle()?.Unload();
+                    }
+                    finally
+                    {
+                        // 画面オブジェクト自体の Dispose を実行
+                        screen.Dispose();
+                    }
+                }
+            }
+
+            /// <summary>
+            /// 指定されたコネクタから親（先祖）方向へ遡り、ロード済みのビューを一時アンロードしてフラグを設定します。
+            /// </summary>
+            private static void UnloadAncestors(GameScreenConnector startConnector)
+            {
+                for (var parent = startConnector.Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent.Owner is IGameScreenInternal screen)
+                    {
+                        var handle = screen.GetViewHandle();
+                        if (handle != null && handle.IsLoaded)
+                        {
+                            // [UnityView] 参照フィールドを一旦 null クリア
+                            UnityViewUtility.Nullify(screen);
+
+                            // ビューを物理的にアンロード
+                            handle.Unload();
+
+                            // 一時アンロード状態を記録
+                            handle.IsUnloadedTemporarily = true;
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// 一時アンロードされていた先祖のビューを、並列ロードと直列インスタンス化のハイブリッドで安全かつ超高速に復元します。
+            /// </summary>
+            internal static async UniTask RestoreAncestorsAsync(
+                GameScreenConnector startConnector,
+                CancellationToken cancellationToken
+            )
+            {
+                var pendingScreens = new List<IGameScreenInternal>();
+                for (var parent = startConnector; parent != null; parent = parent.Parent)
+                {
+                    if (parent.Owner is IGameScreenInternal screen)
+                    {
+                        var handle = screen.GetViewHandle();
+                        if (handle != null)
+                        {
+                            if (handle.IsUnloadedTemporarily)
+                            {
+                                pendingScreens.Add(screen);
+                            }
+
+                            // [境界の打ち切り]
+                            // 先祖アンロードを行う画面（重い画面 h）に遭遇した場合、
+                            // その画面自体の復元までをこのライフサイクルで処理し、それより親の領域は探索を打ち切ります。
+                            if (handle.UnloadsAncestors)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (pendingScreens.Count == 0)
+                {
+                    return;
+                }
+
+                // 1. [並列アセットロード] すべての一時アンロード画面のアセット事前ロードを一斉に並列実行（WhenAll）
+                var preloadTasks = new List<UniTask>(pendingScreens.Count);
+                foreach (var screen in pendingScreens)
+                {
+                    var handle = screen.GetViewHandle();
+                    preloadTasks.Add(handle.PreloadAsync(screen.Context, cancellationToken));
+                }
+                await UniTask.WhenAll(preloadTasks);
+
+                // 2. [直列インスタンス化] アセットがメモリに載った状態で、最親から順に 1 つずつ直列にインスタンス化/アクティベート
+                for (var i = pendingScreens.Count - 1; i >= 0; i--)
+                {
+                    var screen = pendingScreens[i];
+                    var handle = screen.GetViewHandle();
+
+                    // 物理ロード処理を安全に再利用（重複の完全排除）
+                    await LoadAsync(screen, cancellationToken);
+                    handle.IsUnloadedTemporarily = false;
+                }
+            }
         }
-
-        #endregion
-
-        #region ビュー処理（旧ユーティリティの統合プロシージャ）
 
         /// <summary>
         /// キャンバスの描画順や背面レイキャストブロックなど、物理的なレイアウト調整を行う手続きモジュール。
@@ -755,7 +749,5 @@ namespace Lilja.ScreenManagement
                 graphic.raycastTarget = true;
             }
         }
-
-        #endregion
     }
 }
