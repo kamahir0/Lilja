@@ -2,7 +2,7 @@
     "name": "Lilja.ScreenManagement",
     "rootNamespace": "Lilja.ScreenManagement",
     "references": [
-        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -11,12 +11,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.cysharp.unitask",
-            "expression": "",
-            "define": ""
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }
