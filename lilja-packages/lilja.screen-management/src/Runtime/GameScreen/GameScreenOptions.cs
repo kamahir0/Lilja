@@ -9,6 +9,11 @@ namespace Lilja.ScreenManagement
         private ISceneLoader _sceneLoader;
 
         /// <summary>
+        /// デフォルトの設定オプション。
+        /// </summary>
+        public static GameScreenOptions Default { get; } = new GameScreenOptions();
+
+        /// <summary>
         /// 画面遷移時に使用されるトランジション演出。
         /// </summary>
         public ITransition Transition { get; set; }

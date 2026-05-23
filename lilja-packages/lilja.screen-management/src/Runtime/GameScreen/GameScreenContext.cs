@@ -10,6 +10,28 @@ namespace Lilja.ScreenManagement
         internal GameScreenContext(GameScreenConnector connector)
         {
             Connector = connector ?? throw new ArgumentNullException(nameof(connector));
+            Options = GameScreenOptions.Default;
+        }
+
+        /// <summary>
+        /// 画面階層の最上部（Root）として機能する、新規のルートコンテキストを生成します。
+        /// </summary>
+        /// <param name="options">この遷移ツリー全体で共有・伝播されるカスタムオプション。指定しない場合はデフォルト設定が適用されます。</param>
+        /// <returns>安全に初期化されたルートコンテキストインスタンス</returns>
+        public static GameScreenContext CreateRoot(GameScreenOptions options = null)
+        {
+            var connector = new GameScreenConnector();
+            var context = new GameScreenContext(connector)
+            {
+                Layer = 0
+            };
+
+            if (options != null)
+            {
+                context.Options = options;
+            }
+
+            return context;
         }
 
         /// <summary>

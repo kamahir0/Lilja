@@ -59,7 +59,14 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
-                    if (callerConnector.Child == calleeConnector)
+                    if (callerConnector.Owner != null)
+                    {
+                        if (callerConnector.Child == calleeConnector)
+                        {
+                            await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
+                        }
+                    }
+                    else
                     {
                         await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
                     }
@@ -154,10 +161,19 @@ namespace Lilja.ScreenManagement
                     throw new ArgumentNullException(nameof(calleeGroup));
                 }
 
+                var callerConnector = callerContext.Connector;
                 var calleeConnector = calleeGroup.Context.Connector;
-                Connector.Connect(callerContext.Connector, calleeConnector);
 
-                calleeGroup.Context.Layer = callerContext.Layer + 1;
+                if (callerConnector.Owner != null)
+                {
+                    Connector.Connect(callerConnector, calleeConnector);
+                    calleeGroup.Context.Layer = callerContext.Layer + 1;
+                }
+                else
+                {
+                    calleeGroup.Context.Layer = callerContext.Layer;
+                }
+
                 calleeGroup.Context.Options = callerContext.Options;
 
                 calleeGroup.ConfigureInternal();

@@ -30,9 +30,16 @@ namespace Lilja.ScreenManagement
                 var callerConnector = callerContext.Connector;
                 var calleeConnector = calleeScreen.Context.Connector;
 
-                Connector.Connect(callerConnector, calleeConnector);
+                if (callerConnector.Owner != null)
+                {
+                    Connector.Connect(callerConnector, calleeConnector);
+                    calleeScreen.Context.Layer = callerContext.Layer + 1;
+                }
+                else
+                {
+                    calleeScreen.Context.Layer = callerContext.Layer;
+                }
 
-                calleeScreen.Context.Layer = callerContext.Layer + 1;
                 calleeScreen.Context.Options = callerContext.Options;
 
                 var result = default(TResult);
@@ -69,7 +76,14 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
-                    if (callerConnector.Child == calleeConnector)
+                    if (callerConnector.Owner != null)
+                    {
+                        if (callerConnector.Child == calleeConnector)
+                        {
+                            await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
+                        }
+                    }
+                    else
                     {
                         await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
                     }
