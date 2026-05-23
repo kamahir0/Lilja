@@ -3,19 +3,24 @@ using UnityEngine.UI;
 
 namespace Lilja.ScreenManagement
 {
-
+    /// <summary>
+    /// メッシュの生成や描画処理を一切行わず、物理的なレイキャスト衝突検知（入力遮断）のみを提供する不可視の UI グラフィックコンポーネント。
+    /// </summary>
     [RequireComponent(typeof(CanvasRenderer))]
     public sealed class InvisibleGraphic : Graphic
     {
-
-        public InvisibleGraphic()
-        {
-            useLegacyMeshGeneration = false;
-        }
-
+        /// <inheritdoc />
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
+        }
+
+        /// <summary>
+        /// 新しい <see cref="InvisibleGraphic"/> インスタンスを初期化します。
+        /// </summary>
+        public InvisibleGraphic()
+        {
+            useLegacyMeshGeneration = false;
         }
     }
 }

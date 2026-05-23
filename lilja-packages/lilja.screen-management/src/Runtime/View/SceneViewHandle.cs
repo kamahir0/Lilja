@@ -6,10 +6,14 @@ using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
 {
-
+    /// <summary>
+    /// Unity の Scene 加算ロードを物理的なビューの実体として管理する、ビューハンドルクラス。
+    /// </summary>
     public sealed class SceneViewHandle : IViewHandle
     {
-
+        /// <summary>
+        /// シーン名自動解決に対応した、空のデフォルトハンドルインスタンスを取得します。
+        /// </summary>
         public static SceneViewHandle Default => new(null);
 
         private readonly string _specifiedSceneName;
@@ -19,20 +23,45 @@ namespace Lilja.ScreenManagement
         private ISceneLoader _cachedLoader;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
 
-        public GameObject[] RootObjects => _rootObjects;
-
-        public bool IsLoaded => _loadedScene.IsValid() && _loadedScene.isLoaded;
-
-        public bool IsUnloadedTemporarily { get; set; }
-
-        public bool UnloadsAncestors => _unloadsAncestors;
-
+        /// <summary>
+        /// 新しい <see cref="SceneViewHandle"/> インスタンスを初期化します。
+        /// </summary>
+        /// <param name="sceneName">ロード対象のシーンアセット名</param>
+        /// <param name="unloadsAncestors">このビューロード時に先祖画面のアンロードを要求するか</param>
         public SceneViewHandle(string sceneName, bool unloadsAncestors = true)
         {
             _specifiedSceneName = sceneName;
             _unloadsAncestors = unloadsAncestors;
         }
 
+        private static string ResolveSceneNameFromType(Type ownerType)
+        {
+            var typeName = ownerType.Name;
+            const string suffix = "Screen";
+
+            if (typeName.EndsWith(suffix))
+            {
+                typeName = typeName[..^suffix.Length];
+            }
+
+            return typeName;
+        }
+
+        #region IViewHandle
+
+        /// <inheritdoc />
+        public GameObject[] RootObjects => _rootObjects;
+
+        /// <inheritdoc />
+        public bool IsLoaded => _loadedScene.IsValid() && _loadedScene.isLoaded;
+
+        /// <inheritdoc />
+        public bool IsUnloadedTemporarily { get; set; }
+
+        /// <inheritdoc />
+        public bool UnloadsAncestors => _unloadsAncestors;
+
+        /// <inheritdoc />
         public void Initialize(Type ownerType)
         {
             if (_resolvedSceneName != null)
@@ -45,6 +74,13 @@ namespace Lilja.ScreenManagement
                 : ResolveSceneNameFromType(ownerType);
         }
 
+        /// <inheritdoc />
+        public UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
+        {
+            return UniTask.CompletedTask;
+        }
+
+        /// <inheritdoc />
         public async UniTask LoadAsync(
             GameScreenContext context,
             CancellationToken cancellationToken
@@ -78,11 +114,11 @@ namespace Lilja.ScreenManagement
             _rootObjects = _loadedScene.GetRootGameObjects();
         }
 
+        /// <inheritdoc />
         public void Unload()
         {
             if (_cachedLoader != null && _loadedScene.IsValid() && _loadedScene.isLoaded)
             {
-
                 _cachedLoader.UnloadSceneAsync(_loadedScene, CancellationToken.None).Forget();
             }
 
@@ -91,23 +127,6 @@ namespace Lilja.ScreenManagement
             _rootObjects = Array.Empty<GameObject>();
         }
 
-        public UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
-        {
-
-            return UniTask.CompletedTask;
-        }
-
-        private static string ResolveSceneNameFromType(Type ownerType)
-        {
-            var typeName = ownerType.Name;
-            const string suffix = "Screen";
-
-            if (typeName.EndsWith(suffix))
-            {
-                typeName = typeName[..^suffix.Length];
-            }
-
-            return typeName;
-        }
+        #endregion
     }
 }
