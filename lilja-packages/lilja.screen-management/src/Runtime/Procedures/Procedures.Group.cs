@@ -63,7 +63,10 @@ namespace Lilja.ScreenManagement
                     {
                         if (callerConnector.Child == calleeConnector)
                         {
-                            await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
+                            await Connector.DropSubtreeAsync(
+                                calleeConnector,
+                                CancellationToken.None
+                            );
                         }
                     }
                     else

@@ -21,10 +21,7 @@ namespace Lilja.ScreenManagement
         public static GameScreenContext CreateRoot(GameScreenOptions options = null)
         {
             var connector = new GameScreenConnector();
-            var context = new GameScreenContext(connector)
-            {
-                Layer = 0
-            };
+            var context = new GameScreenContext(connector) { Layer = 0 };
 
             if (options != null)
             {
