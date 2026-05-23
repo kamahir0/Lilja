@@ -48,7 +48,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// グループの生存期間を待機するための非同期ソース。
         /// </summary>
-        internal UniTaskCompletionSource<ValueTuple> CompletionSource { get; } = new();
+        internal UniTaskCompletionSource CompletionSource { get; } = new();
 
         /// <summary>
         /// 内部的な初期設定を実行します。
@@ -157,7 +157,7 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public void Complete()
         {
-            CompletionSource.TrySetResult(new ValueTuple());
+            CompletionSource.TrySetResult();
         }
 
         /// <summary>
