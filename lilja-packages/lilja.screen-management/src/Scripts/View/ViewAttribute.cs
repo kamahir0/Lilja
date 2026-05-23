@@ -10,5 +10,5 @@ namespace Lilja.ScreenManagement
     /// この属性はプロパティには付与せず、原則 private/protected フィールドに対して付与します。
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-    public sealed class UnityViewAttribute : Attribute { }
+    public sealed class ViewAttribute : Attribute { }
 }

@@ -6,7 +6,7 @@ namespace Lilja.ScreenManagement
     /// <summary>
     /// キャンバスの描画順や背面入力遮断オブジェクトの生成など、ビュー（肉体）の物理的・視覚的なレイアウト調整を担当するユーティリティ。
     /// </summary>
-    internal static class CanvasUtility
+    internal static class CanvasOrderUtility
     {
         private const int LayerOrderRange = 1000;
         private static readonly List<Canvas> _canvasBuffer = new(16);
@@ -47,7 +47,7 @@ namespace Lilja.ScreenManagement
                 if (canvas.renderMode == RenderMode.WorldSpace)
                 {
                     Debug.LogWarning(
-                        $"[ViewLayoutUtility] WorldSpace Canvas はソート順制御のサポート対象外です: {canvas.gameObject.name}"
+                        $"[CanvasLayoutUtility] WorldSpace Canvas はソート順制御のサポート対象外です: {canvas.gameObject.name}"
                     );
                     continue;
                 }

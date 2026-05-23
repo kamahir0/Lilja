@@ -6,18 +6,18 @@ using UnityEngine;
 namespace Lilja.ScreenManagement
 {
     /// <summary>
-    /// [UnityView] 属性が付与されたフィールドに対して、コンポーネントの自動依存注入（Dependency Injection）および
+    /// [View] 属性が付与されたフィールドに対して、コンポーネントの自動依存注入（Dependency Injection）および
     /// メモリ解放のための null クリアを行うユーティリティ静的クラス。
     /// </summary>
-    internal static class UnityViewUtility
+    internal static class ViewInjectUtility
     {
-        // リフレクションの走査コストを抑えるため、型ごとの[UnityView]フィールドリストをキャッシュします
+        // リフレクションの走査コストを抑えるため、型ごとの[View]フィールドリストをキャッシュします
         private static readonly Dictionary<Type, List<FieldInfo>> _fieldCache = new();
 
         /// <summary>
-        /// ビューアセット内のコンポーネントを、対象画面オブジェクトの [UnityView] フィールドに注入します。
+        /// ビューアセット内のコンポーネントを、対象画面オブジェクトの [View] フィールドに注入します。
         /// </summary>
-        /// <param name="target">注入対象の画面オブジェクト</param>
+        /// <param name="target">注入対象 of 画面オブジェクト</param>
         /// <param name="rootObjects">ロードされたビューのルートGameObject配列</param>
         public static void Inject(object target, GameObject[] rootObjects)
         {
@@ -34,7 +34,9 @@ namespace Lilja.ScreenManagement
                 foreach (var root in rootObjects)
                 {
                     if (root == null)
+                    {
                         continue;
+                    }
 
                     // 非アクティブなGameObject内のコンポーネントも対象にするため includeInactive: true
                     var component = root.GetComponentInChildren(field.FieldType, true);
@@ -49,7 +51,7 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// 注入された [UnityView] フィールドの参照をすべて null でクリアし、強参照によるメモリリークを完全に防止します。
+        /// 注入された [View] フィールドの参照をすべて null でクリアし、強参照によるメモリリークを完全に防止します。
         /// </summary>
         /// <param name="target">対象の画面オブジェクト</param>
         public static void Nullify(object target)
@@ -69,7 +71,7 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// 指定された型の継承階層をすべてたどり、[UnityView] 属性を持つフィールドをキャッシュから（なければリフレクションで）取得します。
+        /// 指定された型の継承階層をすべてたどり、[View] 属性を持つフィールドをキャッシュから（なければリフレクションで）取得します。
         /// </summary>
         private static List<FieldInfo> GetFields(Type type)
         {
@@ -95,7 +97,7 @@ namespace Lilja.ScreenManagement
 
                     foreach (var field in declaredFields)
                     {
-                        if (field.GetCustomAttribute<UnityViewAttribute>() != null)
+                        if (field.GetCustomAttribute<ViewAttribute>() != null)
                         {
                             list.Add(field);
                         }

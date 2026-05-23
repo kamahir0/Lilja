@@ -507,16 +507,16 @@ namespace Lilja.ScreenManagement
 
                 var rootObjects = viewHandle.RootObjects;
 
-                // 4. Canvas 描画順の適用
-                CanvasUtility.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
+                // 4. Canvas 描順の適用
+                CanvasOrderUtility.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
 
-                // 5. [UnityView] によるコンポーネント自動注入
-                UnityViewUtility.Inject(screen, rootObjects);
+                // 5. [View] によるコンポーネント自動注入
+                ViewInjectUtility.Inject(screen, rootObjects);
 
                 // 6. 重ね合わされる Overlay (Layer > 0) の場合、背面レイキャストブロッカーを生成
                 if (screen.Context.Layer > 0)
                 {
-                    CanvasUtility.CreateBehindRaycastBlocker(rootObjects);
+                    CanvasOrderUtility.CreateBehindRaycastBlocker(rootObjects);
                 }
             }
 
@@ -527,8 +527,8 @@ namespace Lilja.ScreenManagement
             {
                 try
                 {
-                    // [UnityView] 参照フィールドを null クリアし、メモリリークを完全に防止する
-                    UnityViewUtility.Nullify(screen);
+                    // [View] 参照フィールドを null クリアし、メモリリークを完全に防止する
+                    ViewInjectUtility.Nullify(screen);
                 }
                 finally
                 {
@@ -557,8 +557,8 @@ namespace Lilja.ScreenManagement
                         var handle = screen.GetViewHandle();
                         if (handle != null && handle.IsLoaded)
                         {
-                            // [UnityView] 参照フィールドを一旦 null クリア
-                            UnityViewUtility.Nullify(screen);
+                            // [View] 参照フィールドを一旦 null クリア
+                            ViewInjectUtility.Nullify(screen);
 
                             // ビューを物理的にアンロード
                             handle.Unload();
