@@ -1,6 +1,9 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
+using R3;
+#endif
 
 namespace Lilja.ScreenManagement
 {
@@ -57,6 +60,30 @@ namespace Lilja.ScreenManagement
         /// 画面オブジェクトが所有するリソースを解放するためのクリーンアップ処理を記述します。
         /// </summary>
         protected virtual void DisposeCore() { }
+
+        /// <summary>
+        /// ビューアセットがロードされ、[View] 属性付きフィールドへの依存注入が完了した直後に呼び出されます。
+        /// </summary>
+        protected virtual void OnViewLoaded() { }
+
+        /// <summary>
+        /// ビューアセットが破棄され、[View] 属性付きフィールドが null クリアされる直前に呼び出されます。
+        /// </summary>
+        protected virtual void OnViewUnloaded() { }
+
+#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
+        /// <summary>
+        /// 画面インスタンス全体の寿命に紐づく CompositeDisposable。
+        /// Dispose 時に自動で破棄されます。
+        /// </summary>
+        public CompositeDisposable Lifetime { get; } = new();
+
+        /// <summary>
+        /// ビューの寿命（OnViewLoaded ～ OnViewUnloaded）に紐づく CompositeDisposable。
+        /// OnViewUnloaded 時に自動でクリアされます。
+        /// </summary>
+        public CompositeDisposable ViewLifetime { get; } = new();
+#endif
 
         #endregion
 
@@ -153,6 +180,21 @@ namespace Lilja.ScreenManagement
             return ExitAsync(ExitType.OnPause, cancellationToken);
         }
 
+        /// <inheritdoc />
+        void IGameScreenInternal.OnViewLoaded()
+        {
+            OnViewLoaded();
+        }
+
+        /// <inheritdoc />
+        void IGameScreenInternal.OnViewUnloaded()
+        {
+            OnViewUnloaded();
+#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
+            ViewLifetime.Clear();
+#endif
+        }
+
         #endregion
 
         #region IDisposable
@@ -178,6 +220,10 @@ namespace Lilja.ScreenManagement
         protected virtual void OnDispose()
         {
             _cachedViewHandle = null;
+#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
+            ViewLifetime.Dispose();
+            Lifetime.Dispose();
+#endif
         }
     }
 }

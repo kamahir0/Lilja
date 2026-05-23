@@ -45,6 +45,16 @@ namespace Lilja.ScreenManagement
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         UniTask PauseAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// ビューのロードおよび注入が完了したことを通知します。
+        /// </summary>
+        void OnViewLoaded();
+
+        /// <summary>
+        /// ビューがアンロードされる直前であることを通知します。
+        /// </summary>
+        void OnViewUnloaded();
     }
 
     /// <summary>

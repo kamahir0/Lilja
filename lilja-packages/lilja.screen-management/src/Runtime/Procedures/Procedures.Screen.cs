@@ -43,6 +43,8 @@ namespace Lilja.ScreenManagement
 
                 ViewInjectUtility.Inject(screen, rootObjects);
 
+                screen.OnViewLoaded();
+
                 if (screen.Context.Layer > 0)
                 {
                     CanvasOrderUtility.CreateBehindRaycastBlocker(rootObjects);
@@ -56,6 +58,7 @@ namespace Lilja.ScreenManagement
             {
                 try
                 {
+                    screen.OnViewUnloaded();
                     ViewInjectUtility.Nullify(screen);
                 }
                 finally
@@ -80,6 +83,8 @@ namespace Lilja.ScreenManagement
                         var handle = screen.GetViewHandle();
                         if (handle != null && handle.IsLoaded)
                         {
+                            screen.OnViewUnloaded();
+
                             ViewInjectUtility.Nullify(screen);
 
                             handle.Unload();

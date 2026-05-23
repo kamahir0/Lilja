@@ -5,7 +5,8 @@
         "UniTask",
         "UniTask.Addressables",
         "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.ResourceManager",
+        "R3"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -19,6 +20,16 @@
             "name": "com.unity.addressables",
             "expression": "1.0.0",
             "define": "LILJA_SCREEN_MANAGEMENT_ADDRESSABLES_SUPPORT"
+        },
+        {
+            "name": "com.cysharp.r3",
+            "expression": "",
+            "define": "LILJA_SCREEN_MANAGEMENT_R3_SUPPORT"
+        },
+        {
+            "name": "org.nuget.r3",
+            "expression": "",
+            "define": "LILJA_SCREEN_MANAGEMENT_R3_SUPPORT"
         }
     ],
     "noEngineReferences": false
