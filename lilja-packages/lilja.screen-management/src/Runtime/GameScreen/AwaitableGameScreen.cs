@@ -37,12 +37,7 @@ namespace Lilja.ScreenManagement
                 throw new ArgumentNullException(nameof(callerContext));
             }
 
-            return GameScreenProcedures.Awaitable.CallAsync(
-                callerContext,
-                this,
-                args,
-                cancellationToken
-            );
+            return Procedures.Awaitable.CallAsync(callerContext, this, args, cancellationToken);
         }
 
         /// <summary>

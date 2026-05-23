@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
@@ -12,7 +11,7 @@ namespace Lilja.ScreenManagement
     /// 画面のロード、アンロード、一時停止、再開、ツリー構造の接続・切断、
     /// および描画順の設定や背面入力遮断など、すべてのランタイム手続き（プロシージャ）を担当する静的クラス。
     /// </summary>
-    internal static class GameScreenProcedures
+    internal static class Procedures
     {
         /// <summary>
         /// AwaitableGameScreen（結果を待てる画面）に関する手続きモジュール。

@@ -83,7 +83,7 @@ namespace Lilja.ScreenManagement
                 throw new ArgumentNullException(nameof(callerContext));
             }
 
-            return GameScreenProcedures.Group.CallAsync(
+            return Procedures.Group.CallAsync(
                 callerContext,
                 this,
                 initialScreenKey,
@@ -130,7 +130,7 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken = default
         )
         {
-            return GameScreenProcedures.Group.SwitchAsync(this, key, args, cancellationToken);
+            return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);
         }
 
         /// <summary>
