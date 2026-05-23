@@ -56,7 +56,7 @@ namespace Lilja.ScreenManagement
                     }
 
                     // 3. 子画面ビューのロードと物理的セットアップ
-                    await Screen.LoadAsync(calleeScreen, cancellationToken);
+                    await Screen.PrepareAsync(calleeScreen, cancellationToken);
 
                     // 4. 入場演出を非同期実行
                     await ((IGameScreenInternal<TArgs>)calleeScreen).OpenAsync(
@@ -231,7 +231,7 @@ namespace Lilja.ScreenManagement
                     try
                     {
                         // 4. ビューのロードと物理的セットアップ
-                        await Screen.LoadAsync(nextScreen, cancellationToken);
+                        await Screen.PrepareAsync(nextScreen, cancellationToken);
 
                         // 5. 入場演出を非同期実行
                         await ((IGameScreenInternal<TArgs>)nextScreen).OpenAsync(
@@ -480,7 +480,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 画面アセットをロードし、依存注入、ソート順、入力遮断を適用して画面を物理的に使用可能な状態にします。
             /// </summary>
-            internal static async UniTask LoadAsync(
+            internal static async UniTask PrepareAsync(
                 IGameScreenInternal screen,
                 CancellationToken cancellationToken
             )
@@ -508,7 +508,7 @@ namespace Lilja.ScreenManagement
                 var rootObjects = viewHandle.RootObjects;
 
                 // 4. Canvas 描画順の適用
-                Layout.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
+                CanvasUtility.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
 
                 // 5. [UnityView] によるコンポーネント自動注入
                 UnityViewUtility.Inject(screen, rootObjects);
@@ -516,7 +516,7 @@ namespace Lilja.ScreenManagement
                 // 6. 重ね合わされる Overlay (Layer > 0) の場合、背面レイキャストブロッカーを生成
                 if (screen.Context.Layer > 0)
                 {
-                    Layout.CreateBehindRaycastBlocker(rootObjects);
+                    CanvasUtility.CreateBehindRaycastBlocker(rootObjects);
                 }
             }
 
@@ -623,130 +623,9 @@ namespace Lilja.ScreenManagement
                     var handle = screen.GetViewHandle();
 
                     // 物理ロード処理を安全に再利用（重複の完全排除）
-                    await LoadAsync(screen, cancellationToken);
+                    await PrepareAsync(screen, cancellationToken);
                     handle.IsUnloadedTemporarily = false;
                 }
-            }
-        }
-
-        /// <summary>
-        /// キャンバスの描画順や背面レイキャストブロックなど、物理的なレイアウト調整を行う手続きモジュール。
-        /// </summary>
-        internal static class Layout
-        {
-            private const int LayerOrderRange = 1000;
-            private static readonly List<Canvas> _canvasBuffer = new(16);
-
-            /// <summary>
-            /// 生成されたビューオブジェクトにレイヤーインデックスに基づく描画順を適用します（旧 CanvasOrderUtility の統合）。
-            /// </summary>
-            internal static void ApplyCanvasOrder(GameObject[] rootObjects, int layerIndex)
-            {
-                if (rootObjects == null || rootObjects.Length == 0)
-                {
-                    return;
-                }
-
-                var canvases = new List<Canvas>();
-                foreach (var root in rootObjects)
-                {
-                    if (root == null)
-                    {
-                        continue;
-                    }
-                    root.GetComponentsInChildren(true, canvases);
-                }
-
-                if (canvases.Count == 0)
-                {
-                    return;
-                }
-
-                var baseOrder = layerIndex * LayerOrderRange;
-
-                // 既存の相対順序を維持しながらソートして割り当て
-                canvases.Sort((a, b) => a.sortingOrder.CompareTo(b.sortingOrder));
-
-                for (var i = 0; i < canvases.Count; i++)
-                {
-                    var canvas = canvases[i];
-                    if (canvas.renderMode == RenderMode.WorldSpace)
-                    {
-                        Debug.LogWarning(
-                            $"[GameScreenProcedures] WorldSpace Canvas はソート順制御のサポート対象外です: {canvas.gameObject.name}"
-                        );
-                        continue;
-                    }
-                    canvas.sortingOrder = baseOrder + i;
-                }
-            }
-
-            /// <summary>
-            /// 背面に重なった画面へのクリック入力を遮断するブロッカーを生成します（旧 BehindRaycastBlockerUtility の統合）。
-            /// </summary>
-            internal static void CreateBehindRaycastBlocker(GameObject[] rootObjects)
-            {
-                if (rootObjects == null || rootObjects.Length == 0)
-                {
-                    return;
-                }
-
-                _canvasBuffer.Clear();
-
-                // 全てのCanvasを取得
-                foreach (var root in rootObjects)
-                {
-                    if (root == null)
-                    {
-                        continue;
-                    }
-                    root.GetComponentsInChildren(true, _canvasBuffer);
-                }
-
-                if (_canvasBuffer.Count == 0)
-                {
-                    return;
-                }
-
-                // 最奥（SortingOrderが最小）のCanvasを探す
-                Canvas targetCanvas = null;
-                var minOrder = int.MaxValue;
-
-                foreach (var canvas in _canvasBuffer)
-                {
-                    if (canvas.renderMode == RenderMode.WorldSpace)
-                    {
-                        continue;
-                    }
-
-                    if (canvas.sortingOrder < minOrder)
-                    {
-                        minOrder = canvas.sortingOrder;
-                        targetCanvas = canvas;
-                    }
-                }
-
-                _canvasBuffer.Clear();
-
-                if (targetCanvas == null)
-                {
-                    return;
-                }
-
-                // ブロッカーの生成と配置
-                var blocker = new GameObject("RaycastBlocker", typeof(RectTransform));
-                blocker.transform.SetParent(targetCanvas.transform, false);
-                blocker.transform.SetAsFirstSibling();
-
-                var rect = blocker.GetComponent<RectTransform>();
-                rect.anchorMin = Vector2.zero;
-                rect.anchorMax = Vector2.one;
-                rect.sizeDelta = Vector2.zero;
-                rect.anchoredPosition = Vector2.zero;
-
-                // 描画負荷のない InvisibleGraphic (MonoBehaviour) を追加して入力を遮断
-                var graphic = blocker.AddComponent<InvisibleGraphic>();
-                graphic.raycastTarget = true;
             }
         }
     }
