@@ -6,14 +6,10 @@ using UnityEngine;
 
 namespace Lilja.ScreenManagement
 {
-    /// <summary>
-    /// プレハブアセットをロードし、GameObject をインスタンス化して管理するビューハンドル。
-    /// </summary>
+
     public sealed class PrefabViewHandle : IViewHandle
     {
-        /// <summary>
-        /// パス指定を省略し、画面のクラス名から自動的にプレハブパスを推論してロードするデフォルトインスタンスを取得します。
-        /// </summary>
+
         public static PrefabViewHandle Default => new(null);
 
         private readonly string _specifiedKey;
@@ -22,30 +18,20 @@ namespace Lilja.ScreenManagement
         private GameObject _instance;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
 
-        /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
-        /// <inheritdoc />
         public bool IsLoaded => _instance != null;
 
-        /// <inheritdoc />
         public bool IsUnloadedTemporarily { get; set; }
 
-        /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
 
-        /// <summary>
-        /// プレハブのキー（Resourcesパス等）を指定して、新しい <see cref="PrefabViewHandle"/> インスタンスを初期化します。
-        /// </summary>
-        /// <param name="prefabKey">プレハブのキー名（null の場合はクラス名から自動推論されます）</param>
-        /// <param name="unloadsAncestors">このビューがロードされる際、先祖のビューを一時アンロードすべきかどうか</param>
         public PrefabViewHandle(string prefabKey, bool unloadsAncestors = false)
         {
             _specifiedKey = prefabKey;
             _unloadsAncestors = unloadsAncestors;
         }
 
-        /// <inheritdoc />
         public void Initialize(Type ownerType)
         {
             if (_resolvedKey != null)
@@ -53,13 +39,11 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            // 指定キーがあればそれを使い、なければ型名から自動解決する (遅延解決)
             _resolvedKey = !string.IsNullOrEmpty(_specifiedKey)
                 ? _specifiedKey
                 : ResolveKeyFromType(ownerType);
         }
 
-        /// <inheritdoc />
         public async UniTask LoadAsync(
             GameScreenContext context,
             CancellationToken cancellationToken
@@ -77,7 +61,6 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            // 1. DIされた PrefabProvider を用いてアセットをロード (static シングルトンから完全脱却)
             var provider = context.Options.PrefabProvider;
             var prefab = await provider.LoadAsync(_resolvedKey, cancellationToken);
 
@@ -88,12 +71,10 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            // 2. インスタンス化
             _instance = UnityEngine.Object.Instantiate(prefab);
             _rootObjects = new[] { _instance };
         }
 
-        /// <inheritdoc />
         public void Unload()
         {
             if (_instance != null)
@@ -104,13 +85,6 @@ namespace Lilja.ScreenManagement
             _rootObjects = Array.Empty<GameObject>();
         }
 
-        /// <summary>
-        /// プレハブアセットを事前に非同期ロードしてキャッシュします。
-        /// </summary>
-        /// <param name="context">画面コンテキスト</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
-        /// <inheritdoc />
         public async UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
         {
             if (_resolvedKey == null)
@@ -132,7 +106,6 @@ namespace Lilja.ScreenManagement
                 typeName = typeName[..^suffix.Length];
             }
 
-            // 標準の Resources プレハブパス「Screens/{Name}」を自動構築
             return $"Screens/{typeName}";
         }
     }

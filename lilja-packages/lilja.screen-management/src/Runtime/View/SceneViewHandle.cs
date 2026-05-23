@@ -6,14 +6,10 @@ using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
 {
-    /// <summary>
-    /// Unityの加算シーンロードを非同期で実行し、シーン内のルートオブジェクトを抽出して管理するビューハンドル。
-    /// </summary>
+
     public sealed class SceneViewHandle : IViewHandle
     {
-        /// <summary>
-        /// シーン名指定を省略し、画面のクラス名から自動的にシーン名を推論してロードするデフォルトインスタンスを取得します。
-        /// </summary>
+
         public static SceneViewHandle Default => new(null);
 
         private readonly string _specifiedSceneName;
@@ -23,30 +19,20 @@ namespace Lilja.ScreenManagement
         private ISceneLoader _cachedLoader;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
 
-        /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
-        /// <inheritdoc />
         public bool IsLoaded => _loadedScene.IsValid() && _loadedScene.isLoaded;
 
-        /// <inheritdoc />
         public bool IsUnloadedTemporarily { get; set; }
 
-        /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
 
-        /// <summary>
-        /// 加算ロードするシーン名を明示的に指定して、新しい <see cref="SceneViewHandle"/> インスタンスを初期化します。
-        /// </summary>
-        /// <param name="sceneName">シーン名（null の場合はクラス名から自動推論されます）</param>
-        /// <param name="unloadsAncestors">このビューがロードされる際、先祖のビューを一時アンロードすべきかどうか</param>
         public SceneViewHandle(string sceneName, bool unloadsAncestors = true)
         {
             _specifiedSceneName = sceneName;
             _unloadsAncestors = unloadsAncestors;
         }
 
-        /// <inheritdoc />
         public void Initialize(Type ownerType)
         {
             if (_resolvedSceneName != null)
@@ -54,13 +40,11 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            // 指定されたシーン名があればそれを使い、なければ型名から自動解決する (遅延解決)
             _resolvedSceneName = !string.IsNullOrEmpty(_specifiedSceneName)
                 ? _specifiedSceneName
                 : ResolveSceneNameFromType(ownerType);
         }
 
-        /// <inheritdoc />
         public async UniTask LoadAsync(
             GameScreenContext context,
             CancellationToken cancellationToken
@@ -78,7 +62,6 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            // DIされた SceneLoader をキャッシュして実行 (static シングルトンから完全脱却)
             _cachedLoader = context.Options.SceneLoader;
             _loadedScene = await _cachedLoader.LoadSceneAsync(
                 _resolvedSceneName,
@@ -92,16 +75,14 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            // 加算ロードされたシーンのルートオブジェクト群を抽出して格納
             _rootObjects = _loadedScene.GetRootGameObjects();
         }
 
-        /// <inheritdoc />
         public void Unload()
         {
             if (_cachedLoader != null && _loadedScene.IsValid() && _loadedScene.isLoaded)
             {
-                // アンロード演出をバックグラウンドで開始
+
                 _cachedLoader.UnloadSceneAsync(_loadedScene, CancellationToken.None).Forget();
             }
 
@@ -110,10 +91,9 @@ namespace Lilja.ScreenManagement
             _rootObjects = Array.Empty<GameObject>();
         }
 
-        /// <inheritdoc />
         public UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)
         {
-            // シーンロードは事前ロードをサポートしていないため、何もしない（カスタム SceneLoader でのアセットダウンロード用）
+
             return UniTask.CompletedTask;
         }
 
