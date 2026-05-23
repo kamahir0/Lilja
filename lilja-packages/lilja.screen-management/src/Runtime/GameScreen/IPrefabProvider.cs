@@ -4,6 +4,9 @@ using System.IO;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+#if LILJA_SCREEN_MANAGEMENT_ADDRESSABLES_SUPPORT
+using UnityEngine.AddressableAssets;
+#endif
 
 namespace Lilja.ScreenManagement
 {
@@ -65,4 +68,48 @@ namespace Lilja.ScreenManagement
 
         #endregion
     }
+
+#if LILJA_SCREEN_MANAGEMENT_ADDRESSABLES_SUPPORT
+    /// <summary>
+    /// Addressables アセットシステムを使用してプレハブをロード・アンロードするプロバイダー。
+    /// </summary>
+    public sealed class AddressablePrefabProvider : IPrefabProvider
+    {
+        private readonly Dictionary<string, GameObject> _loadedCache = new();
+
+        #region IPrefabProvider
+
+        /// <inheritdoc />
+        public async UniTask<GameObject> LoadAsync(string key, CancellationToken cancellationToken)
+        {
+            if (_loadedCache.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+
+            var op = Addressables.LoadAssetAsync<GameObject>(key);
+            var prefab = await op.WithCancellation(cancellationToken);
+
+            if (prefab == null)
+            {
+                throw new FileNotFoundException($"Prefab not found in Addressables at key: '{key}'");
+            }
+
+            _loadedCache[key] = prefab;
+            return prefab;
+        }
+
+        /// <inheritdoc />
+        public void Unload(string key)
+        {
+            if (_loadedCache.TryGetValue(key, out var prefab))
+            {
+                _loadedCache.Remove(key);
+                Addressables.Release(prefab);
+            }
+        }
+
+        #endregion
+    }
+#endif
 }
