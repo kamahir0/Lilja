@@ -49,6 +49,23 @@ namespace Lilja.ScreenManagement
     internal sealed class GameScreenRegistry : IGameScreenRegistry
     {
         private readonly Dictionary<string, Func<object>> _factories = new();
+        private readonly Dictionary<string, Type> _types = new();
+
+        /// <summary>
+        /// キーに紐づく画面の型を取得します。
+        /// </summary>
+        /// <param name="key">キー名</param>
+        /// <returns>画面の型</returns>
+        internal Type GetScreenType(string key)
+        {
+            if (!_types.TryGetValue(key, out var type))
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] 画面キー '{key}' は登録されていません。"
+                );
+            }
+            return type;
+        }
 
         /// <summary>
         /// キーに紐づく画面オブジェクトを作成します。
@@ -59,7 +76,9 @@ namespace Lilja.ScreenManagement
         {
             if (!_factories.TryGetValue(key, out var factory))
             {
-                throw new InvalidOperationException($"[Lilja.ScreenManagement] 画面キー '{key}' はこの GameScreenGroup に登録されていません。Configure(IGameScreenRegistry) で登録されているか確認してください。");
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] 画面キー '{key}' はこの GameScreenGroup に登録されていません。Configure(IGameScreenRegistry) で登録されているか確認してください。"
+                );
             }
             return factory.Invoke();
         }
@@ -70,6 +89,7 @@ namespace Lilja.ScreenManagement
         public void Register<TScreen, TArgs>(string key)
             where TScreen : GameScreen<TArgs>
         {
+            _types[key] = typeof(TScreen);
             _factories[key] = () =>
             {
                 var instance = Activator.CreateInstance(typeof(TScreen));
@@ -97,6 +117,7 @@ namespace Lilja.ScreenManagement
             {
                 throw new ArgumentNullException(nameof(factory));
             }
+            _types[key] = typeof(GameScreen<TArgs>);
             _factories[key] = () => factory.Invoke();
         }
 
@@ -108,6 +129,7 @@ namespace Lilja.ScreenManagement
             {
                 throw new ArgumentNullException(nameof(factory));
             }
+            _types[typeof(TScreen).FullName] = typeof(TScreen);
             Register(typeof(TScreen).FullName, () => factory.Invoke());
         }
 

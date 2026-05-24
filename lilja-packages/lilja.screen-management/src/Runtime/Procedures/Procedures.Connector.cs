@@ -70,6 +70,7 @@ namespace Lilja.ScreenManagement
             /// </summary>
             internal static async UniTask DropSubtreeAsync(
                 GameScreenConnector root,
+                Type nextScreenType,
                 CancellationToken cancellationToken
             )
             {
@@ -86,13 +87,14 @@ namespace Lilja.ScreenManagement
                 var front = MarkClosingAndGetFront(root);
 
                 ExceptionDispatchInfo closeException = null;
+                IGameScreenInternal frontScreen = null;
 
                 try
                 {
-                    var frontScreen = FindFrontScreen(root, front);
+                    frontScreen = FindFrontScreen(root, front);
                     if (frontScreen != null)
                     {
-                        await frontScreen.CloseAsync(cancellationToken);
+                        await frontScreen.CloseAsync(nextScreenType, cancellationToken);
                     }
                 }
                 catch (Exception exception)
@@ -101,6 +103,7 @@ namespace Lilja.ScreenManagement
                 }
 
                 var parentToRestore = root.Parent;
+                var previousScreenType = frontScreen?.GetType();
 
                 try
                 {
@@ -115,7 +118,11 @@ namespace Lilja.ScreenManagement
 
                 if (parentToRestore != null)
                 {
-                    await Screen.RestoreAncestorsAsync(parentToRestore, cancellationToken);
+                    await Screen.RestoreAncestorsAsync(
+                        parentToRestore,
+                        previousScreenType,
+                        cancellationToken
+                    );
                 }
             }
 

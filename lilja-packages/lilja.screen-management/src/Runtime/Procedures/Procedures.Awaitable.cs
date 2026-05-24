@@ -49,13 +49,15 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerConnector.Owner is IGameScreenInternal callerScreen)
                     {
-                        await callerScreen.PauseAsync(cancellationToken);
+                        await callerScreen.PauseAsync(calleeScreen.GetType(), cancellationToken);
                     }
 
                     await Screen.PrepareAsync(calleeScreen, cancellationToken);
 
+                    Type previousScreenType = callerConnector.Owner?.GetType();
                     await ((IGameScreenInternal<TArgs>)calleeScreen).OpenAsync(
                         args,
+                        previousScreenType,
                         cancellationToken
                     );
 
@@ -82,18 +84,23 @@ namespace Lilja.ScreenManagement
                         {
                             await Connector.DropSubtreeAsync(
                                 calleeConnector,
+                                callerConnector.Owner.GetType(),
                                 CancellationToken.None
                             );
                         }
                     }
                     else
                     {
-                        await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
+                        await Connector.DropSubtreeAsync(
+                            calleeConnector,
+                            null,
+                            CancellationToken.None
+                        );
                     }
 
                     if (callerConnector.Owner is IGameScreenInternal callerScreen)
                     {
-                        await callerScreen.ResumeAsync(cancellationToken);
+                        await callerScreen.ResumeAsync(calleeScreen.GetType(), cancellationToken);
                     }
                 }
                 catch (Exception teardownException) when (signalException != null)

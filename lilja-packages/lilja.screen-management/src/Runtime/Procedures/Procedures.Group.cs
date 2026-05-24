@@ -31,9 +31,10 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
+                    var nextScreenType = calleeGroup.Registry.GetScreenType(initialScreenKey);
                     if (callerConnector.Owner is IGameScreenInternal callerScreen)
                     {
-                        await callerScreen.PauseAsync(cancellationToken);
+                        await callerScreen.PauseAsync(nextScreenType, cancellationToken);
                     }
 
                     await calleeGroup.SwitchAsync(
@@ -59,24 +60,38 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
+                    Type previousScreenType = null;
+                    if (
+                        calleeConnector.Child != null
+                        && calleeConnector.Child.Owner is IGameScreenInternal activeScreen
+                    )
+                    {
+                        previousScreenType = activeScreen.GetType();
+                    }
+
                     if (callerConnector.Owner != null)
                     {
                         if (callerConnector.Child == calleeConnector)
                         {
                             await Connector.DropSubtreeAsync(
                                 calleeConnector,
+                                callerConnector.Owner.GetType(),
                                 CancellationToken.None
                             );
                         }
                     }
                     else
                     {
-                        await Connector.DropSubtreeAsync(calleeConnector, CancellationToken.None);
+                        await Connector.DropSubtreeAsync(
+                            calleeConnector,
+                            null,
+                            CancellationToken.None
+                        );
                     }
 
                     if (callerConnector.Owner is IGameScreenInternal callerScreen)
                     {
-                        await callerScreen.ResumeAsync(cancellationToken);
+                        await callerScreen.ResumeAsync(previousScreenType, cancellationToken);
                     }
                 }
                 catch (Exception teardownException) when (signalException != null)
@@ -116,9 +131,24 @@ namespace Lilja.ScreenManagement
                         ? TempSceneUtility.CreateTempSceneScope()
                         : default;
 
+                    var nextScreenType = group.Registry.GetScreenType(key);
+
+                    Type previousScreenType = null;
+                    if (
+                        groupConnector.Child != null
+                        && groupConnector.Child.Owner is IGameScreenInternal oldScreen
+                    )
+                    {
+                        previousScreenType = oldScreen.GetType();
+                    }
+
                     if (groupConnector.Child != null)
                     {
-                        await Connector.DropSubtreeAsync(groupConnector.Child, cancellationToken);
+                        await Connector.DropSubtreeAsync(
+                            groupConnector.Child,
+                            nextScreenType,
+                            cancellationToken
+                        );
                     }
 
                     var nextScreenObj = group.Registry.Create(key);
@@ -136,6 +166,7 @@ namespace Lilja.ScreenManagement
 
                         await ((IGameScreenInternal<TArgs>)nextScreen).OpenAsync(
                             args,
+                            previousScreenType,
                             cancellationToken
                         );
                     }
@@ -143,7 +174,11 @@ namespace Lilja.ScreenManagement
                     {
                         if (groupConnector.Child == nextConnector)
                         {
-                            await Connector.DropSubtreeAsync(nextConnector, CancellationToken.None);
+                            await Connector.DropSubtreeAsync(
+                                nextConnector,
+                                null,
+                                CancellationToken.None
+                            );
                         }
                         throw;
                     }

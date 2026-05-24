@@ -100,6 +100,7 @@ namespace Lilja.ScreenManagement
             /// </summary>
             internal static async UniTask RestoreAncestorsAsync(
                 GameScreenConnector startConnector,
+                Type previousScreenType,
                 CancellationToken cancellationToken
             )
             {

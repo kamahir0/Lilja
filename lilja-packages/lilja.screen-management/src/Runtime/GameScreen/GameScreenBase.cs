@@ -34,11 +34,11 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面が活性化される際（新規入場または復帰時）に呼び出されます。
         /// </summary>
-        /// <param name="enterType">入場遷移の種類</param>
+        /// <param name="context">入場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         protected virtual UniTask EnterAsync(
-            EnterType enterType,
+            EnterContext context,
             CancellationToken cancellationToken
         )
         {
@@ -48,10 +48,13 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面が非活性化される際（完全退出または一時停止時）に呼び出されます。
         /// </summary>
-        /// <param name="exitType">退場遷移の種類</param>
+        /// <param name="context">退場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        protected virtual UniTask ExitAsync(ExitType exitType, CancellationToken cancellationToken)
+        protected virtual UniTask ExitAsync(
+            ExitContext context,
+            CancellationToken cancellationToken
+        )
         {
             return UniTask.CompletedTask;
         }
@@ -155,29 +158,80 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         async UniTask IGameScreenInternal<TArgs>.OpenAsync(
             TArgs args,
+            Type previousScreenType,
             CancellationToken cancellationToken
         )
         {
             await InitializeAsync(args, cancellationToken);
-            await EnterAsync(EnterType.OnOpen, cancellationToken);
+
+            var transitionHandle = new TransitionHandle(Context.Options.Transition, false);
+            var enterContext = new EnterContext(
+                EnterType.OnOpen,
+                previousScreenType,
+                transitionHandle
+            );
+
+            await EnterAsync(enterContext, cancellationToken);
+
+            if (!transitionHandle.IsPlayed)
+            {
+                await transitionHandle.PlayAsync(cancellationToken);
+            }
         }
 
         /// <inheritdoc />
-        UniTask IGameScreenInternal.CloseAsync(CancellationToken cancellationToken)
+        async UniTask IGameScreenInternal.CloseAsync(
+            Type nextScreenType,
+            CancellationToken cancellationToken
+        )
         {
-            return ExitAsync(ExitType.OnClose, cancellationToken);
+            var transitionHandle = new TransitionHandle(Context.Options.Transition, true);
+            var exitContext = new ExitContext(ExitType.OnClose, nextScreenType, transitionHandle);
+
+            await ExitAsync(exitContext, cancellationToken);
+
+            if (!transitionHandle.IsPlayed)
+            {
+                await transitionHandle.PlayAsync(cancellationToken);
+            }
         }
 
         /// <inheritdoc />
-        UniTask IGameScreenInternal.ResumeAsync(CancellationToken cancellationToken)
+        async UniTask IGameScreenInternal.ResumeAsync(
+            Type previousScreenType,
+            CancellationToken cancellationToken
+        )
         {
-            return EnterAsync(EnterType.OnResume, cancellationToken);
+            var transitionHandle = new TransitionHandle(Context.Options.Transition, false);
+            var enterContext = new EnterContext(
+                EnterType.OnResume,
+                previousScreenType,
+                transitionHandle
+            );
+
+            await EnterAsync(enterContext, cancellationToken);
+
+            if (!transitionHandle.IsPlayed)
+            {
+                await transitionHandle.PlayAsync(cancellationToken);
+            }
         }
 
         /// <inheritdoc />
-        UniTask IGameScreenInternal.PauseAsync(CancellationToken cancellationToken)
+        async UniTask IGameScreenInternal.PauseAsync(
+            Type nextScreenType,
+            CancellationToken cancellationToken
+        )
         {
-            return ExitAsync(ExitType.OnPause, cancellationToken);
+            var transitionHandle = new TransitionHandle(Context.Options.Transition, true);
+            var exitContext = new ExitContext(ExitType.OnPause, nextScreenType, transitionHandle);
+
+            await ExitAsync(exitContext, cancellationToken);
+
+            if (!transitionHandle.IsPlayed)
+            {
+                await transitionHandle.PlayAsync(cancellationToken);
+            }
         }
 
         /// <inheritdoc />
