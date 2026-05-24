@@ -6,7 +6,7 @@ namespace Lilja.ScreenManagement
     /// <summary>
     /// Canvas の描画順制御および背面レイキャストの遮断を行うユーティリティクラス。
     /// </summary>
-    internal static class CanvasOrderUtility
+    public static class CanvasOrderUtility
     {
         private const int LayerOrderRange = 1000;
         private static readonly List<Canvas> _canvasBuffer = new(16);
@@ -16,7 +16,7 @@ namespace Lilja.ScreenManagement
         /// </summary>
         /// <param name="rootObjects">描画対象のルートオブジェクト群</param>
         /// <param name="layerIndex">階層に基づくレイヤーインデックス</param>
-        internal static void ApplyCanvasOrder(GameObject[] rootObjects, int layerIndex)
+        public static void ApplyCanvasOrder(GameObject[] rootObjects, int layerIndex)
         {
             if (rootObjects == null || rootObjects.Length == 0)
             {
@@ -60,7 +60,7 @@ namespace Lilja.ScreenManagement
         /// 最前面の画面の背後への入力を遮断するための、描画を伴わない不可視のレイキャストブロッカーを生成します。
         /// </summary>
         /// <param name="rootObjects">背面遮断を行う画面のルートオブジェクト群</param>
-        internal static void CreateBehindRaycastBlocker(GameObject[] rootObjects)
+        public static void CreateBehindRaycastBlocker(GameObject[] rootObjects)
         {
             if (rootObjects == null || rootObjects.Length == 0)
             {

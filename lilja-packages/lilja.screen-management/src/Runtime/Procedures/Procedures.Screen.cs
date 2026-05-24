@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 
 namespace Lilja.ScreenManagement
 {
-    internal static partial class Procedures
+    public static partial class Procedures
     {
         /// <summary>
         /// 単一の画面（Screen）に対する物理的なインフラ処理を司るモジュール。
@@ -15,7 +15,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 画面アセットをロードし、依存注入、ソート順、入力遮断を適用して画面を物理的に使用可能な状態にします。
             /// </summary>
-            internal static async UniTask PrepareAsync(
+            public static async UniTask PrepareAsync(
                 IGameScreenInternal screen,
                 CancellationToken cancellationToken
             )
@@ -54,7 +54,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// ビューアセットをアンロードし、注入された参照フィールドを null でクリアした上で、画面を破棄します。
             /// </summary>
-            internal static void Teardown(IGameScreenInternal screen)
+            public static void Teardown(IGameScreenInternal screen)
             {
                 try
                 {
@@ -98,7 +98,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 一時アンロードされていた先祖のビューを、並列ロードと直列インスタンス化のハイブリッドで安全かつ超高速に復元します。
             /// </summary>
-            internal static async UniTask RestoreAncestorsAsync(
+            public static async UniTask RestoreAncestorsAsync(
                 GameScreenConnector startConnector,
                 Type previousScreenType,
                 CancellationToken cancellationToken

@@ -34,7 +34,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// ランタイムツリー上のこの画面ノードのコネクタを取得します。
         /// </summary>
-        internal GameScreenConnector Connector { get; }
+        public GameScreenConnector Connector { get; }
 
         /// <summary>
         /// この画面に割り当てられたソート順などの描画レイヤー値。
@@ -44,32 +44,32 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// この遷移ツリー全体で共有・伝播される、トランジションやアセットプロバイダーなどの依存関係オプション。
         /// </summary>
-        public GameScreenOptions Options { get; internal set; }
+        public GameScreenOptions Options { get; set; }
     }
 
     /// <summary>
     /// 画面遷移システムが動的に構築するランタイム木構造上の各ノードを繋ぐ双方向リンクコネクタ。
     /// </summary>
-    internal sealed class GameScreenConnector
+    public sealed class GameScreenConnector
     {
         /// <summary>
         /// 親画面ノードのコネクタ。
         /// </summary>
-        internal GameScreenConnector Parent { get; set; }
+        public GameScreenConnector Parent { get; set; }
 
         /// <summary>
         /// 子画面ノード of コネクタ。
         /// </summary>
-        internal GameScreenConnector Child { get; set; }
+        public GameScreenConnector Child { get; set; }
 
         /// <summary>
         /// このコネクタが表す画面ノードの所有者オブジェクト。
         /// </summary>
-        internal object Owner { get; set; }
+        public object Owner { get; set; }
 
         /// <summary>
         /// このノード以下のサブツリーがクローズ処理中であるかを示すフラグ。
         /// </summary>
-        internal bool IsClosing { get; set; }
+        public bool IsClosing { get; set; }
     }
 }

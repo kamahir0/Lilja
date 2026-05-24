@@ -5,17 +5,17 @@ using Cysharp.Threading.Tasks;
 
 namespace Lilja.ScreenManagement
 {
-    internal static partial class Procedures
+    public static partial class Procedures
     {
         /// <summary>
         /// AwaitableGameScreen（結果を待める画面）に関する手続きモジュール。
         /// </summary>
-        internal static class Awaitable
+        public static class Awaitable
         {
             /// <summary>
             /// AwaitableGameScreen を呼び出し元の階層に接続し、表示・演出を行い、結果の確定と破棄完了まで非同期待機します。
             /// </summary>
-            internal static async UniTask<TResult> CallAsync<TArgs, TResult>(
+            public static async UniTask<TResult> CallAsync<TArgs, TResult>(
                 GameScreenContext callerContext,
                 AwaitableGameScreen<TArgs, TResult> calleeScreen,
                 TArgs args,

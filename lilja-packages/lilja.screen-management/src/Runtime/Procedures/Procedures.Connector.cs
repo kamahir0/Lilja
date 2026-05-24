@@ -6,14 +6,14 @@ using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
 {
-    internal static partial class Procedures
+    public static partial class Procedures
     {
         /// <summary>
         /// ランタイムツリー上の双方向ノード（コネクタ）の接続・切断、および再帰破棄の手続きモジュール。
         /// </summary>
         internal static class Connector
         {
-            internal static void Connect(GameScreenConnector parent, GameScreenConnector child)
+            public static void Connect(GameScreenConnector parent, GameScreenConnector child)
             {
                 if (parent == null)
                     throw new ArgumentNullException(nameof(parent));
@@ -53,7 +53,7 @@ namespace Lilja.ScreenManagement
                 parent.Child = child;
             }
 
-            internal static void Disconnect(GameScreenConnector parent, GameScreenConnector child)
+            public static void Disconnect(GameScreenConnector parent, GameScreenConnector child)
             {
                 if (child == null)
                     throw new ArgumentNullException(nameof(child));
@@ -78,7 +78,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 指定されたコネクタ以下のサブツリーを安全に再帰破棄します。
             /// </summary>
-            internal static async UniTask DropSubtreeAsync(
+            public static async UniTask DropSubtreeAsync(
                 GameScreenConnector root,
                 Type nextScreenType,
                 CancellationToken cancellationToken

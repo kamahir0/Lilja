@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
 {
-    internal static partial class Procedures
+    public static partial class Procedures
     {
         /// <summary>
         /// GameScreenGroup（画面グループ）に関する手続きモジュール。
@@ -16,7 +16,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 画面グループを起動し、初期画面を表示してグループの寿命が終了するまで非同期待機します。
             /// </summary>
-            internal static async UniTask CallAsync<TArgs>(
+            public static async UniTask CallAsync<TArgs>(
                 GameScreenContext callerContext,
                 GameScreenGroup calleeGroup,
                 string initialScreenKey,
@@ -108,7 +108,7 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 画面グループが排他所有している現在のアクティブ画面を破棄し、新しい画面へ切り替えます。
             /// </summary>
-            internal static async UniTask SwitchAsync<TArgs>(
+            public static async UniTask SwitchAsync<TArgs>(
                 GameScreenGroup group,
                 string key,
                 TArgs args,
