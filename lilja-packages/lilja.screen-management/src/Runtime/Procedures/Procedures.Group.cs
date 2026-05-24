@@ -123,7 +123,9 @@ namespace Lilja.ScreenManagement
 
                     if (groupConnector.IsClosing)
                     {
-                        throw new InvalidOperationException("[Lilja.ScreenManagement] この画面グループはクローズ処理中です。");
+                        throw new InvalidOperationException(
+                            "[Lilja.ScreenManagement] この画面グループはクローズ処理中です。"
+                        );
                     }
 
                     var needsTempScene = SceneManager.sceneCount <= 1;

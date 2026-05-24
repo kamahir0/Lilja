@@ -20,23 +20,33 @@ namespace Lilja.ScreenManagement
                 if (child == null)
                     throw new ArgumentNullException(nameof(child));
                 if (parent.Owner == null)
-                    throw new InvalidOperationException("[Lilja.ScreenManagement] 親コネクタが実行されていません。");
+                    throw new InvalidOperationException(
+                        "[Lilja.ScreenManagement] 親コネクタが実行されていません。"
+                    );
                 if (parent.IsClosing)
-                    throw new InvalidOperationException("[Lilja.ScreenManagement] 親コネクタはクローズ処理中です。");
+                    throw new InvalidOperationException(
+                        "[Lilja.ScreenManagement] 親コネクタはクローズ処理中です。"
+                    );
                 if (parent.Child != null)
                     throw new InvalidOperationException(
                         "[Lilja.ScreenManagement] 親コネクタには既に子コネクタが接続されています。"
                     );
                 if (ReferenceEquals(parent, child))
-                    throw new InvalidOperationException("[Lilja.ScreenManagement] コネクタを自分自身に接続することはできません。");
+                    throw new InvalidOperationException(
+                        "[Lilja.ScreenManagement] コネクタを自分自身に接続することはできません。"
+                    );
                 if (child.Parent != null)
                     throw new InvalidOperationException(
                         "[Lilja.ScreenManagement] 子コネクタは既に接続されています。"
                     );
                 if (child.IsClosing)
-                    throw new InvalidOperationException("[Lilja.ScreenManagement] 子コネクタはクローズ処理中です。");
+                    throw new InvalidOperationException(
+                        "[Lilja.ScreenManagement] 子コネクタはクローズ処理中です。"
+                    );
                 if (child.Owner == null)
-                    throw new InvalidOperationException("[Lilja.ScreenManagement] 子コネクタが実行されていません。");
+                    throw new InvalidOperationException(
+                        "[Lilja.ScreenManagement] 子コネクタが実行されていません。"
+                    );
 
                 child.Parent = parent;
                 child.IsClosing = false;

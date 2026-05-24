@@ -92,7 +92,9 @@ namespace Lilja.ScreenManagement
 
             if (prefab == null)
             {
-                throw new FileNotFoundException($"Prefab not found in Addressables at key: '{key}'");
+                throw new FileNotFoundException(
+                    $"Prefab not found in Addressables at key: '{key}'"
+                );
             }
 
             _loadedCache[key] = prefab;
