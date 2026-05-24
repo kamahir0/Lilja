@@ -17,6 +17,10 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 設定されているトランジション演出を実行し、完了まで非同期待機します。
         /// </summary>
+        /// <remarks>
+        /// 画面の入場・退場ライフサイクル（EnterAsync/ExitAsync）内でこのメソッドを手動呼び出しする場合は、
+        /// 演出の完了と同期させるため、<b>必ず await してください。</b>（Forget() による呼び出しは避けてください）
+        /// </remarks>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         UniTask PlayAsync(CancellationToken cancellationToken);

@@ -34,6 +34,11 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面が活性化される際（新規入場または復帰時）に呼び出されます。
         /// </summary>
+        /// <remarks>
+        /// コンテキスト内の <see cref="EnterContext.Transition"/> を手動で再生・制御することができます。<br/>
+        /// 手動再生（PlayAsync）を行う場合は、演出の完了を保証するために<b>必ず await してください。</b>（Forget() は避けてください）<br/>
+        /// このメソッド内で手動再生されなかった場合は、メソッドを抜けた後にシステム側で自動フォールバック再生されます。
+        /// </remarks>
         /// <param name="context">入場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
@@ -48,6 +53,11 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面が非活性化される際（完全退出または一時停止時）に呼び出されます。
         /// </summary>
+        /// <remarks>
+        /// コンテキスト内の <see cref="ExitContext.Transition"/> を手動で再生・制御することができます。<br/>
+        /// 手動再生（PlayAsync）を行う場合は、演出の完了を保証するために<b>必ず await してください。</b>（Forget() は避けてください）<br/>
+        /// このメソッド内で手動再生されなかった場合は、メソッドを抜けた後にシステム側で自動フォールバック再生されます。
+        /// </remarks>
         /// <param name="context">退場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
