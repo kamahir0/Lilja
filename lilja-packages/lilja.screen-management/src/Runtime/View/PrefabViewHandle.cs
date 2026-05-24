@@ -82,7 +82,7 @@ namespace Lilja.ScreenManagement
             if (_resolvedKey == null)
             {
                 throw new InvalidOperationException(
-                    "PrefabViewHandle has not been initialized with a type context."
+                    "[Lilja.ScreenManagement] PrefabViewHandle が型コンテキストで初期化されていません。"
                 );
             }
             await context.Options.PrefabProvider.LoadAsync(_resolvedKey, cancellationToken);
@@ -102,7 +102,7 @@ namespace Lilja.ScreenManagement
             if (_resolvedKey == null)
             {
                 throw new InvalidOperationException(
-                    "PrefabViewHandle has not been initialized with a type context."
+                    "[Lilja.ScreenManagement] PrefabViewHandle が型コンテキストで初期化されていません。"
                 );
             }
 
@@ -112,7 +112,7 @@ namespace Lilja.ScreenManagement
             if (prefab == null)
             {
                 throw new FileNotFoundException(
-                    $"Prefab asset could not be loaded at key: '{_resolvedKey}'"
+                    $"[Lilja.ScreenManagement] キー '{_resolvedKey}' のプレハブアセットをロードできませんでした。アセットが Resources または Addressables に存在することを確認してください。"
                 );
             }
 

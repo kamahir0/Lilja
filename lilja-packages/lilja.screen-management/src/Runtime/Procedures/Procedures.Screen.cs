@@ -24,7 +24,7 @@ namespace Lilja.ScreenManagement
                 if (viewHandle == null)
                 {
                     throw new InvalidOperationException(
-                        $"ViewHandle is null in screen '{screen.GetType().Name}'."
+                        $"[Lilja.ScreenManagement] 画面 '{screen.GetType().Name}' の ViewHandle が null です。"
                     );
                 }
 

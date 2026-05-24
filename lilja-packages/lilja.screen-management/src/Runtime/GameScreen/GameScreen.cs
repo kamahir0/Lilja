@@ -16,7 +16,7 @@ namespace Lilja.ScreenManagement
         protected internal GameScreenGroup Group
         {
             get =>
-                _group ?? throw new InvalidOperationException("This group screen is not running.");
+                _group ?? throw new InvalidOperationException("[Lilja.ScreenManagement] この画面はグループ内で実行されていません。");
             internal set => _group = value;
         }
 

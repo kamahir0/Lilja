@@ -94,7 +94,7 @@ namespace Lilja.ScreenManagement
             if (_resolvedSceneName == null)
             {
                 throw new InvalidOperationException(
-                    "SceneViewHandle has not been initialized with a type context."
+                    "[Lilja.ScreenManagement] SceneViewHandle が型コンテキストで初期化されていません。"
                 );
             }
 
@@ -107,7 +107,7 @@ namespace Lilja.ScreenManagement
             if (!_loadedScene.IsValid())
             {
                 throw new InvalidOperationException(
-                    $"Failed to load scene: '{_resolvedSceneName}'"
+                    $"[Lilja.ScreenManagement] シーン '{_resolvedSceneName}' のロードに失敗しました。Build Settings にシーンが追加されているか確認してください。"
                 );
             }
 

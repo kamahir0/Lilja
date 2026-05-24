@@ -145,7 +145,7 @@ namespace Lilja.ScreenManagement
                 if (_cachedViewHandle == null)
                 {
                     throw new InvalidOperationException(
-                        $"ViewHandle property returned null in screen '{GetType().Name}'."
+                        $"[Lilja.ScreenManagement] 画面 '{GetType().Name}' の ViewHandle プロパティが null を返しました。"
                     );
                 }
             }

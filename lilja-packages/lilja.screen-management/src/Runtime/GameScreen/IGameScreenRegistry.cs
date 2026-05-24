@@ -59,7 +59,7 @@ namespace Lilja.ScreenManagement
         {
             if (!_factories.TryGetValue(key, out var factory))
             {
-                throw new InvalidOperationException($"Screen key '{key}' is not registered.");
+                throw new InvalidOperationException($"[Lilja.ScreenManagement] 画面キー '{key}' はこの GameScreenGroup に登録されていません。Configure(IGameScreenRegistry) で登録されているか確認してください。");
             }
             return factory.Invoke();
         }
@@ -76,7 +76,7 @@ namespace Lilja.ScreenManagement
                 if (instance == null)
                 {
                     throw new InvalidOperationException(
-                        $"{typeof(TScreen).Name} could not be created."
+                        $"[Lilja.ScreenManagement] {typeof(TScreen).Name} を生成できませんでした。"
                     );
                 }
                 return instance;

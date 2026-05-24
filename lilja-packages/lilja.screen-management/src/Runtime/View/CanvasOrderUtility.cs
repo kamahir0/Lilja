@@ -48,7 +48,7 @@ namespace Lilja.ScreenManagement
                 if (canvas.renderMode == RenderMode.WorldSpace)
                 {
                     Debug.LogWarning(
-                        $"[CanvasLayoutUtility] WorldSpace Canvas はソート順制御のサポート対象外です: {canvas.gameObject.name}"
+                        $"[Lilja.ScreenManagement] WorldSpace Canvas はソート順制御のサポート対象外です: {canvas.gameObject.name}"
                     );
                     continue;
                 }
