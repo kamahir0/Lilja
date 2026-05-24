@@ -121,16 +121,21 @@ namespace Lilja.ScreenManagement.Dialog
                     provider.LoadAsync(_contentKey, cancellationToken).SuppressCancellationThrow()
                 );
 
-                if (!results.Item1.IsCanceled)
+                // いずれかがキャンセルされていた場合はフォールバックを生成せずに中断する。
+                // キャンセルされた状態でフォールバックUIを生成すると、呼び出し元が既に
+                // キャンセル済みであるにもかかわらずダイアログが画面に残り続けるバグの原因となる。
+                if (results.Item1.IsCanceled || results.Item2.IsCanceled)
                 {
-                    framePrefab = results.Item1.Result;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    // ThrowIfCancellationRequested が通過した場合（トークン自体は未キャンセルだが
+                    // SuppressCancellationThrow が IsCanceled を返した異常ケース）は早期リターン
+                    return;
                 }
-                if (!results.Item2.IsCanceled)
-                {
-                    contentPrefab = results.Item2.Result;
-                }
+
+                framePrefab = results.Item1.Result;
+                contentPrefab = results.Item2.Result;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // フォールバックで対応するため警告ログのみ残して進めます
                 Debug.LogWarning(
