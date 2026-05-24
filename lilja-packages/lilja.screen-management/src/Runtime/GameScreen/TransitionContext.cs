@@ -27,13 +27,7 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public ITransitionHandle Transition { get; }
 
-        /// <summary>
-        /// 新しい <see cref="EnterContext"/> インスタンスを初期化します。
-        /// </summary>
-        /// <param name="enterType">入場遷移の種類</param>
-        /// <param name="previousScreenType">遷移元の画面の型</param>
-        /// <param name="transition">トランジション制御用のハンドル</param>
-        public EnterContext(
+        internal EnterContext(
             EnterType enterType,
             Type previousScreenType,
             ITransitionHandle transition
@@ -70,13 +64,7 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public ITransitionHandle Transition { get; }
 
-        /// <summary>
-        /// 新しい <see cref="ExitContext"/> インスタンスを初期化します。
-        /// </summary>
-        /// <param name="exitType">退場遷移の種類</param>
-        /// <param name="nextScreenType">遷移先の画面の型</param>
-        /// <param name="transition">トランジション制御用のハンドル</param>
-        public ExitContext(ExitType exitType, Type nextScreenType, ITransitionHandle transition)
+        internal ExitContext(ExitType exitType, Type nextScreenType, ITransitionHandle transition)
         {
             ExitType = exitType;
             NextScreenType = nextScreenType;
