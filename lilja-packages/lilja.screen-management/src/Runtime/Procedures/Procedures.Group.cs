@@ -159,7 +159,7 @@ namespace Lilja.ScreenManagement
 
                     Connector.Connect(groupConnector, nextConnector);
                     nextScreen.Context.Layer = group.Context.Layer;
-                    nextScreen.Context.Options = group.Context.Options;
+                    nextScreen.Context.BaseOptions = group.Context.BaseOptions;
                     nextScreen.Group = group;
 
                     try
@@ -214,7 +214,7 @@ namespace Lilja.ScreenManagement
                     calleeGroup.Context.Layer = callerContext.Layer;
                 }
 
-                calleeGroup.Context.Options = callerContext.Options;
+                calleeGroup.Context.BaseOptions = callerContext.BaseOptions;
 
                 calleeGroup.ConfigureInternal();
                 return calleeConnector;

@@ -10,7 +10,6 @@ namespace Lilja.ScreenManagement
         internal GameScreenContext(GameScreenConnector connector)
         {
             Connector = connector ?? throw new ArgumentNullException(nameof(connector));
-            Options = GameScreenOptions.Default;
         }
 
         /// <summary>
@@ -21,14 +20,11 @@ namespace Lilja.ScreenManagement
         public static GameScreenContext CreateRoot(GameScreenOptions options = null)
         {
             var connector = new GameScreenConnector();
-            var context = new GameScreenContext(connector) { Layer = 0 };
-
-            if (options != null)
+            return new GameScreenContext(connector)
             {
-                context.Options = options;
-            }
-
-            return context;
+                Layer = 0,
+                BaseOptions = options ?? GameScreenOptions.Default,
+            };
         }
 
         /// <summary>
@@ -42,9 +38,20 @@ namespace Lilja.ScreenManagement
         public int Layer { get; internal set; }
 
         /// <summary>
-        /// この遷移ツリー全体で共有・伝播される、トランジションやアセットプロバイダーなどの依存関係オプション。
+        /// 現在有効な依存関係オプション。一時オーバーライドが設定されている場合はそれを優先し、それ以外はツリー共通のベースオプションを返します。
         /// </summary>
-        public GameScreenOptions Options { get; set; }
+        public GameScreenOptions Options =>
+            OverrideOptions ?? BaseOptions ?? GameScreenOptions.Default;
+
+        /// <summary>
+        /// 画面ツリー共通で伝播されるベースのオプション。
+        /// </summary>
+        internal GameScreenOptions BaseOptions { get; set; }
+
+        /// <summary>
+        /// この画面ノード固有の一時的なオーバーライドオプション（Screen内部から自由に設定・変更可能です）。
+        /// </summary>
+        public GameScreenOptions OverrideOptions { get; set; }
     }
 
     /// <summary>

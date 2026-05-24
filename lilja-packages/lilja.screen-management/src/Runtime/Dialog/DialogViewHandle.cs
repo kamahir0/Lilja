@@ -32,8 +32,10 @@ namespace Lilja.ScreenManagement.Dialog
 
         #region IViewHandle
 
+        private GameObject[] _rootObjects = Array.Empty<GameObject>();
+
         /// <inheritdoc />
-        public GameObject[] RootObjects => new[] { _root };
+        public GameObject[] RootObjects => _rootObjects;
 
         /// <inheritdoc />
         public bool IsLoaded => _root != null;
@@ -99,6 +101,7 @@ namespace Lilja.ScreenManagement.Dialog
 
             // Root生成
             _root = CreateRoot();
+            _rootObjects = new[] { _root };
 
             // Backdrop生成
             if (_useBackdrop)
@@ -204,6 +207,7 @@ namespace Lilja.ScreenManagement.Dialog
                 Object.Destroy(_root);
                 _root = null;
             }
+            _rootObjects = Array.Empty<GameObject>();
             FrameRectTransform = null;
             ContentRectTransform = null;
         }

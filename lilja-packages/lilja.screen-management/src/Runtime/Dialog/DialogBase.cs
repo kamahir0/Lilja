@@ -99,18 +99,18 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary>
         /// ダイアログ専用の合成ビューハンドルを生成・遅延初期化します。
         /// </summary>
+        /// <returns>初期化されたダイアログビューハンドルインスタンス。</returns>
         private DialogViewHandle CreateViewHandle()
         {
             // 重ね合わせ（スタック最前面が別のIDialog）かどうかに基づいて Backdrop を使うか決定
             var parent = Context.Connector.Parent;
             var useBackdrop = !(parent != null && parent.Owner is IDialog);
 
-            // ダイアログ専用のアニメーションを正式版の Transition システムにマッピング
-            Context.Options = new GameScreenOptions
+            // 自分自身のコンテキストの一時オーバーライドオプションを自己完結的にセット！
+            // BaseOptions は internal のため、public な Options プロパティ（BaseOptions と等値）を使用する
+            Context.OverrideOptions = Context.Options with
             {
                 Transition = new DialogTransition(GetAnimation()),
-                PrefabProvider = Context.Options.PrefabProvider,
-                SceneLoader = Context.Options.SceneLoader,
             };
 
             return new DialogViewHandle(
@@ -204,29 +204,6 @@ namespace Lilja.ScreenManagement.Dialog
                     await stackAnim.PushAsync(cancellationToken);
                 }
             }
-        }
-    }
-
-    /// <summary>
-    /// IDialogAnimation を正式版の ITransition にマッピングするブリッジクラス。
-    /// </summary>
-    internal sealed class DialogTransition : ITransition
-    {
-        private readonly IDialogAnimation _animation;
-
-        public DialogTransition(IDialogAnimation animation)
-        {
-            _animation = animation;
-        }
-
-        public UniTask OutAsync(CancellationToken cancellationToken)
-        {
-            return _animation?.HideAsync(cancellationToken) ?? UniTask.CompletedTask;
-        }
-
-        public UniTask InAsync(CancellationToken cancellationToken)
-        {
-            return _animation?.ShowAsync(cancellationToken) ?? UniTask.CompletedTask;
         }
     }
 }

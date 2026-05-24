@@ -40,7 +40,7 @@ namespace Lilja.ScreenManagement
                     calleeScreen.Context.Layer = callerContext.Layer;
                 }
 
-                calleeScreen.Context.Options = callerContext.Options;
+                calleeScreen.Context.BaseOptions = callerContext.BaseOptions;
 
                 var result = default(TResult);
                 ExceptionDispatchInfo signalException = null;

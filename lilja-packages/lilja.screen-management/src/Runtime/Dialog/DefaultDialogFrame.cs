@@ -182,7 +182,8 @@ namespace Lilja.ScreenManagement.Dialog
                 }
             }
 
-            var buttonRowHeight = buttonCount > 0 ? buttonPrefabHeight + buttonContainerPadding : 0f;
+            var buttonRowHeight =
+                buttonCount > 0 ? buttonPrefabHeight + buttonContainerPadding : 0f;
 
             // 6. ボタンコンテナの表示状態とアンカーを先に確定する。
             //    コンテンツのレイアウト再計算（Step 7）の前に行うことで正確な底部オフセットを算出できる。
@@ -243,7 +244,8 @@ namespace Lilja.ScreenManagement.Dialog
             //    フレームとして必要な最小高さを算出し、maxFrameHeight でクランプする。
             const float contentPaddingVertical = 30f; // コンテンツコンテナ内の上下余白
             var bottomAreaHeight = buttonCount > 0 ? buttonRowHeight : 15f;
-            var totalNeededHeight = headerHeight + contentNeededHeight + bottomAreaHeight + contentPaddingVertical;
+            var totalNeededHeight =
+                headerHeight + contentNeededHeight + bottomAreaHeight + contentPaddingVertical;
             var finalFrameHeight = Mathf.Min(totalNeededHeight, maxFrameHeight);
 
             frameRect.sizeDelta = new Vector2(originalWidth, finalFrameHeight);

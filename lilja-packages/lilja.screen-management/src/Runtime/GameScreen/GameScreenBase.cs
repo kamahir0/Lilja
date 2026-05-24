@@ -139,7 +139,7 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            Context.Options = options;
+            Context.BaseOptions = options;
             handle.Initialize(GetType());
             await handle.PreloadAsync(Context, cancellationToken);
         }
