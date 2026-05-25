@@ -54,7 +54,10 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// ビューアセットを非同期でアンロードし、注入された参照フィールドを null でクリアした上で、画面を破棄します。
             /// </summary>
-            public static async UniTask TeardownAsync(IGameScreenInternal screen, CancellationToken cancellationToken = default)
+            public static async UniTask TeardownAsync(
+                IGameScreenInternal screen,
+                CancellationToken cancellationToken = default
+            )
             {
                 try
                 {
@@ -78,7 +81,10 @@ namespace Lilja.ScreenManagement
                 }
             }
 
-            private static async UniTask UnloadAncestorsAsync(GameScreenConnector startConnector, CancellationToken cancellationToken)
+            private static async UniTask UnloadAncestorsAsync(
+                GameScreenConnector startConnector,
+                CancellationToken cancellationToken
+            )
             {
                 for (var parent = startConnector.Parent; parent != null; parent = parent.Parent)
                 {

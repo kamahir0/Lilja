@@ -94,7 +94,10 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
-        protected override async UniTask InitializeAsync(TArgs args, CancellationToken cancellationToken)
+        protected sealed override async UniTask TriggerInitializeAsync(
+            TArgs args,
+            CancellationToken cancellationToken
+        )
         {
             // 自分自身のコンテキストの一時オーバーライドオプションを自己完結的にセット！
             Context.OverrideOptions = Context.Options with
@@ -102,7 +105,7 @@ namespace Lilja.ScreenManagement.Dialog
                 Transition = new DialogTransition(GetAnimation()),
             };
 
-            await base.InitializeAsync(args, cancellationToken);
+            await base.TriggerInitializeAsync(args, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -128,10 +131,8 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
-        protected override void OnViewLoaded()
+        protected sealed override void TriggerOnViewLoaded()
         {
-            base.OnViewLoaded();
-
             if (_outsideButton != null)
             {
                 _outsideButton.onClick.AddListener(OnClickOutside);
@@ -139,10 +140,12 @@ namespace Lilja.ScreenManagement.Dialog
 
             GetAnimation()?.OnViewLoaded(_viewHandle.FrameRectTransform);
             GetStackAnimation()?.OnViewLoaded(_viewHandle.FrameRectTransform);
+
+            base.TriggerOnViewLoaded();
         }
 
         /// <inheritdoc />
-        protected override void OnViewUnloaded()
+        protected sealed override void TriggerOnViewUnloaded()
         {
             GetAnimation()?.OnViewUnloaded();
             GetStackAnimation()?.OnViewUnloaded();
@@ -156,7 +159,7 @@ namespace Lilja.ScreenManagement.Dialog
             _cachedAnimation = null;
             _cachedStackAnimation = null;
 
-            base.OnViewUnloaded();
+            base.TriggerOnViewUnloaded();
         }
 
         private void OnClickOutside()
@@ -168,7 +171,7 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
-        protected override async UniTask EnterAsync(
+        protected sealed override async UniTask TriggerEnterAsync(
             EnterContext context,
             CancellationToken cancellationToken
         )
@@ -187,10 +190,12 @@ namespace Lilja.ScreenManagement.Dialog
                     await stackAnim.PopAsync(cancellationToken);
                 }
             }
+
+            await base.TriggerEnterAsync(context, cancellationToken);
         }
 
         /// <inheritdoc />
-        protected override async UniTask ExitAsync(
+        protected sealed override async UniTask TriggerExitAsync(
             ExitContext context,
             CancellationToken cancellationToken
         )
@@ -209,6 +214,8 @@ namespace Lilja.ScreenManagement.Dialog
                     await stackAnim.PushAsync(cancellationToken);
                 }
             }
+
+            await base.TriggerExitAsync(context, cancellationToken);
         }
     }
 }

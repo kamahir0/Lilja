@@ -191,7 +191,10 @@ namespace Lilja.ScreenManagement
                 }
             }
 
-            private static async UniTask CleanupOwnerAsync(GameScreenConnector connector, CancellationToken cancellationToken)
+            private static async UniTask CleanupOwnerAsync(
+                GameScreenConnector connector,
+                CancellationToken cancellationToken
+            )
             {
                 switch (connector.Owner)
                 {

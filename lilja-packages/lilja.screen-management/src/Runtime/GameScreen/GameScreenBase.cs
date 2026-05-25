@@ -100,6 +100,59 @@ namespace Lilja.ScreenManagement
 
         #endregion
 
+        #region Trigger Life Cycle
+
+        /// <summary>
+        /// システム用の画面初期化フック。デフォルトではユーザーの <see cref="InitializeAsync"/> を呼び出します。
+        /// </summary>
+        protected virtual async UniTask TriggerInitializeAsync(
+            TArgs args,
+            CancellationToken cancellationToken
+        )
+        {
+            await InitializeAsync(args, cancellationToken);
+        }
+
+        /// <summary>
+        /// システム用の入場演出フック。デフォルトではユーザーの <see cref="EnterAsync"/> を呼び出します。
+        /// </summary>
+        protected virtual async UniTask TriggerEnterAsync(
+            EnterContext context,
+            CancellationToken cancellationToken
+        )
+        {
+            await EnterAsync(context, cancellationToken);
+        }
+
+        /// <summary>
+        /// システム用の退場演出フック。 デフォルトではユーザーの <see cref="ExitAsync"/> を呼び出します。
+        /// </summary>
+        protected virtual async UniTask TriggerExitAsync(
+            ExitContext context,
+            CancellationToken cancellationToken
+        )
+        {
+            await ExitAsync(context, cancellationToken);
+        }
+
+        /// <summary>
+        /// システム用のビューロード完了フック。デフォルトではユーザーの <see cref="OnViewLoaded"/> を呼び出します。
+        /// </summary>
+        protected virtual void TriggerOnViewLoaded()
+        {
+            OnViewLoaded();
+        }
+
+        /// <summary>
+        /// システム用のビューアンロードフック。デフォルトではユーザーの <see cref="OnViewUnloaded"/> を呼び出します。
+        /// </summary>
+        protected virtual void TriggerOnViewUnloaded()
+        {
+            OnViewUnloaded();
+        }
+
+        #endregion
+
         private bool _disposed;
         private IViewHandle _cachedViewHandle;
 
@@ -172,7 +225,7 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         )
         {
-            await InitializeAsync(args, cancellationToken);
+            await TriggerInitializeAsync(args, cancellationToken);
 
             var transitionHandle = new TransitionHandle(Context.Options.Transition, false);
             var enterContext = new EnterContext(
@@ -181,7 +234,7 @@ namespace Lilja.ScreenManagement
                 transitionHandle
             );
 
-            await EnterAsync(enterContext, cancellationToken);
+            await TriggerEnterAsync(enterContext, cancellationToken);
 
             if (!transitionHandle.IsPlayed)
             {
@@ -198,7 +251,7 @@ namespace Lilja.ScreenManagement
             var transitionHandle = new TransitionHandle(Context.Options.Transition, true);
             var exitContext = new ExitContext(ExitType.OnClose, nextScreenType, transitionHandle);
 
-            await ExitAsync(exitContext, cancellationToken);
+            await TriggerExitAsync(exitContext, cancellationToken);
 
             if (!transitionHandle.IsPlayed)
             {
@@ -219,7 +272,7 @@ namespace Lilja.ScreenManagement
                 transitionHandle
             );
 
-            await EnterAsync(enterContext, cancellationToken);
+            await TriggerEnterAsync(enterContext, cancellationToken);
 
             if (!transitionHandle.IsPlayed)
             {
@@ -236,7 +289,7 @@ namespace Lilja.ScreenManagement
             var transitionHandle = new TransitionHandle(Context.Options.Transition, true);
             var exitContext = new ExitContext(ExitType.OnPause, nextScreenType, transitionHandle);
 
-            await ExitAsync(exitContext, cancellationToken);
+            await TriggerExitAsync(exitContext, cancellationToken);
 
             if (!transitionHandle.IsPlayed)
             {
@@ -247,13 +300,13 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         void IGameScreenInternal.OnViewLoaded()
         {
-            OnViewLoaded();
+            TriggerOnViewLoaded();
         }
 
         /// <inheritdoc />
         void IGameScreenInternal.OnViewUnloaded()
         {
-            OnViewUnloaded();
+            TriggerOnViewUnloaded();
 #if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
             ViewLifetime.Clear();
 #endif
