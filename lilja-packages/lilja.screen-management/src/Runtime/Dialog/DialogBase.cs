@@ -94,6 +94,18 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
+        protected override async UniTask InitializeAsync(TArgs args, CancellationToken cancellationToken)
+        {
+            // 自分自身のコンテキストの一時オーバーライドオプションを自己完結的にセット！
+            Context.OverrideOptions = Context.Options with
+            {
+                Transition = new DialogTransition(GetAnimation()),
+            };
+
+            await base.InitializeAsync(args, cancellationToken);
+        }
+
+        /// <inheritdoc />
         protected override IViewHandle ViewHandle => _viewHandle ??= CreateViewHandle();
 
         /// <summary>
@@ -105,13 +117,6 @@ namespace Lilja.ScreenManagement.Dialog
             // 重ね合わせ（スタック最前面が別のIDialog）かどうかに基づいて Backdrop を使うか決定
             var parent = Context.Connector.Parent;
             var useBackdrop = !(parent != null && parent.Owner is IDialog);
-
-            // 自分自身のコンテキストの一時オーバーライドオプションを自己完結的にセット！
-            // BaseOptions は internal のため、public な Options プロパティ（BaseOptions と等値）を使用する
-            Context.OverrideOptions = Context.Options with
-            {
-                Transition = new DialogTransition(GetAnimation()),
-            };
 
             return new DialogViewHandle(
                 GetFrameKey(),

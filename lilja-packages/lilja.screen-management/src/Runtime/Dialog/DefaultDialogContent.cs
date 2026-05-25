@@ -9,13 +9,10 @@ namespace Lilja.ScreenManagement.Dialog
     /// </summary>
     public class DefaultDialogContent : MonoBehaviour
     {
-        [SerializeField]
-        private Text _bodyText;
-
         /// <summary>
-        /// 本文テキストコンポーネントを取得します。
+        /// 本文テキストコンポーネント。Inspector またはコードから直接設定します。
         /// </summary>
-        public Text BodyText => _bodyText;
+        public Text BodyText;
 
         /// <summary>
         /// テキストを追加します。
@@ -24,22 +21,22 @@ namespace Lilja.ScreenManagement.Dialog
         /// <exception cref="InvalidOperationException">本文テキストコンポーネントのシリアライズド参照が不足している場合にスローされます。</exception>
         public void AddText(string text)
         {
-            if (_bodyText == null)
+            if (BodyText == null)
             {
                 Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] DefaultDialogContent の本文テキストコンポーネント（_bodyText）が設定されていません。プレハブのシリアライズ参照を確認してください。"
+                    "[Lilja.ScreenManagement.Dialog] DefaultDialogContent の本文テキストコンポーネント（BodyText）が設定されていません。プレハブのシリアライズ参照を確認してください。"
                 );
                 return;
             }
 
             // 既存テキストがあれば改行で連結、なければそのまま代入
-            if (!string.IsNullOrEmpty(_bodyText.text))
+            if (!string.IsNullOrEmpty(BodyText.text))
             {
-                _bodyText.text += "\n" + text;
+                BodyText.text += "\n" + text;
             }
             else
             {
-                _bodyText.text = text;
+                BodyText.text = text;
             }
         }
     }

@@ -9,38 +9,33 @@ namespace Lilja.ScreenManagement.Dialog
     /// </summary>
     public class DefaultDialogFrame : MonoBehaviour, IDialogFrame
     {
-        [SerializeField]
-        private RectTransform _contentContainer;
+        /// <summary>
+        /// コンテンツ配置用コンテナ。Inspector またはコードから直接設定します。
+        /// </summary>
+        public RectTransform ContentContainerRect;
 
-        [SerializeField]
-        private Text _titleText;
+        /// <summary>
+        /// タイトルテキストコンポーネント。Inspector またはコードから直接設定します。
+        /// </summary>
+        public Text TitleText;
 
-        [SerializeField]
-        private Transform _buttonContainer;
+        /// <summary>
+        /// ボタン配置用コンテナ。Inspector またはコードから直接設定します。
+        /// </summary>
+        public Transform ButtonContainer;
 
-        [SerializeField]
-        private GameObject _buttonPrefab;
+        /// <summary>
+        /// ボタンのプレハブ。Inspector またはコードから直接設定します。
+        /// </summary>
+        public GameObject ButtonPrefab;
 
-        [SerializeField]
-        private RectTransform _frameRect;
+        /// <summary>
+        /// フレーム全体の RectTransform。Inspector またはコードから直接設定します。
+        /// </summary>
+        public RectTransform FrameRect;
 
         /// <inheritdoc />
-        public RectTransform ContentContainer => _contentContainer;
-
-        /// <summary>
-        /// タイトルテキストコンポーネントを取得します。
-        /// </summary>
-        public Text TitleText => _titleText;
-
-        /// <summary>
-        /// ボタン配置用のコンテナを取得します。
-        /// </summary>
-        public Transform ButtonContainer => _buttonContainer;
-
-        /// <summary>
-        /// ボタンのプレハブを取得します。
-        /// </summary>
-        public GameObject ButtonPrefab => _buttonPrefab;
+        RectTransform IDialogFrame.ContentContainer => ContentContainerRect;
 
         /// <summary>
         /// タイトルの文字列を設定します。
@@ -48,14 +43,14 @@ namespace Lilja.ScreenManagement.Dialog
         /// <param name="title">表示するタイトル文字列。</param>
         public void SetTitle(string title)
         {
-            if (_titleText == null)
+            if (TitleText == null)
             {
                 Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] DefaultDialogFrame のタイトルテキストコンポーネント（_titleText）が設定されていません。プレハブのシリアライズ参照を確認してください。"
+                    "[Lilja.ScreenManagement.Dialog] DefaultDialogFrame のタイトルテキストコンポーネント（TitleText）が設定されていません。プレハブのシリアライズ参照を確認してください。"
                 );
                 return;
             }
-            _titleText.text = title;
+            TitleText.text = title;
         }
 
         /// <summary>
@@ -65,23 +60,23 @@ namespace Lilja.ScreenManagement.Dialog
         /// <param name="onClick">ボタンが押下された際に実行されるコールバックアクション。</param>
         public void AddButton(string label, Action onClick)
         {
-            if (_buttonContainer == null)
+            if (ButtonContainer == null)
             {
                 Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] DefaultDialogFrame のボタン配置コンテナ（_buttonContainer）が設定されていません。プレハブのシリアライズ参照を確認してください。"
+                    "[Lilja.ScreenManagement.Dialog] DefaultDialogFrame のボタン配置コンテナ（ButtonContainer）が設定されていません。プレハブのシリアライズ参照を確認してください。"
                 );
                 return;
             }
 
-            if (_buttonPrefab == null)
+            if (ButtonPrefab == null)
             {
                 Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] DefaultDialogFrame のボタンプレハブ（_buttonPrefab）が設定されていません。プレハブのシリアライズ参照を確認してください。"
+                    "[Lilja.ScreenManagement.Dialog] DefaultDialogFrame のボタンプレハブ（ButtonPrefab）が設定されていません。プレハブのシリアライズ参照を確認してください。"
                 );
                 return;
             }
 
-            var buttonObj = Instantiate(_buttonPrefab, _buttonContainer);
+            var buttonObj = Instantiate(ButtonPrefab, ButtonContainer);
             if (buttonObj == null)
             {
                 Debug.LogError(
@@ -129,7 +124,7 @@ namespace Lilja.ScreenManagement.Dialog
         public void AdjustLayout(DefaultDialogContent content)
         {
             // 1. 対象のフレーム RectTransform を決定 (未設定なら自身を使用)
-            var frameRect = _frameRect != null ? _frameRect : GetComponent<RectTransform>();
+            var frameRect = FrameRect != null ? FrameRect : GetComponent<RectTransform>();
             if (frameRect == null)
             {
                 return;
@@ -143,9 +138,9 @@ namespace Lilja.ScreenManagement.Dialog
             //    SerializeField が未設定の場合は保守的なフォールバック値を使用する。
             const float headerHeightFallback = 70f;
             var headerHeight = headerHeightFallback;
-            if (_titleText != null)
+            if (TitleText != null)
             {
-                var titleRect = _titleText.GetComponent<RectTransform>();
+                var titleRect = TitleText.GetComponent<RectTransform>();
                 if (titleRect != null)
                 {
                     // タイトルテキストの高さ + 下端位置（anchoredPosition.y が負値の場合は上への余白）
@@ -157,9 +152,9 @@ namespace Lilja.ScreenManagement.Dialog
 
             // 4. ボタンの存在確認とカウント
             var buttonCount = 0;
-            if (_buttonContainer != null)
+            if (ButtonContainer != null)
             {
-                foreach (Transform child in _buttonContainer)
+                foreach (Transform child in ButtonContainer)
                 {
                     if (child.gameObject.activeSelf)
                     {
@@ -173,9 +168,9 @@ namespace Lilja.ScreenManagement.Dialog
             const float buttonContainerPadding = 30f; // コンテナ上下パディング合計
             const float buttonPrefabHeightFallback = 50f;
             var buttonPrefabHeight = buttonPrefabHeightFallback;
-            if (_buttonPrefab != null)
+            if (ButtonPrefab != null)
             {
-                var buttonPrefabRect = _buttonPrefab.GetComponent<RectTransform>();
+                var buttonPrefabRect = ButtonPrefab.GetComponent<RectTransform>();
                 if (buttonPrefabRect != null && buttonPrefabRect.rect.height > 0f)
                 {
                     buttonPrefabHeight = buttonPrefabRect.rect.height;
@@ -187,14 +182,14 @@ namespace Lilja.ScreenManagement.Dialog
 
             // 6. ボタンコンテナの表示状態とアンカーを先に確定する。
             //    コンテンツのレイアウト再計算（Step 7）の前に行うことで正確な底部オフセットを算出できる。
-            if (_buttonContainer != null)
+            if (ButtonContainer != null)
             {
-                var buttonContainerRect = _buttonContainer.GetComponent<RectTransform>();
+                var buttonContainerRect = ButtonContainer.GetComponent<RectTransform>();
                 if (buttonContainerRect != null)
                 {
                     if (buttonCount > 0)
                     {
-                        _buttonContainer.gameObject.SetActive(true);
+                        ButtonContainer.gameObject.SetActive(true);
                         // 下部アンカー固定・ボタンプレハブの高さに基づいてサイズを確定
                         buttonContainerRect.anchorMin = new Vector2(0f, 0f);
                         buttonContainerRect.anchorMax = new Vector2(1f, 0f);
@@ -204,7 +199,7 @@ namespace Lilja.ScreenManagement.Dialog
                     }
                     else
                     {
-                        _buttonContainer.gameObject.SetActive(false);
+                        ButtonContainer.gameObject.SetActive(false);
                     }
                 }
             }
@@ -226,17 +221,17 @@ namespace Lilja.ScreenManagement.Dialog
                 }
             }
 
-            // 8. コンテンツコンテナ（_contentContainer）のオフセットを確定する。
+            // 8. コンテンツコンテナ（ContentContainerRect）のオフセットを確定する。
             //    底部オフセットにはボタン領域の実測高さを使用する。
-            if (_contentContainer != null)
+            if (ContentContainerRect != null)
             {
-                _contentContainer.anchorMin = new Vector2(0f, 0f);
-                _contentContainer.anchorMax = new Vector2(1f, 1f);
-                _contentContainer.pivot = new Vector2(0.5f, 0.5f);
+                ContentContainerRect.anchorMin = new Vector2(0f, 0f);
+                ContentContainerRect.anchorMax = new Vector2(1f, 1f);
+                ContentContainerRect.pivot = new Vector2(0.5f, 0.5f);
 
                 var bottomOffset = buttonCount > 0 ? buttonRowHeight : 15f;
-                _contentContainer.offsetMin = new Vector2(20f, bottomOffset);
-                _contentContainer.offsetMax = new Vector2(-20f, -headerHeight);
+                ContentContainerRect.offsetMin = new Vector2(20f, bottomOffset);
+                ContentContainerRect.offsetMax = new Vector2(-20f, -headerHeight);
             }
 
             // 9. フレーム全体の高さを決定してサイズを適用する。

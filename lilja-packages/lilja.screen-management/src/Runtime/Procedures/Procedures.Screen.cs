@@ -32,7 +32,7 @@ namespace Lilja.ScreenManagement
 
                 if (viewHandle.UnloadsAncestors)
                 {
-                    UnloadAncestors(screen.Context.Connector);
+                    await UnloadAncestorsAsync(screen.Context.Connector, cancellationToken);
                 }
 
                 await viewHandle.LoadAsync(screen.Context, cancellationToken);
@@ -52,9 +52,9 @@ namespace Lilja.ScreenManagement
             }
 
             /// <summary>
-            /// ビューアセットをアンロードし、注入された参照フィールドを null でクリアした上で、画面を破棄します。
+            /// ビューアセットを非同期でアンロードし、注入された参照フィールドを null でクリアした上で、画面を破棄します。
             /// </summary>
-            public static void Teardown(IGameScreenInternal screen)
+            public static async UniTask TeardownAsync(IGameScreenInternal screen, CancellationToken cancellationToken = default)
             {
                 try
                 {
@@ -65,7 +65,11 @@ namespace Lilja.ScreenManagement
                 {
                     try
                     {
-                        screen.GetViewHandle()?.Unload();
+                        var handle = screen.GetViewHandle();
+                        if (handle != null)
+                        {
+                            await handle.UnloadAsync(cancellationToken);
+                        }
                     }
                     finally
                     {
@@ -74,7 +78,7 @@ namespace Lilja.ScreenManagement
                 }
             }
 
-            private static void UnloadAncestors(GameScreenConnector startConnector)
+            private static async UniTask UnloadAncestorsAsync(GameScreenConnector startConnector, CancellationToken cancellationToken)
             {
                 for (var parent = startConnector.Parent; parent != null; parent = parent.Parent)
                 {
@@ -87,7 +91,7 @@ namespace Lilja.ScreenManagement
 
                             ViewInjectUtility.Nullify(screen);
 
-                            handle.Unload();
+                            await handle.UnloadAsync(cancellationToken);
 
                             handle.IsUnloadedTemporarily = true;
                         }

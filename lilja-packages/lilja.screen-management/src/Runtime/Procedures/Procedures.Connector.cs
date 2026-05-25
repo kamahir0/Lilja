@@ -117,7 +117,7 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
-                    CleanupDropChain(root, front);
+                    await CleanupDropChainAsync(root, front, cancellationToken);
                 }
                 catch (Exception cleanupException) when (closeException != null)
                 {
@@ -167,9 +167,10 @@ namespace Lilja.ScreenManagement
                 return null;
             }
 
-            private static void CleanupDropChain(
+            private static async UniTask CleanupDropChainAsync(
                 GameScreenConnector root,
-                GameScreenConnector front
+                GameScreenConnector front,
+                CancellationToken cancellationToken
             )
             {
                 Disconnect(root.Parent, root);
@@ -178,7 +179,7 @@ namespace Lilja.ScreenManagement
                 {
                     var parent = connector.Parent;
 
-                    CleanupOwner(connector);
+                    await CleanupOwnerAsync(connector, cancellationToken);
                     ClearConnector(connector);
 
                     if (connector == root)
@@ -190,7 +191,7 @@ namespace Lilja.ScreenManagement
                 }
             }
 
-            private static void CleanupOwner(GameScreenConnector connector)
+            private static async UniTask CleanupOwnerAsync(GameScreenConnector connector, CancellationToken cancellationToken)
             {
                 switch (connector.Owner)
                 {
@@ -198,7 +199,7 @@ namespace Lilja.ScreenManagement
                         group.CompletionSource.TrySetCanceled();
                         break;
                     case IGameScreenInternal screen:
-                        Screen.Teardown(screen);
+                        await Screen.TeardownAsync(screen, cancellationToken);
                         break;
                 }
             }

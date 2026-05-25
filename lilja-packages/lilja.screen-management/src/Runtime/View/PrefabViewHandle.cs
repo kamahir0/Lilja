@@ -121,7 +121,7 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        public void Unload()
+        public UniTask UnloadAsync(CancellationToken cancellationToken)
         {
             if (_instance != null)
             {
@@ -129,6 +129,7 @@ namespace Lilja.ScreenManagement
                 _instance = null;
             }
             _rootObjects = Array.Empty<GameObject>();
+            return UniTask.CompletedTask;
         }
 
         #endregion

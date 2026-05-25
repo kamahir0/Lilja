@@ -62,21 +62,21 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 親画面ノードのコネクタ。
         /// </summary>
-        public GameScreenConnector Parent { get; set; }
+        public GameScreenConnector Parent { get; internal set; }
 
         /// <summary>
-        /// 子画面ノード of コネクタ。
+        /// 子画面ノードのコネクタ。
         /// </summary>
-        public GameScreenConnector Child { get; set; }
+        public GameScreenConnector Child { get; internal set; }
 
         /// <summary>
         /// このコネクタが表す画面ノードの所有者オブジェクト。
         /// </summary>
-        public object Owner { get; set; }
+        public object Owner { get; internal set; }
 
         /// <summary>
         /// このノード以下のサブツリーがクローズ処理中であるかを示すフラグ。
         /// </summary>
-        public bool IsClosing { get; set; }
+        public bool IsClosing { get; internal set; }
     }
 }

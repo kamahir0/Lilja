@@ -53,8 +53,10 @@ namespace Lilja.ScreenManagement
         UniTask LoadAsync(GameScreenContext context, CancellationToken cancellationToken);
 
         /// <summary>
-        /// 生成された GameObject を破棄し、ロードされたビューアセットをメモリからアンロード（解放）します。
+        /// 生成された GameObject を破棄し、ロードされたビューアセットをメモリから非同期でアンロード（解放）します。
         /// </summary>
-        void Unload();
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>非同期タスク</returns>
+        UniTask UnloadAsync(CancellationToken cancellationToken);
     }
 }

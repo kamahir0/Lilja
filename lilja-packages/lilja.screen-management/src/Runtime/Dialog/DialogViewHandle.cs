@@ -200,7 +200,7 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
-        public void Unload()
+        public UniTask UnloadAsync(CancellationToken cancellationToken)
         {
             if (_root != null)
             {
@@ -210,6 +210,7 @@ namespace Lilja.ScreenManagement.Dialog
             _rootObjects = Array.Empty<GameObject>();
             FrameRectTransform = null;
             ContentRectTransform = null;
+            return UniTask.CompletedTask;
         }
 
         #endregion

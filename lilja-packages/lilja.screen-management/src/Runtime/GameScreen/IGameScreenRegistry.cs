@@ -27,11 +27,22 @@ namespace Lilja.ScreenManagement
 
         /// <summary>
         /// 画面を作成する外部ファクトリをキー名指定で登録します。
+        /// 具体的な型情報が失われるため、可能であれば <see cref="Register{TScreen,TArgs}(string,Func{TScreen})"/> の使用を推奨します。
         /// </summary>
         /// <typeparam name="TArgs">引数の型</typeparam>
         /// <param name="key">一意なキー名</param>
         /// <param name="factory">生成ファクトリデリゲート</param>
         void Register<TArgs>(string key, Func<GameScreen<TArgs>> factory);
+
+        /// <summary>
+        /// 画面を作成する外部ファクトリをキー名指定で登録します（具体的な型情報を正確に記録します）。
+        /// </summary>
+        /// <typeparam name="TScreen">画面の型</typeparam>
+        /// <typeparam name="TArgs">引数の型</typeparam>
+        /// <param name="key">一意なキー名</param>
+        /// <param name="factory">生成ファクトリデリゲート</param>
+        void Register<TScreen, TArgs>(string key, Func<TScreen> factory)
+            where TScreen : GameScreen<TArgs>;
 
         /// <summary>
         /// 画面を作成する外部ファクトリを型名指定で登録します。
@@ -117,7 +128,29 @@ namespace Lilja.ScreenManagement
             {
                 throw new ArgumentNullException(nameof(factory));
             }
+            // 初回は暫定的に基底型を登録するが、ファクトリが実行されたタイミングで具体的な型に遅延確定する。
             _types[key] = typeof(GameScreen<TArgs>);
+            _factories[key] = () =>
+            {
+                var screen = factory.Invoke();
+                if (screen != null)
+                {
+                    _types[key] = screen.GetType();
+                }
+                return screen;
+            };
+        }
+
+        /// <inheritdoc />
+        public void Register<TScreen, TArgs>(string key, Func<TScreen> factory)
+            where TScreen : GameScreen<TArgs>
+        {
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
+            // 具体型 TScreen を正確に記録する
+            _types[key] = typeof(TScreen);
             _factories[key] = () => factory.Invoke();
         }
 
@@ -130,7 +163,7 @@ namespace Lilja.ScreenManagement
                 throw new ArgumentNullException(nameof(factory));
             }
             _types[typeof(TScreen).FullName] = typeof(TScreen);
-            Register(typeof(TScreen).FullName, () => factory.Invoke());
+            Register<TScreen, TArgs>(typeof(TScreen).FullName, factory);
         }
 
         #endregion

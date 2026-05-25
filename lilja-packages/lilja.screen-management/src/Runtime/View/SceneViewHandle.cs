@@ -115,11 +115,11 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        public void Unload()
+        public async UniTask UnloadAsync(CancellationToken cancellationToken)
         {
             if (_cachedLoader != null && _loadedScene.IsValid() && _loadedScene.isLoaded)
             {
-                _cachedLoader.UnloadSceneAsync(_loadedScene, CancellationToken.None).Forget();
+                await _cachedLoader.UnloadSceneAsync(_loadedScene, cancellationToken);
             }
 
             _loadedScene = default;
