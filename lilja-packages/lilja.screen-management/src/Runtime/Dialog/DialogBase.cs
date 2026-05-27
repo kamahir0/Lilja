@@ -102,7 +102,8 @@ namespace Lilja.ScreenManagement.Dialog
             // 自分自身のコンテキストの一時オーバーライドオプションを自己完結的にセット！
             Context.OverrideOptions = Context.Options with
             {
-                Transition = new DialogTransition(GetAnimation()),
+                // ダイアログ表示時は、システム全体のフェード等の割り込みを自動でブロックする
+                Transition = null,
             };
 
             await base.TriggerInitializeAsync(args, cancellationToken);
@@ -176,6 +177,16 @@ namespace Lilja.ScreenManagement.Dialog
             CancellationToken cancellationToken
         )
         {
+            // 通常の入場（新規オープン）のとき、ダイアログのポップアップアニメーションを実行
+            if (context.EnterType == EnterType.OnOpen)
+            {
+                var anim = GetAnimation();
+                if (anim != null)
+                {
+                    await anim.ShowAsync(cancellationToken);
+                }
+            }
+
             if (context.EnterType == EnterType.OnResume)
             {
                 var stackAnim = GetStackAnimation();
@@ -200,6 +211,16 @@ namespace Lilja.ScreenManagement.Dialog
             CancellationToken cancellationToken
         )
         {
+            // 通常の退場（クローズ）のとき、ダイアログの非表示アニメーションを実行
+            if (context.ExitType == ExitType.OnClose)
+            {
+                var anim = GetAnimation();
+                if (anim != null)
+                {
+                    await anim.HideAsync(cancellationToken);
+                }
+            }
+
             if (context.ExitType == ExitType.OnPause)
             {
                 var stackAnim = GetStackAnimation();
