@@ -86,12 +86,11 @@ namespace Lilja.ScreenManagement.Dialog
             // ボタンテンプレートの生成
             var buttonPrefab = CreateButtonPrefab(buttonContainer.transform);
 
-            // リフレクションを用いて private フィールドに参照をインジェクション
-            SetPrivateField(dialogFrame, "_titleText", titleText);
-            SetPrivateField(dialogFrame, "_buttonContainer", buttonContainer.transform);
-            SetPrivateField(dialogFrame, "_buttonPrefab", buttonPrefab);
-            SetPrivateField(dialogFrame, "_contentContainer", contentRect);
-            SetPrivateField(dialogFrame, "_frameRect", frameRect);
+            dialogFrame.TitleText = titleText;
+            dialogFrame.ButtonContainer = buttonContainer.transform;
+            dialogFrame.ButtonPrefab = buttonPrefab;
+            dialogFrame.ContentContainerRect = contentRect;
+            dialogFrame.FrameRect = frameRect;
 
             return root;
         }
@@ -163,7 +162,7 @@ namespace Lilja.ScreenManagement.Dialog
 
             // DefaultDialogContent コンポーネントの追加と参照の設定
             var contentComp = root.AddComponent<DefaultDialogContent>();
-            SetPrivateField(contentComp, "_bodyText", text);
+            contentComp.BodyText = text;
 
             return root;
         }
@@ -213,32 +212,11 @@ namespace Lilja.ScreenManagement.Dialog
             rect.offsetMax = Vector2.zero;
         }
 
-        /// <summary>
-        /// UI 要素用の最小限 of GameObject を生成し、親に接続します。
-        /// </summary>
         private static GameObject CreateUiElement(string name, Transform parent)
         {
             var obj = new GameObject(name, typeof(RectTransform));
             obj.transform.SetParent(parent, false);
             return obj;
-        }
-
-        /// <summary>
-        /// リフレクションで private フィールドの値を設定します。
-        /// </summary>
-        private static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var field = target
-                .GetType()
-                .GetField(
-                    fieldName,
-                    System.Reflection.BindingFlags.Instance
-                        | System.Reflection.BindingFlags.NonPublic
-                );
-            if (field != null)
-            {
-                field.SetValue(target, value);
-            }
         }
     }
 }

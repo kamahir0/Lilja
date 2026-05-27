@@ -39,9 +39,14 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         )
         {
-            await SceneManager
-                .LoadSceneAsync(sceneName, LoadSceneMode.Additive)
-                .WithCancellation(cancellationToken);
+            var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            if (op == null)
+            {
+                throw new System.IO.FileNotFoundException(
+                    $"[Lilja.ScreenManagement] シーン '{sceneName}' をロードできませんでした。ビルド設定（Build Settings）にシーンが登録されているか確認してください。"
+                );
+            }
+            await op.WithCancellation(cancellationToken);
             return SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
         }
 
