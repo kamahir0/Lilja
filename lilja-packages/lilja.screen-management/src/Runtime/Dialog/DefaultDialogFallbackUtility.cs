@@ -11,13 +11,37 @@ namespace Lilja.ScreenManagement.Dialog
         private static Font _defaultFont;
 
         /// <summary>
-        /// Unity ビルトインのデフォルトフォントを取得します。
+        /// Unity ビルトインのデフォルトフォントを取得します。複数のフォールバック経路を試すことで NullReferenceException を防止します。
         /// </summary>
         private static Font GetDefaultFont()
         {
             if (_defaultFont == null)
             {
+                // 1. Unity 2022.3+ 等の一部の環境のデフォルトフォントを試行
                 _defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+                // 2. 伝統的なビルトイン Arial.ttf を試行
+                if (_defaultFont == null)
+                {
+                    _defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+                }
+
+                // 3. メモリ上にロードされている任意のフォントを試行して null を絶対に回避
+                if (_defaultFont == null)
+                {
+                    var activeFonts = Resources.FindObjectsOfTypeAll<Font>();
+                    if (activeFonts != null && activeFonts.Length > 0)
+                    {
+                        _defaultFont = activeFonts[0];
+                    }
+                }
+
+                if (_defaultFont == null)
+                {
+                    Debug.LogError(
+                        "[Lilja.ScreenManagement.Dialog] デフォルトの UI フォントの取得に失敗しました。Text のレイアウト計算で例外が発生する可能性があります。"
+                    );
+                }
             }
 
             return _defaultFont;
