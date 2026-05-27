@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -115,9 +116,13 @@ namespace Lilja.ScreenManagement
                 var parentToRestore = root.Parent;
                 var previousScreenType = frontScreen?.GetType();
 
+                // 【構造的解決】破棄対象のチェーンをキャッシュし、親子リンクをあらかじめすべて切断する
+                var chain = GatherChain(root, front);
+                DisconnectChain(chain);
+
                 try
                 {
-                    await CleanupDropChainAsync(root, front, cancellationToken);
+                    await CleanupDropChainAsync(chain, cancellationToken);
                 }
                 catch (Exception cleanupException) when (closeException != null)
                 {
@@ -167,27 +172,49 @@ namespace Lilja.ScreenManagement
                 return null;
             }
 
-            private static async UniTask CleanupDropChainAsync(
-                GameScreenConnector root,
-                GameScreenConnector front,
-                CancellationToken cancellationToken
-            )
+            private static List<GameScreenConnector> GatherChain(GameScreenConnector root, GameScreenConnector front)
             {
-                Disconnect(root.Parent, root);
-
+                var list = new List<GameScreenConnector>();
                 for (var connector = front; connector != null; )
                 {
-                    var parent = connector.Parent;
-
-                    await CleanupOwnerAsync(connector, cancellationToken);
-                    ClearConnector(connector);
-
+                    list.Add(connector);
                     if (connector == root)
                     {
                         break;
                     }
+                    connector = connector.Parent;
+                }
+                return list;
+            }
 
-                    connector = parent;
+            private static void DisconnectChain(System.Collections.Generic.List<GameScreenConnector> chain)
+            {
+                if (chain.Count == 0)
+                {
+                    return;
+                }
+
+                // ルートとその親の切断
+                var root = chain[^1];
+                Disconnect(root.Parent, root);
+
+                // サブツリー内部の全親子関係の先行切断
+                foreach (var connector in chain)
+                {
+                    connector.Parent = null;
+                    connector.Child = null;
+                }
+            }
+
+            private static async UniTask CleanupDropChainAsync(
+                System.Collections.Generic.List<GameScreenConnector> chain,
+                CancellationToken cancellationToken
+            )
+            {
+                foreach (var connector in chain)
+                {
+                    await CleanupOwnerAsync(connector, cancellationToken);
+                    ClearConnector(connector);
                 }
             }
 

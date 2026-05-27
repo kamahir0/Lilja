@@ -78,29 +78,33 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
-                    if (callerConnector.Owner != null)
+                    // 一括破棄（一括クローズ）の最中でない場合のみ、個別でのクリーンアップや親画面の再開を実行する
+                    if (!callerConnector.IsClosing && !calleeConnector.IsClosing)
                     {
-                        if (callerConnector.Child == calleeConnector)
+                        if (callerConnector.Owner != null)
+                        {
+                            if (callerConnector.Child == calleeConnector)
+                            {
+                                await Connector.DropSubtreeAsync(
+                                    calleeConnector,
+                                    callerConnector.Owner.GetType(),
+                                    CancellationToken.None
+                                );
+                            }
+                        }
+                        else
                         {
                             await Connector.DropSubtreeAsync(
                                 calleeConnector,
-                                callerConnector.Owner.GetType(),
+                                null,
                                 CancellationToken.None
                             );
                         }
-                    }
-                    else
-                    {
-                        await Connector.DropSubtreeAsync(
-                            calleeConnector,
-                            null,
-                            CancellationToken.None
-                        );
-                    }
 
-                    if (callerConnector.Owner is IGameScreenInternal callerScreen)
-                    {
-                        await callerScreen.ResumeAsync(calleeScreen.GetType(), cancellationToken);
+                        if (callerConnector.Owner is IGameScreenInternal callerScreen)
+                        {
+                            await callerScreen.ResumeAsync(calleeScreen.GetType(), cancellationToken);
+                        }
                     }
                 }
                 catch (Exception teardownException) when (signalException != null)
