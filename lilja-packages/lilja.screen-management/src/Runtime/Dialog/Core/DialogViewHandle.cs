@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Lilja.ScreenManagement.Dialog
@@ -232,7 +233,21 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary> Rootを生成する </summary>
         private static GameObject CreateRoot()
         {
-            return DialogRootUtility.Create();
+            var root = new GameObject("Dialog");
+
+            // Canvas の自動アタッチと設定
+            var canvas = root.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+            // 基準解像度 1920x1080 に基づくマルチ解像度対応スケーラーの設定
+            var scaler = root.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+            // UI入力を可能にするための GraphicRaycaster 設定
+            root.AddComponent<GraphicRaycaster>();
+
+            return root;
         }
 
         /// <summary> ContentをFrameの子にする </summary>
