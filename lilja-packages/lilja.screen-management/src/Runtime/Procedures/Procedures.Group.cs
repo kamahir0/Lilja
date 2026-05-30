@@ -16,11 +16,25 @@ namespace Lilja.ScreenManagement
             /// <summary>
             /// 画面グループを起動し、初期画面を表示してグループの寿命が終了するまで非同期待機します。
             /// </summary>
-            public static async UniTask CallAsync<TArgs>(
+            public static GameScreenGroupHandle CallAsync<TArgs>(
                 GameScreenContext callerContext,
                 GameScreenGroup calleeGroup,
                 string initialScreenKey,
                 TArgs initialScreenArgs,
+                CancellationToken cancellationToken
+            )
+            {
+                var handle = new GameScreenGroupHandle();
+                CallAsyncInternal(callerContext, calleeGroup, initialScreenKey, initialScreenArgs, handle, cancellationToken).Forget();
+                return handle;
+            }
+
+            private static async UniTaskVoid CallAsyncInternal<TArgs>(
+                GameScreenContext callerContext,
+                GameScreenGroup calleeGroup,
+                string initialScreenKey,
+                TArgs initialScreenArgs,
+                GameScreenGroupHandle handle,
                 CancellationToken cancellationToken
             )
             {
@@ -51,6 +65,8 @@ namespace Lilja.ScreenManagement
                         cancellationToken
                     );
 
+                    handle.SignalInitialScreenEntered();
+
                     var completionSource = calleeGroup.CompletionSource;
                     using (
                         cancellationToken.RegisterWithoutCaptureExecutionContext(() =>
@@ -60,10 +76,17 @@ namespace Lilja.ScreenManagement
                     {
                         await completionSource.Task;
                     }
+
+                    handle.SignalGroupLifetimeCompleted();
+                }
+                catch (OperationCanceledException)
+                {
+                    handle.SignalGroupLifetimeCanceled();
                 }
                 catch (Exception exception)
                 {
                     signalException = ExceptionDispatchInfo.Capture(exception);
+                    handle.SignalGroupLifetimeFailed(exception);
                 }
 
                 try

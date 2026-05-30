@@ -135,7 +135,7 @@ namespace Lilja.ScreenManagement
         /// <param name="initialScreenArgs">初期表示画面の引数</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>グループの生存期間を表す非同期タスク</returns>
-        public UniTask CallAsync<TArgs>(
+        public GameScreenGroupHandle CallAsync<TArgs>(
             GameScreenContext callerContext,
             string initialScreenKey,
             TArgs initialScreenArgs,
@@ -165,7 +165,7 @@ namespace Lilja.ScreenManagement
         /// <param name="initialScreenArgs">初期表示画面の引数</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>グループの生存期間を表す非同期タスク</returns>
-        public UniTask CallAsync<TScreen, TArgs>(
+        public GameScreenGroupHandle CallAsync<TScreen, TArgs>(
             GameScreenContext callerContext,
             TArgs initialScreenArgs,
             CancellationToken cancellationToken = default
