@@ -55,7 +55,11 @@ namespace Lilja.ScreenManagement
         {
             if (scene.IsValid() && scene.isLoaded)
             {
-                await SceneManager.UnloadSceneAsync(scene).WithCancellation(cancellationToken);
+                var op = SceneManager.UnloadSceneAsync(scene);
+                if (op != null)
+                {
+                    await op.WithCancellation(cancellationToken);
+                }
             }
         }
 

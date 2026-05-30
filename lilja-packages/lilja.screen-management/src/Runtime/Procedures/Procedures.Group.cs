@@ -164,66 +164,89 @@ namespace Lilja.ScreenManagement
                         );
                     }
 
-                    var needsTempScene = SceneManager.sceneCount <= 1;
-                    using var tempSceneScope = needsTempScene
-                        ? TempSceneUtility.CreateTempSceneScope()
-                        : default;
-
                     var nextScreenType = group.GetScreenType(key);
                     var list = context.ActiveScreensInternal;
 
                     Type previousScreenType = null;
                     ITransition customTransition = null;
-                    if (list.Count > 0)
-                    {
-                        var oldScreen = list[^1];
-                        previousScreenType = oldScreen.GetType();
-
-                        // 遷移元と遷移先のペアから一時差し替えトランジションを検索
-                        if (group.OverrideTransitionMap.TryGetValue((previousScreenType, nextScreenType), out var t))
-                        {
-                            customTransition = t;
-                        }
-
-                        // 現在のアクティブな画面（末尾）を破棄
-                        await TeardownAsyncInternal(context, oldScreen, nextScreenType, customTransition, cancellationToken);
-                    }
-                    else
-                    {
-                        // 遷移元がnull（初期画面）時のToへの差し替え
-                        if (group.OverrideTransitionMap.TryGetValue((null, nextScreenType), out var t))
-                        {
-                            customTransition = t;
-                        }
-                    }
-
-                    var nextScreenObj = group.Create(key);
-                    var nextScreen = (GameScreen<TArgs>)nextScreenObj;
-
-                    nextScreen.Context = context;
-                    nextScreen.Layer = group.Layer;
-                    nextScreen.Group = group;
-
-                    list.Add(nextScreen);
+                    TempSceneUtility.TempSceneScope tempSceneScope = default;
 
                     try
                     {
-                        await Screen.PrepareAsync(nextScreen, cancellationToken);
-
-                        await ((IGameScreenInternal<TArgs>)nextScreen).OpenAsync(
-                            args,
-                            previousScreenType,
-                            customTransition,
-                            cancellationToken
-                        );
-                    }
-                    catch
-                    {
-                        if (list.Contains(nextScreen))
+                        if (list.Count > 0)
                         {
-                            await TeardownAsyncInternal(context, nextScreen, null, null, CancellationToken.None);
+                            var oldScreen = list[^1];
+                            previousScreenType = oldScreen.GetType();
+
+                            // 遷移元と遷移先のペアから一時差し替えトランジションを検索
+                            if (group.OverrideTransitionMap.TryGetValue((previousScreenType, nextScreenType), out var t))
+                            {
+                                customTransition = t;
+                            }
+
+                            // 1. まず CloseAsync を呼び、画面を完全に覆う（暗転完了を待つ）
+                            oldScreen.IsClosing = true;
+                            await oldScreen.CloseAsync(nextScreenType, customTransition, cancellationToken);
+
+                            // 2. 画面が完全に覆われたので、ここで初めて TempScene 防衛を開始する
+                            var needsTempScene = SceneManager.sceneCount <= 1;
+                            if (needsTempScene)
+                            {
+                                tempSceneScope = TempSceneUtility.CreateTempSceneScope();
+                            }
+
+                            // 3. 旧画面を物理的にアンロード
+                            list.Remove(oldScreen);
+                            await Screen.TeardownAsync(oldScreen, cancellationToken);
                         }
-                        throw;
+                        else
+                        {
+                            // 遷移元がnull（初期画面）時のToへの差し替え
+                            if (group.OverrideTransitionMap.TryGetValue((null, nextScreenType), out var t))
+                            {
+                                customTransition = t;
+                            }
+                        }
+
+                        var nextScreenObj = group.Create(key);
+                        var nextScreen = (GameScreen<TArgs>)nextScreenObj;
+
+                        nextScreen.Context = context;
+                        nextScreen.Layer = group.Layer;
+                        nextScreen.Group = group;
+
+                        list.Add(nextScreen);
+
+                        try
+                        {
+                            // 4. 新シーンをロードし、アクティブにする
+                            await Screen.PrepareAsync(nextScreen, cancellationToken);
+
+                            // 5. 新シーンが正常にアクティブになったので、ここで TempScene を破棄する
+                            tempSceneScope.Dispose();
+                            tempSceneScope = default;
+
+                            // 6. トランジションを明ける（フェードイン）
+                            await ((IGameScreenInternal<TArgs>)nextScreen).OpenAsync(
+                                args,
+                                previousScreenType,
+                                customTransition,
+                                cancellationToken
+                            );
+                        }
+                        catch
+                        {
+                            if (list.Contains(nextScreen))
+                            {
+                                await TeardownAsyncInternal(context, nextScreen, null, null, CancellationToken.None);
+                            }
+                            throw;
+                        }
+                    }
+                    finally
+                    {
+                        // 異常系での破棄漏れ防止
+                        tempSceneScope.Dispose();
                     }
                 }
                 finally
@@ -250,11 +273,6 @@ namespace Lilja.ScreenManagement
                     return;
                 }
 
-                var needsTempScene = SceneManager.sceneCount <= 1;
-                using var tempSceneScope = needsTempScene
-                    ? TempSceneUtility.CreateTempSceneScope()
-                    : default;
-
                 // 破棄対象の全画面を Closing マーク
                 for (var i = list.Count - 1; i >= index; i--)
                 {
@@ -274,50 +292,67 @@ namespace Lilja.ScreenManagement
                 }
 
                 var previousScreenType = frontScreen.GetType();
+                TempSceneUtility.TempSceneScope tempSceneScope = default;
 
-                // 起点画面から末尾画面までの破棄チェーンをクリーンアップしてリストから削除
-                ExceptionDispatchInfo teardownException = null;
-                for (var i = list.Count - 1; i >= index; i--)
+                try
                 {
-                    var screen = list[i];
-                    try
+                    var needsTempScene = SceneManager.sceneCount <= 1;
+                    if (needsTempScene)
                     {
-                        await Screen.TeardownAsync(screen, cancellationToken);
+                        tempSceneScope = TempSceneUtility.CreateTempSceneScope();
                     }
-                    catch (Exception ex)
+
+                    // 起点画面から末尾画面までの破棄チェーンをクリーンアップしてリストから削除
+                    ExceptionDispatchInfo teardownException = null;
+                    for (var i = list.Count - 1; i >= index; i--)
                     {
-                        if (teardownException == null)
+                        var screen = list[i];
+                        try
                         {
-                            teardownException = ExceptionDispatchInfo.Capture(ex);
+                            await Screen.TeardownAsync(screen, cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (teardownException == null)
+                            {
+                                teardownException = ExceptionDispatchInfo.Capture(ex);
+                            }
+                        }
+                        finally
+                        {
+                            list.RemoveAt(i);
                         }
                     }
-                    finally
-                    {
-                        list.RemoveAt(i);
-                    }
-                }
 
-                if (closeException != null || teardownException != null)
-                {
-                    var firstEx = closeException?.SourceException ?? teardownException?.SourceException;
-                    var secondEx = closeException != null ? teardownException?.SourceException : null;
-                    if (secondEx != null)
+                    if (closeException != null || teardownException != null)
                     {
-                        throw new AggregateException(firstEx, secondEx);
+                        var firstEx = closeException?.SourceException ?? teardownException?.SourceException;
+                        var secondEx = closeException != null ? teardownException?.SourceException : null;
+                        if (secondEx != null)
+                        {
+                            throw new AggregateException(firstEx, secondEx);
+                        }
+                        throw firstEx;
                     }
-                    throw firstEx;
-                }
 
-                // 破棄後に親が残っていれば復元
-                if (list.Count > 0)
+                    // 破棄後に親が残っていれば復元
+                    if (list.Count > 0)
+                    {
+                        var parentToRestore = list[^1];
+                        await Screen.RestoreAncestorsAsync(
+                            context,
+                            parentToRestore,
+                            previousScreenType,
+                            cancellationToken
+                        );
+                    }
+
+                    tempSceneScope.Dispose();
+                    tempSceneScope = default;
+                }
+                finally
                 {
-                    var parentToRestore = list[^1];
-                    await Screen.RestoreAncestorsAsync(
-                        context,
-                        parentToRestore,
-                        previousScreenType,
-                        cancellationToken
-                    );
+                    tempSceneScope.Dispose();
                 }
             }
 

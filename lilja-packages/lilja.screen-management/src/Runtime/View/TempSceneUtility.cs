@@ -20,16 +20,19 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// 防衛用の一時シーンを新規作成、または既存のものを取得してロードします。
+        /// 防衛用の一時シーンを新規作成、または既存のものを取得してロードし、アクティブシーンに設定します。
         /// </summary>
         internal static Scene Create()
         {
             var scene = SceneManager.GetSceneByName(SceneName);
             if (scene.IsValid() && scene.isLoaded)
             {
+                SceneManager.SetActiveScene(scene);
                 return scene;
             }
-            return SceneManager.CreateScene(SceneName);
+            var createdScene = SceneManager.CreateScene(SceneName);
+            SceneManager.SetActiveScene(createdScene);
+            return createdScene;
         }
 
         /// <summary>

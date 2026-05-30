@@ -105,6 +105,11 @@ namespace Lilja.ScreenManagement
 
                         ViewInjectUtility.Nullify(screen);
 
+                        var needsTempScene = UnityEngine.SceneManagement.SceneManager.sceneCount <= 1;
+                        using var tempSceneScope = needsTempScene
+                            ? TempSceneUtility.CreateTempSceneScope()
+                            : default;
+
                         await handle.UnloadAsync(cancellationToken);
 
                         handle.IsUnloadedTemporarily = true;
