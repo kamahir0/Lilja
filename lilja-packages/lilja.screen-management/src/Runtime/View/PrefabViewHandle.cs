@@ -85,7 +85,7 @@ namespace Lilja.ScreenManagement
                     "[Lilja.ScreenManagement] PrefabViewHandle が型コンテキストで初期化されていません。"
                 );
             }
-            await context.Options.PrefabProvider.LoadAsync(_resolvedKey, cancellationToken);
+            await context.PrefabProvider.LoadAsync(_resolvedKey, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -106,7 +106,7 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            var provider = context.Options.PrefabProvider;
+            var provider = context.PrefabProvider;
             var prefab = await provider.LoadAsync(_resolvedKey, cancellationToken);
 
             if (prefab == null)

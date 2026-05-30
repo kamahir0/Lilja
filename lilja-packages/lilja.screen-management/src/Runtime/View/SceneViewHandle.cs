@@ -98,7 +98,7 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            _cachedLoader = context.Options.SceneLoader;
+            _cachedLoader = context.SceneLoader;
             _loadedScene = await _cachedLoader.LoadSceneAsync(
                 _resolvedSceneName,
                 cancellationToken

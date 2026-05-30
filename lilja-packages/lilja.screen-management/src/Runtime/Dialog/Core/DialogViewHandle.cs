@@ -81,7 +81,7 @@ namespace Lilja.ScreenManagement.Dialog
             CancellationToken cancellationToken
         )
         {
-            var provider = context.Options.PrefabProvider;
+            var provider = context.PrefabProvider;
             try
             {
                 await UniTask.WhenAll(
@@ -123,7 +123,7 @@ namespace Lilja.ScreenManagement.Dialog
             OutsideButtonUtility.Create(_root.transform, _useBackdrop);
 
             // Frame / Content ロードとインスタンス化
-            var provider = context.Options.PrefabProvider;
+            var provider = context.PrefabProvider;
 
             GameObject framePrefab = null;
             GameObject contentPrefab = null;

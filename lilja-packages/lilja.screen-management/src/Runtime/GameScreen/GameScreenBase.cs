@@ -181,11 +181,6 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// 有効な画面オプションを取得します。
-        /// </summary>
-        public GameScreenOptions Options => Context?.Options;
-
-        /// <summary>
         /// この画面が現在クローズ処理中であるか。
         /// </summary>
         internal bool IsClosing { get; set; }
@@ -198,21 +193,18 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// 画面がツリーに接続される前に、指定されたカスタムオプションを用いてビューのアセットを事前に非同期ロードしてメモリにキャッシュします。
+        /// 画面がツリーに接続される前に、指定されたアセットプロバイダー等を用いてビューのアセットを事前に非同期ロードしてメモリにキャッシュします。
         /// </summary>
-        /// <param name="options">アセットロードに使用するカスタムオプション</param>
+        /// <param name="prefabProvider">プレハブアセットプロバイダー</param>
+        /// <param name="sceneLoader">シーンロードサービス</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         public async UniTask PreloadViewAsync(
-            GameScreenOptions options,
+            IPrefabProvider prefabProvider = null,
+            ISceneLoader sceneLoader = null,
             CancellationToken cancellationToken = default
         )
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
             var handle = ((IGameScreenInternal)this).GetViewHandle();
             if (handle == null)
             {
@@ -223,7 +215,8 @@ namespace Lilja.ScreenManagement
             {
                 Context = new GameScreenContext();
             }
-            Context.Options = options;
+            if (prefabProvider != null) Context.PrefabProvider = prefabProvider;
+            if (sceneLoader != null) Context.SceneLoader = sceneLoader;
             handle.Initialize(GetType());
             await handle.PreloadAsync(Context, cancellationToken);
         }
@@ -259,7 +252,7 @@ namespace Lilja.ScreenManagement
         {
             await TriggerInitializeAsync(args, cancellationToken);
 
-            var transition = overrideTransition ?? Options?.Transition;
+            var transition = overrideTransition ?? Context?.Transition;
             var transitionHandle = new TransitionHandle(transition, false);
             var enterContext = new EnterContext(
                 EnterType.OnOpen,
@@ -282,7 +275,7 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         )
         {
-            var transition = overrideTransition ?? Options?.Transition;
+            var transition = overrideTransition ?? Context?.Transition;
             var transitionHandle = new TransitionHandle(transition, true);
             var exitContext = new ExitContext(ExitType.OnClose, nextScreenType, transitionHandle);
 
@@ -301,7 +294,7 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         )
         {
-            var transition = overrideTransition ?? Options?.Transition;
+            var transition = overrideTransition ?? Context?.Transition;
             var transitionHandle = new TransitionHandle(transition, false);
             var enterContext = new EnterContext(
                 EnterType.OnResume,
@@ -324,7 +317,7 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         )
         {
-            var transition = overrideTransition ?? Options?.Transition;
+            var transition = overrideTransition ?? Context?.Transition;
             var transitionHandle = new TransitionHandle(transition, true);
             var exitContext = new ExitContext(ExitType.OnPause, nextScreenType, transitionHandle);
 

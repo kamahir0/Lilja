@@ -13,17 +13,29 @@ namespace Lilja.ScreenManagement
         internal GameScreenContext()
         {
             Gate = new SemaphoreSlim(1, 1);
-            Options = GameScreenOptions.Default;
+            PrefabProvider = new ResourcesPrefabProvider();
+            SceneLoader = new DefaultSceneLoader();
         }
 
         /// <summary>
         /// 新規のルートコンテキストを生成します。
         /// </summary>
-        /// <param name="options">この遷移スタック全体で共有・伝播されるカスタムオプション。指定しない場合はデフォルト設定が適用されます。</param>
+        /// <param name="transition">この遷移スタック全体で共有・使用されるトランジション演出。</param>
+        /// <param name="prefabProvider">プレハブのロードに使用されるアセットプロバイダー。</param>
+        /// <param name="sceneLoader">シーンのロードに使用されるサービス。</param>
         /// <returns>安全に初期化されたルートコンテキストインスタンス</returns>
-        public static GameScreenContext CreateRoot(GameScreenOptions options = null)
+        public static GameScreenContext CreateRoot(
+            ITransition transition = null,
+            IPrefabProvider prefabProvider = null,
+            ISceneLoader sceneLoader = null
+        )
         {
-            return new GameScreenContext { Options = options ?? GameScreenOptions.Default };
+            return new GameScreenContext
+            {
+                Transition = transition,
+                PrefabProvider = prefabProvider ?? new ResourcesPrefabProvider(),
+                SceneLoader = sceneLoader ?? new DefaultSceneLoader(),
+            };
         }
 
         /// <summary>
@@ -48,8 +60,18 @@ namespace Lilja.ScreenManagement
         internal bool IsClosing { get; set; }
 
         /// <summary>
-        /// 現在有効な依存関係オプション。
+        /// 画面遷移時に使用されるデフォルトのトランジション演出。
         /// </summary>
-        public GameScreenOptions Options { get; internal set; }
+        public ITransition Transition { get; set; }
+
+        /// <summary>
+        /// プレハブのロードに使用されるアセットプロバイダー。
+        /// </summary>
+        public IPrefabProvider PrefabProvider { get; set; }
+
+        /// <summary>
+        /// シーンのロードに使用されるサービス。
+        /// </summary>
+        public ISceneLoader SceneLoader { get; set; }
     }
 }
