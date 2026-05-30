@@ -36,7 +36,7 @@ namespace Lilja.ScreenManagement
                 }
 
                 ExceptionDispatchInfo signalException = null;
-                var initialScreenType = calleeGroup.Registry.GetScreenType(initialScreenKey);
+                var initialScreenType = calleeGroup.Builder.GetScreenType(initialScreenKey);
 
                 try
                 {
@@ -76,7 +76,7 @@ namespace Lilja.ScreenManagement
 
                     // グループによって追加された画面があれば破棄
                     // グループ開始時のリストの状態に戻す
-                    if (calleeGroup.Registry.Contains(initialScreenKey))
+                    if (calleeGroup.Builder.Contains(initialScreenKey))
                     {
                         // calleeGroup.SwitchAsyncによって最初に追加された初期画面から末尾までを破棄
                         // 初期画面は initialScreenType の型を持つ
@@ -146,7 +146,7 @@ namespace Lilja.ScreenManagement
                         ? TempSceneUtility.CreateTempSceneScope()
                         : default;
 
-                    var nextScreenType = group.Registry.GetScreenType(key);
+                    var nextScreenType = group.Builder.GetScreenType(key);
                     var list = context.ActiveScreensInternal;
 
                     Type previousScreenType = null;
@@ -174,7 +174,7 @@ namespace Lilja.ScreenManagement
                         }
                     }
 
-                    var nextScreenObj = group.Registry.Create(key);
+                    var nextScreenObj = group.Builder.Create(key);
                     var nextScreen = (GameScreen<TArgs>)nextScreenObj;
 
                     nextScreen.Context = context;

@@ -14,8 +14,8 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// このグループ内の画面遷移設定を行います。
         /// </summary>
-        /// <param name="registry">登録用レジストリ</param>
-        protected virtual void Configure(IGameScreenRegistry registry) { }
+        /// <param name="builder">登録用ビルダー</param>
+        protected virtual void Configure(GameScreenGroupBuilder builder) { }
 
         #endregion
 
@@ -43,12 +43,12 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// このグループ内の画面レジストリ。
         /// </summary>
-        internal GameScreenRegistry Registry { get; } = new();
+        internal GameScreenGroupBuilder Builder { get; } = new();
 
         /// <summary>
         /// 画面遷移元と遷移先の組み合わせに応じた一時差し替えトランジションマップ。
         /// </summary>
-        public System.Collections.Generic.Dictionary<(System.Type From, System.Type To), ITransition> OverrideTransitionMap => Registry.OverrideTransitionMap;
+        public System.Collections.Generic.Dictionary<(System.Type From, System.Type To), ITransition> OverrideTransitionMap => Builder.OverrideTransitionMap;
 
         /// <summary>
         /// 多重画面遷移を防ぐための非同期セマフォ。
@@ -70,7 +70,7 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            Configure(Registry);
+            Configure(Builder);
             _configured = true;
         }
 
@@ -192,24 +192,24 @@ namespace Lilja.ScreenManagement
         /// </summary>
         /// <param name="configure">画面登録を行うデリゲート</param>
         /// <returns>簡易生成された画面グループインスタンス</returns>
-        public static GameScreenGroup Create(Action<IGameScreenRegistry> configure)
+        public static GameScreenGroup Create(Action<GameScreenGroupBuilder> configure)
         {
             return new ConfiguredGameScreenGroup(configure);
         }
 
         private sealed class ConfiguredGameScreenGroup : GameScreenGroup
         {
-            private readonly Action<IGameScreenRegistry> _configure;
+            private readonly Action<GameScreenGroupBuilder> _configure;
 
-            public ConfiguredGameScreenGroup(Action<IGameScreenRegistry> configure)
+            public ConfiguredGameScreenGroup(Action<GameScreenGroupBuilder> configure)
             {
                 _configure = configure ?? throw new ArgumentNullException(nameof(configure));
             }
 
             /// <inheritdoc />
-            protected override void Configure(IGameScreenRegistry registry)
+            protected override void Configure(GameScreenGroupBuilder builder)
             {
-                _configure.Invoke(registry);
+                _configure.Invoke(builder);
             }
         }
     }
