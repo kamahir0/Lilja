@@ -64,14 +64,25 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public ITransition Transition { get; set; }
 
+        private IPrefabProvider _prefabProvider;
+        private ISceneLoader _sceneLoader;
+
         /// <summary>
         /// プレハブのロードに使用されるアセットプロバイダー。
         /// </summary>
-        public IPrefabProvider PrefabProvider { get; set; }
+        public IPrefabProvider PrefabProvider
+        {
+            get => _prefabProvider;
+            set => _prefabProvider = value ?? throw new System.ArgumentNullException(nameof(value), "[Lilja.ScreenManagement] PrefabProvider に null を設定することはできません。");
+        }
 
         /// <summary>
         /// シーンのロードに使用されるサービス。
         /// </summary>
-        public ISceneLoader SceneLoader { get; set; }
+        public ISceneLoader SceneLoader
+        {
+            get => _sceneLoader;
+            set => _sceneLoader = value ?? throw new System.ArgumentNullException(nameof(value), "[Lilja.ScreenManagement] SceneLoader に null を設定することはできません。");
+        }
     }
 }

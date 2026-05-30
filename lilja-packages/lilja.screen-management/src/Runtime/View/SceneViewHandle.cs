@@ -120,14 +120,21 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public async UniTask UnloadAsync(CancellationToken cancellationToken)
         {
-            if (_cachedLoader != null && _loadedScene.IsValid() && _loadedScene.isLoaded)
+            try
             {
-                await _cachedLoader.UnloadSceneAsync(_loadedScene, cancellationToken);
+                if (_cachedLoader != null && _loadedScene.IsValid() && _loadedScene.isLoaded)
+                {
+                    // アンロード中のキャンセルによるシーン破損・メモリリークを防ぐため、
+                    // CancellationToken.None を指定して処理を最後まで安全に完了させます
+                    await _cachedLoader.UnloadSceneAsync(_loadedScene, CancellationToken.None);
+                }
             }
-
-            _loadedScene = default;
-            _cachedLoader = null;
-            _rootObjects = Array.Empty<GameObject>();
+            finally
+            {
+                _loadedScene = default;
+                _cachedLoader = null;
+                _rootObjects = Array.Empty<GameObject>();
+            }
         }
 
         #endregion

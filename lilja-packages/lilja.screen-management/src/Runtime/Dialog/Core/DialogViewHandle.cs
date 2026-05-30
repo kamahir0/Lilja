@@ -15,11 +15,15 @@ namespace Lilja.ScreenManagement.Dialog
     {
         private readonly string _frameKey;
         private readonly string _contentKey;
-        private readonly bool _useBackdrop;
         private readonly Func<GameObject> _fallbackFrameFactory;
         private readonly Func<GameObject> _fallbackContentFactory;
 
         private GameObject _root;
+
+        /// <summary>
+        /// 背景イメージを使用するかどうか。
+        /// </summary>
+        public bool UseBackdrop { get; set; } = true;
 
         /// <summary>
         /// Frame の RectTransform を取得します。
@@ -58,14 +62,12 @@ namespace Lilja.ScreenManagement.Dialog
         public DialogViewHandle(
             string frameKey,
             string contentKey,
-            bool useBackdrop,
             Func<GameObject> fallbackFrameFactory,
             Func<GameObject> fallbackContentFactory
         )
         {
             _frameKey = frameKey;
             _contentKey = contentKey;
-            _useBackdrop = useBackdrop;
             _fallbackFrameFactory = fallbackFrameFactory;
             _fallbackContentFactory = fallbackContentFactory;
         }
@@ -114,104 +116,115 @@ namespace Lilja.ScreenManagement.Dialog
             _root = CreateRoot();
             _rootObjects = new[] { _root };
 
-            // GameScreens シーンへ移動
-            var targetScene = await GameScreenSceneUtility.GetOrCreateSceneAsync(cancellationToken);
-            if (targetScene.IsValid() && targetScene.isLoaded && _root != null)
-            {
-                SceneManager.MoveGameObjectToScene(_root, targetScene);
-            }
-
-            // Backdrop生成
-            if (_useBackdrop)
-            {
-                BackdropUtility.Create(_root.transform);
-            }
-
-            // OutsideButton生成
-            OutsideButtonUtility.Create(_root.transform, _useBackdrop);
-
-            // Frame / Content ロードとインスタンス化
-            var provider = context.PrefabProvider;
-
-            GameObject framePrefab = null;
-            GameObject contentPrefab = null;
             try
             {
-                var results = await UniTask.WhenAll(
-                    provider.LoadAsync(_frameKey, cancellationToken).SuppressCancellationThrow(),
-                    provider.LoadAsync(_contentKey, cancellationToken).SuppressCancellationThrow()
-                );
-
-                // いずれかがキャンセルされていた場合はフォールバックを生成せずに中断する。
-                // キャンセルされた状態でフォールバックUIを生成すると、呼び出し元が既に
-                // キャンセル済みであるにもかかわらずダイアログが画面に残り続けるバグの原因となる。
-                if (results.Item1.IsCanceled || results.Item2.IsCanceled)
+                // GameScreens シーンへ移動
+                var targetScene = await GameScreenSceneUtility.GetOrCreateSceneAsync(cancellationToken);
+                if (targetScene.IsValid() && targetScene.isLoaded && _root != null)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    // ThrowIfCancellationRequested が通過した場合（トークン自体は未キャンセルだが
-                    // SuppressCancellationThrow が IsCanceled を返した異常ケース）は早期リターン
-                    return;
+                    SceneManager.MoveGameObjectToScene(_root, targetScene);
                 }
 
-                framePrefab = results.Item1.Result;
-                contentPrefab = results.Item2.Result;
+                // Backdrop生成
+                if (UseBackdrop)
+                {
+                    BackdropUtility.Create(_root.transform);
+                }
+
+                // OutsideButton生成
+                OutsideButtonUtility.Create(_root.transform, UseBackdrop);
+
+                // Frame / Content ロードとインスタンス化
+                var provider = context.PrefabProvider;
+
+                GameObject framePrefab = null;
+                GameObject contentPrefab = null;
+                try
+                {
+                    var results = await UniTask.WhenAll(
+                        provider.LoadAsync(_frameKey, cancellationToken).SuppressCancellationThrow(),
+                        provider.LoadAsync(_contentKey, cancellationToken).SuppressCancellationThrow()
+                    );
+
+                    // いずれかがキャンセルされていた場合はフォールバックを生成せずに中断する。
+                    // キャンセルされた状態でフォールバックUIを生成すると、呼び出し元が既に
+                    // キャンセル済みであるにもかかわらずダイアログが画面に残り続けるバグの原因となる。
+                    if (results.Item1.IsCanceled || results.Item2.IsCanceled)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        // ThrowIfCancellationRequested が通過した場合（トークン自体は未キャンセルだが
+                        // SuppressCancellationThrow が IsCanceled を返した異常ケース）は例外を投げて早期脱出
+                        throw new OperationCanceledException(cancellationToken);
+                    }
+
+                    framePrefab = results.Item1.Result;
+                    contentPrefab = results.Item2.Result;
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // フォールバックで対応する
+                }
+
+                // Frame生成
+                var frameGo =
+                    framePrefab == null
+                        ? _fallbackFrameFactory?.Invoke()
+                        : Object.Instantiate(framePrefab);
+                if (frameGo == null)
+                {
+                    throw new InvalidOperationException(
+                        $"[Lilja.ScreenManagement.Dialog] ダイアログフレーム '{_frameKey}' のインスタンス化に失敗しました（プレハブ・フォールバック共に生成不可）。"
+                    );
+                }
+
+                FrameRectTransform = frameGo.GetComponent<RectTransform>();
+                if (FrameRectTransform == null)
+                {
+                    throw new InvalidOperationException(
+                        $"[Lilja.ScreenManagement.Dialog] 生成されたダイアログフレーム '{_frameKey}' に RectTransform が見つかりません。"
+                    );
+                }
+
+                // FrameをRootの子にする
+                FrameRectTransform.SetParent(_root.transform, false);
+                FrameRectTransform.SetAsLastSibling(); // 順序保障: Backdrop(0) -> Outside(1) -> Frame(2)
+
+                // Content生成
+                var contentGo =
+                    contentPrefab == null
+                        ? _fallbackContentFactory?.Invoke()
+                        : Object.Instantiate(contentPrefab);
+
+                if (contentGo == null)
+                {
+                    throw new InvalidOperationException(
+                        $"[Lilja.ScreenManagement.Dialog] ダイアログコンテンツ '{_contentKey}' のインスタンス化に失敗しました（プレハブ・フォールバック共に生成不可）。"
+                    );
+                }
+
+                ContentRectTransform = contentGo.GetComponent<RectTransform>();
+                if (ContentRectTransform == null)
+                {
+                    throw new InvalidOperationException(
+                        $"[Lilja.ScreenManagement.Dialog] 生成されたダイアログコンテンツ '{_contentKey}' に RectTransform が見つかりません。"
+                    );
+                }
+
+                // ContentをFrameの子にする
+                SetContentParent(ContentRectTransform, FrameRectTransform);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception)
             {
-                // フォールバックで対応する
+                if (_root != null)
+                {
+                    Object.Destroy(_root);
+                    _root = null;
+                }
+                _rootObjects = Array.Empty<GameObject>();
+                FrameRectTransform = null;
+                ContentRectTransform = null;
+                throw;
             }
-
-            // Frame生成
-            var frameGo =
-                framePrefab == null
-                    ? _fallbackFrameFactory?.Invoke()
-                    : Object.Instantiate(framePrefab);
-            if (frameGo == null)
-            {
-                Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] ダイアログフレームのインスタンス化に失敗しました。"
-                );
-                return;
-            }
-
-            FrameRectTransform = frameGo.GetComponent<RectTransform>();
-            if (FrameRectTransform == null)
-            {
-                Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] 生成されたダイアログフレームに RectTransform が見つかりません。"
-                );
-                return;
-            }
-
-            // FrameをRootの子にする
-            FrameRectTransform.SetParent(_root.transform, false);
-            FrameRectTransform.SetAsLastSibling(); // 順序保障: Backdrop(0) -> Outside(1) -> Frame(2)
-
-            // Content生成
-            var contentGo =
-                contentPrefab == null
-                    ? _fallbackContentFactory?.Invoke()
-                    : Object.Instantiate(contentPrefab);
-
-            if (contentGo == null)
-            {
-                Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] ダイアログコンテンツのインスタンス化に失敗しました。"
-                );
-                return;
-            }
-
-            ContentRectTransform = contentGo.GetComponent<RectTransform>();
-            if (ContentRectTransform == null)
-            {
-                Debug.LogError(
-                    "[Lilja.ScreenManagement.Dialog] 生成されたダイアログコンテンツに RectTransform が見つかりません。"
-                );
-                return;
-            }
-
-            // ContentをFrameの子にする
-            SetContentParent(ContentRectTransform, FrameRectTransform);
         }
 
         /// <inheritdoc />

@@ -95,7 +95,19 @@ namespace Lilja.ScreenManagement.Dialog
 
 
         /// <inheritdoc />
-        protected override IViewHandle ViewHandle => _viewHandle ??= CreateViewHandle();
+        protected override IViewHandle ViewHandle
+        {
+            get
+            {
+                if (_viewHandle == null)
+                {
+                    _viewHandle = CreateViewHandle();
+                }
+                // ゲッターが呼ばれるたびに最新のコンテキストスタックに基づき動的再判定して流し込む
+                _viewHandle.UseBackdrop = EvaluateUseBackdrop();
+                return _viewHandle;
+            }
+        }
 
         /// <summary>
         /// ダイアログ専用の合成ビューハンドルを生成・遅延初期化します。
@@ -103,38 +115,46 @@ namespace Lilja.ScreenManagement.Dialog
         /// <returns>初期化されたダイアログビューハンドルインスタンス。</returns>
         private DialogViewHandle CreateViewHandle()
         {
-            // 重ね合わせ（自分より手前が別のIDialog）かどうかに基づいて Backdrop を使うか決定
-            var useBackdrop = true;
-            if (Context != null)
-            {
-                var list = Context.ActiveScreens;
-                var index = -1;
-                for (var i = 0; i < list.Count; i++)
-                {
-                    if (ReferenceEquals(list[i], this))
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                if (index > 0)
-                {
-                    var parentScreen = list[index - 1];
-                    if (parentScreen is IDialog)
-                    {
-                        useBackdrop = false;
-                    }
-                }
-            }
-
             return new DialogViewHandle(
                 GetFrameKey(),
                 GetContentKey(),
-                useBackdrop,
                 CreateFallbackFrame,
                 CreateFallbackContent
             );
+        }
+
+        /// <summary>
+        /// 最新のコンテキスト状態を走査し、背景イメージ（Backdrop）を表示すべきかどうか動的に判定します。
+        /// </summary>
+        /// <returns>背景を表示すべきなら true、それ以外は false。</returns>
+        private bool EvaluateUseBackdrop()
+        {
+            if (Context == null)
+            {
+                return true;
+            }
+
+            var list = Context.ActiveScreens;
+            var index = -1;
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (ReferenceEquals(list[i], this))
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index > 0)
+            {
+                var parentScreen = list[index - 1];
+                if (parentScreen is IDialog)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <inheritdoc />

@@ -131,12 +131,12 @@ namespace Lilja.ScreenManagement
                         await callerScreen.ResumeAsync(previousScreenType, null, cancellationToken);
                     }
                 }
-                catch (Exception teardownException) when (signalException != null)
+                catch (Exception teardownException)
                 {
-                    throw new AggregateException(
-                        signalException.SourceException,
+                    UnityEngine.Debug.LogException(new Exception(
+                        $"[Lilja.ScreenManagement] 画面グループ '{calleeGroup.GetType().Name}' の終了後処理（ティアダウンまたは親画面の復元）中に例外が発生しました。",
                         teardownException
-                    );
+                    ));
                 }
 
                 signalException?.Throw();
