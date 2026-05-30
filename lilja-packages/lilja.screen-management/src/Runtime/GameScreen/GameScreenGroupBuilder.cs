@@ -32,13 +32,6 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        public IGameScreenGroupBuilder Register<TScreen, TArgs>()
-            where TScreen : GameScreen<TArgs>
-        {
-            return Register<TScreen, TArgs>(typeof(TScreen).FullName);
-        }
-
-        /// <inheritdoc />
         public IGameScreenGroupBuilder Register<TArgs>(string key, Func<GameScreen<TArgs>> factory)
         {
             if (factory == null)
@@ -69,18 +62,6 @@ namespace Lilja.ScreenManagement
             Types[key] = typeof(TScreen);
             Factories[key] = () => factory.Invoke();
             return this;
-        }
-
-        /// <inheritdoc />
-        public IGameScreenGroupBuilder Register<TScreen, TArgs>(Func<TScreen> factory)
-            where TScreen : GameScreen<TArgs>
-        {
-            if (factory == null)
-            {
-                throw new ArgumentNullException(nameof(factory));
-            }
-            Types[typeof(TScreen).FullName] = typeof(TScreen);
-            return Register<TScreen, TArgs>(typeof(TScreen).FullName, factory);
         }
 
         /// <inheritdoc />

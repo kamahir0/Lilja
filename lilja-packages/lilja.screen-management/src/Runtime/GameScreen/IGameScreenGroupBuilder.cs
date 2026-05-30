@@ -24,7 +24,10 @@ namespace Lilja.ScreenManagement
         /// <typeparam name="TArgs">引数の型</typeparam>
         /// <returns>メソッドチェーン用のビルダーインターフェース</returns>
         IGameScreenGroupBuilder Register<TScreen, TArgs>()
-            where TScreen : GameScreen<TArgs>;
+            where TScreen : GameScreen<TArgs>
+        {
+            return Register<TScreen, TArgs>(typeof(TScreen).FullName);
+        }
 
         /// <summary>
         /// 画面を作成する外部ファクトリをキー名指定で登録します。
@@ -54,7 +57,14 @@ namespace Lilja.ScreenManagement
         /// <param name="factory">生成ファクトリデリゲート</param>
         /// <returns>メソッドチェーン用のビルダーインターフェース</returns>
         IGameScreenGroupBuilder Register<TScreen, TArgs>(Func<TScreen> factory)
-            where TScreen : GameScreen<TArgs>;
+            where TScreen : GameScreen<TArgs>
+        {
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
+            return Register<TScreen, TArgs>(typeof(TScreen).FullName, factory);
+        }
 
         /// <summary>
         /// 画面遷移元と遷移先の組み合わせに応じた一時差し替えトランジションを登録します。
