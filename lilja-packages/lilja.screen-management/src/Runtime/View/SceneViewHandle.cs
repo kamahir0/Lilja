@@ -112,6 +112,9 @@ namespace Lilja.ScreenManagement
             }
 
             _rootObjects = _loadedScene.GetRootGameObjects();
+
+            // ロードしたシーンをアクティブシーンに設定して、ブートシーン等のアンロードを可能にする
+            SceneManager.SetActiveScene(_loadedScene);
         }
 
         /// <inheritdoc />
