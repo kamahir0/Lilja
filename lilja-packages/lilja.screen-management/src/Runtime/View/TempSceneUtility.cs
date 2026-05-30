@@ -11,18 +11,17 @@ namespace Lilja.ScreenManagement
         private const string SceneName = "TempScene";
 
         /// <summary>
-        /// 防衛用の一時シーンが既にロードされ存在しているかを取得します。
+        /// Using スコープによる一時シーンの自動生存期間管理（アンロード保証）を行うためのスコープを生成します。
         /// </summary>
-        internal static bool Exists()
+        internal static TempSceneScope CreateTempSceneScope()
         {
-            var scene = SceneManager.GetSceneByName(SceneName);
-            return scene.IsValid() && scene.isLoaded;
+            return new TempSceneScope(Create());
         }
 
         /// <summary>
         /// 防衛用の一時シーンを新規作成、または既存のものを取得してロードし、アクティブシーンに設定します。
         /// </summary>
-        internal static Scene Create()
+        private static Scene Create()
         {
             var scene = SceneManager.GetSceneByName(SceneName);
             if (scene.IsValid() && scene.isLoaded)
@@ -33,26 +32,6 @@ namespace Lilja.ScreenManagement
             var createdScene = SceneManager.CreateScene(SceneName);
             SceneManager.SetActiveScene(createdScene);
             return createdScene;
-        }
-
-        /// <summary>
-        /// 防衛用の一時シーンをアンロードして破棄します。
-        /// </summary>
-        internal static void Destroy()
-        {
-            var scene = SceneManager.GetSceneByName(SceneName);
-            if (scene.IsValid() && scene.isLoaded)
-            {
-                SceneManager.UnloadSceneAsync(scene);
-            }
-        }
-
-        /// <summary>
-        /// Using スコープによる一時シーンの自動生存期間管理（アンロード保証）を行うためのスコープを生成します。
-        /// </summary>
-        internal static TempSceneScope CreateTempSceneScope()
-        {
-            return new TempSceneScope(Create());
         }
 
         /// <summary>

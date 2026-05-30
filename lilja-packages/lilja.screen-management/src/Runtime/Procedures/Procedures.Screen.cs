@@ -30,12 +30,30 @@ namespace Lilja.ScreenManagement
 
                 viewHandle.Initialize(screen.GetType());
 
-                if (viewHandle.UnloadsAncestors && screen.Context != null)
-                {
-                    await UnloadAncestorsAsync(screen.Context, screen, cancellationToken);
-                }
+                TempSceneUtility.TempSceneScope tempSceneScope = default;
 
-                await viewHandle.LoadAsync(screen.Context, cancellationToken);
+                try
+                {
+                    if (viewHandle.UnloadsAncestors && screen.Context != null)
+                    {
+                        var needsTempScene = UnityEngine.SceneManagement.SceneManager.sceneCount <= 1;
+                        if (needsTempScene)
+                        {
+                            tempSceneScope = TempSceneUtility.CreateTempSceneScope();
+                        }
+
+                        await UnloadAncestorsAsync(screen.Context, screen, cancellationToken);
+                    }
+
+                    await viewHandle.LoadAsync(screen.Context, cancellationToken);
+
+                    tempSceneScope.Dispose();
+                    tempSceneScope = default;
+                }
+                finally
+                {
+                    tempSceneScope.Dispose();
+                }
 
                 var rootObjects = viewHandle.RootObjects;
 
@@ -104,11 +122,6 @@ namespace Lilja.ScreenManagement
                         screen.OnViewUnloaded();
 
                         ViewInjectUtility.Nullify(screen);
-
-                        var needsTempScene = UnityEngine.SceneManagement.SceneManager.sceneCount <= 1;
-                        using var tempSceneScope = needsTempScene
-                            ? TempSceneUtility.CreateTempSceneScope()
-                            : default;
 
                         await handle.UnloadAsync(cancellationToken);
 
