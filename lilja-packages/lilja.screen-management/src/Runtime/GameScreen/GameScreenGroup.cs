@@ -26,19 +26,29 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public GameScreenGroup()
         {
-            var connector = new GameScreenConnector { Owner = this };
-            Context = new GameScreenContext(connector);
+            Context = new GameScreenContext();
         }
 
         /// <summary>
         /// このグループが属する画面階層コンテキスト。
         /// </summary>
-        protected internal GameScreenContext Context { get; }
+        public GameScreenContext Context { get; internal set; }
+
+        /// <summary>
+        /// このグループが使用するソート順などの描画レイヤー。
+        /// </summary>
+        public int Layer { get; set; }
+
 
         /// <summary>
         /// このグループ内の画面レジストリ。
         /// </summary>
         internal GameScreenRegistry Registry { get; } = new();
+
+        /// <summary>
+        /// 画面遷移元と遷移先の組み合わせに応じた一時差し替えトランジションマップ。
+        /// </summary>
+        public System.Collections.Generic.Dictionary<(System.Type From, System.Type To), ITransition> OverrideTransitionMap => Registry.OverrideTransitionMap;
 
         /// <summary>
         /// 多重画面遷移を防ぐための非同期セマフォ。

@@ -30,22 +30,22 @@ namespace Lilja.ScreenManagement
 
                 viewHandle.Initialize(screen.GetType());
 
-                if (viewHandle.UnloadsAncestors)
+                if (viewHandle.UnloadsAncestors && screen.Context != null)
                 {
-                    await UnloadAncestorsAsync(screen.Context.Connector, cancellationToken);
+                    await UnloadAncestorsAsync(screen.Context, screen, cancellationToken);
                 }
 
                 await viewHandle.LoadAsync(screen.Context, cancellationToken);
 
                 var rootObjects = viewHandle.RootObjects;
 
-                CanvasOrderUtility.ApplyCanvasOrder(rootObjects, screen.Context.Layer);
+                CanvasOrderUtility.ApplyCanvasOrder(rootObjects, screen.Layer);
 
                 ViewInjectUtility.Inject(screen, rootObjects);
 
                 screen.OnViewLoaded();
 
-                if (screen.Context.Layer > 0)
+                if (screen.Layer > 0)
                 {
                     CanvasOrderUtility.CreateBehindRaycastBlocker(rootObjects);
                 }
@@ -82,25 +82,32 @@ namespace Lilja.ScreenManagement
             }
 
             private static async UniTask UnloadAncestorsAsync(
-                GameScreenConnector startConnector,
+                GameScreenContext context,
+                IGameScreenInternal currentScreen,
                 CancellationToken cancellationToken
             )
             {
-                for (var parent = startConnector.Parent; parent != null; parent = parent.Parent)
+                var list = context.ActiveScreensInternal;
+                var index = list.IndexOf(currentScreen);
+                if (index <= 0)
                 {
-                    if (parent.Owner is IGameScreenInternal screen)
+                    return;
+                }
+
+                // 自分より前（先祖）のアクティブなビューをアンロード
+                for (var i = index - 1; i >= 0; i--)
+                {
+                    var screen = list[i];
+                    var handle = screen.GetViewHandle();
+                    if (handle != null && handle.IsLoaded)
                     {
-                        var handle = screen.GetViewHandle();
-                        if (handle != null && handle.IsLoaded)
-                        {
-                            screen.OnViewUnloaded();
+                        screen.OnViewUnloaded();
 
-                            ViewInjectUtility.Nullify(screen);
+                        ViewInjectUtility.Nullify(screen);
 
-                            await handle.UnloadAsync(cancellationToken);
+                        await handle.UnloadAsync(cancellationToken);
 
-                            handle.IsUnloadedTemporarily = true;
-                        }
+                        handle.IsUnloadedTemporarily = true;
                     }
                 }
             }
@@ -109,28 +116,34 @@ namespace Lilja.ScreenManagement
             /// 一時アンロードされていた先祖のビューを、並列ロードと直列インスタンス化のハイブリッドで安全かつ超高速に復元します。
             /// </summary>
             public static async UniTask RestoreAncestorsAsync(
-                GameScreenConnector startConnector,
+                GameScreenContext context,
+                IGameScreenInternal currentScreen,
                 Type previousScreenType,
                 CancellationToken cancellationToken
             )
             {
-                var pendingScreens = new List<IGameScreenInternal>();
-                for (var parent = startConnector; parent != null; parent = parent.Parent)
+                var list = context.ActiveScreensInternal;
+                var index = list.IndexOf(currentScreen);
+                if (index <= 0)
                 {
-                    if (parent.Owner is IGameScreenInternal screen)
-                    {
-                        var handle = screen.GetViewHandle();
-                        if (handle != null)
-                        {
-                            if (handle.IsUnloadedTemporarily)
-                            {
-                                pendingScreens.Add(screen);
-                            }
+                    return;
+                }
 
-                            if (handle.UnloadsAncestors)
-                            {
-                                break;
-                            }
+                var pendingScreens = new List<IGameScreenInternal>();
+                for (var i = index - 1; i >= 0; i--)
+                {
+                    var screen = list[i];
+                    var handle = screen.GetViewHandle();
+                    if (handle != null)
+                    {
+                        if (handle.IsUnloadedTemporarily)
+                        {
+                            pendingScreens.Add(screen);
+                        }
+
+                        if (handle.UnloadsAncestors)
+                        {
+                            break;
                         }
                     }
                 }
@@ -144,7 +157,7 @@ namespace Lilja.ScreenManagement
                 foreach (var screen in pendingScreens)
                 {
                     var handle = screen.GetViewHandle();
-                    preloadTasks.Add(handle.PreloadAsync(screen.Context, cancellationToken));
+                    preloadTasks.Add(handle.PreloadAsync(context, cancellationToken));
                 }
                 await UniTask.WhenAll(preloadTasks);
 

@@ -1,82 +1,55 @@
-using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Lilja.ScreenManagement
 {
     /// <summary>
-    /// 画面の階層木構造上で、親子関係や共通の設定パラメータを伝播するためのコンテキストクラス。
+    /// 画面スタックの共通の設定パラメータや、アクティブな画面リスト、多重遷移防止などを一元管理するコンテキストクラス。
     /// </summary>
     public sealed class GameScreenContext
     {
-        internal GameScreenContext(GameScreenConnector connector)
+        private readonly List<IGameScreenInternal> _activeScreens = new();
+
+        internal GameScreenContext()
         {
-            Connector = connector ?? throw new ArgumentNullException(nameof(connector));
+            Gate = new SemaphoreSlim(1, 1);
+            Options = GameScreenOptions.Default;
         }
 
         /// <summary>
-        /// 画面階層の最上部（Root）として機能する、新規のルートコンテキストを生成します。
+        /// 新規のルートコンテキストを生成します。
         /// </summary>
-        /// <param name="options">この遷移ツリー全体で共有・伝播されるカスタムオプション。指定しない場合はデフォルト設定が適用されます。</param>
+        /// <param name="options">この遷移スタック全体で共有・伝播されるカスタムオプション。指定しない場合はデフォルト設定が適用されます。</param>
         /// <returns>安全に初期化されたルートコンテキストインスタンス</returns>
         public static GameScreenContext CreateRoot(GameScreenOptions options = null)
         {
-            var connector = new GameScreenConnector();
-            return new GameScreenContext(connector)
-            {
-                Layer = 0,
-                BaseOptions = options ?? GameScreenOptions.Default,
-            };
+            return new GameScreenContext { Options = options ?? GameScreenOptions.Default };
         }
 
         /// <summary>
-        /// ランタイムツリー上のこの画面ノードのコネクタを取得します。
+        /// このコンテキスト（スタック）内で現在アクティブな画面の読み取り専用リスト。
+        /// サードパーティの拡張アセンブリからも安全に参照可能です。
         /// </summary>
-        public GameScreenConnector Connector { get; }
+        public IReadOnlyList<IGameScreen> ActiveScreens => _activeScreens;
 
         /// <summary>
-        /// この画面に割り当てられたソート順などの描画レイヤー値。
+        /// 内部（Procedures等）での遷移・破棄操作に使用する実体リスト。
         /// </summary>
-        public int Layer { get; internal set; }
+        internal List<IGameScreenInternal> ActiveScreensInternal => _activeScreens;
 
         /// <summary>
-        /// 現在有効な依存関係オプション。一時オーバーライドが設定されている場合はそれを優先し、それ以外はツリー共通のベースオプションを返します。
+        /// 多重遷移を防ぐための非同期セマフォ。
         /// </summary>
-        public GameScreenOptions Options =>
-            OverrideOptions ?? BaseOptions ?? GameScreenOptions.Default;
+        internal SemaphoreSlim Gate { get; }
 
         /// <summary>
-        /// 画面ツリー共通で伝播されるベースのオプション。
+        /// このグループ全体がクローズ処理中であるかを示すフラグ。
         /// </summary>
-        internal GameScreenOptions BaseOptions { get; set; }
+        internal bool IsClosing { get; set; }
 
         /// <summary>
-        /// この画面ノード固有の一時的なオーバーライドオプション（Screen内部から自由に設定・変更可能です）。
+        /// 現在有効な依存関係オプション。
         /// </summary>
-        public GameScreenOptions OverrideOptions { get; set; }
-    }
-
-    /// <summary>
-    /// 画面遷移システムが動的に構築するランタイム木構造上の各ノードを繋ぐ双方向リンクコネクタ。
-    /// </summary>
-    public sealed class GameScreenConnector
-    {
-        /// <summary>
-        /// 親画面ノードのコネクタ。
-        /// </summary>
-        public GameScreenConnector Parent { get; internal set; }
-
-        /// <summary>
-        /// 子画面ノードのコネクタ。
-        /// </summary>
-        public GameScreenConnector Child { get; internal set; }
-
-        /// <summary>
-        /// このコネクタが表す画面ノードの所有者オブジェクト。
-        /// </summary>
-        public object Owner { get; internal set; }
-
-        /// <summary>
-        /// このノード以下のサブツリーがクローズ処理中であるかを示すフラグ。
-        /// </summary>
-        public bool IsClosing { get; internal set; }
+        public GameScreenOptions Options { get; internal set; }
     }
 }

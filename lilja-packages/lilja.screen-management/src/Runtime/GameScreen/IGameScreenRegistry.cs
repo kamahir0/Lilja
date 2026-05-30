@@ -61,6 +61,17 @@ namespace Lilja.ScreenManagement
     {
         private readonly Dictionary<string, Func<object>> _factories = new();
         private readonly Dictionary<string, Type> _types = new();
+        internal Dictionary<(Type From, Type To), ITransition> OverrideTransitionMap { get; } = new();
+
+        /// <summary>
+        /// 指定されたキー名がレジストリに登録されているか判定します。
+        /// </summary>
+        /// <param name="key">キー名</param>
+        /// <returns>登録されていれば true</returns>
+        internal bool Contains(string key)
+        {
+            return _factories.ContainsKey(key);
+        }
 
         /// <summary>
         /// キーに紐づく画面の型を取得します。

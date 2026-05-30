@@ -20,6 +20,16 @@ namespace Lilja.ScreenManagement
         GameScreenContext Context { get; }
 
         /// <summary>
+        /// この画面が割り当てられたソート順などの描画レイヤー値。
+        /// </summary>
+        int Layer { get; set; }
+
+        /// <summary>
+        /// この画面が現在クローズ処理中であるか。
+        /// </summary>
+        bool IsClosing { get; set; }
+
+        /// <summary>
         /// この画面が所有するビューハンドルを取得または遅延解決します。
         /// </summary>
         /// <returns>ビューハンドルインスタンス</returns>
@@ -29,25 +39,28 @@ namespace Lilja.ScreenManagement
         /// 画面を閉じます。
         /// </summary>
         /// <param name="nextScreenType">遷移先の画面の型</param>
+        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask CloseAsync(Type nextScreenType, CancellationToken cancellationToken);
+        UniTask CloseAsync(Type nextScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
 
         /// <summary>
         /// 画面を再開します。
         /// </summary>
         /// <param name="previousScreenType">遷移元の画面の型</param>
+        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask ResumeAsync(Type previousScreenType, CancellationToken cancellationToken);
+        UniTask ResumeAsync(Type previousScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
 
         /// <summary>
         /// 画面を一時停止します。
         /// </summary>
         /// <param name="nextScreenType">遷移先の画面の型</param>
+        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask PauseAsync(Type nextScreenType, CancellationToken cancellationToken);
+        UniTask PauseAsync(Type nextScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
 
         /// <summary>
         /// ビューのロードおよび注入が完了したことを通知します。
@@ -71,8 +84,9 @@ namespace Lilja.ScreenManagement
         /// </summary>
         /// <param name="args">初期化引数</param>
         /// <param name="previousScreenType">遷移元の画面の型</param>
+        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask OpenAsync(TArgs args, Type previousScreenType, CancellationToken cancellationToken);
+        UniTask OpenAsync(TArgs args, Type previousScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
     }
 }

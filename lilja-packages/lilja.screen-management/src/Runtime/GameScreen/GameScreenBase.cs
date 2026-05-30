@@ -161,14 +161,41 @@ namespace Lilja.ScreenManagement
         /// </summary>
         protected GameScreenBase()
         {
-            var connector = new GameScreenConnector { Owner = this };
-            Context = new GameScreenContext(connector);
         }
 
         /// <summary>
         /// この画面が所属する実行コンテキスト。
         /// </summary>
-        protected internal GameScreenContext Context { get; }
+        public GameScreenContext Context { get; internal set; }
+
+        /// <summary>
+        /// この画面のソート順などの描画レイヤー。
+        /// </summary>
+        public int Layer { get; internal set; }
+
+        /// <inheritdoc />
+        int IGameScreenInternal.Layer
+        {
+            get => Layer;
+            set => Layer = value;
+        }
+
+        /// <summary>
+        /// 有効な画面オプションを取得します。
+        /// </summary>
+        public GameScreenOptions Options => Context?.Options;
+
+        /// <summary>
+        /// この画面が現在クローズ処理中であるか。
+        /// </summary>
+        internal bool IsClosing { get; set; }
+
+        /// <inheritdoc />
+        bool IGameScreenInternal.IsClosing
+        {
+            get => IsClosing;
+            set => IsClosing = value;
+        }
 
         /// <summary>
         /// 画面がツリーに接続される前に、指定されたカスタムオプションを用いてビューのアセットを事前に非同期ロードしてメモリにキャッシュします。
@@ -192,7 +219,11 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            Context.BaseOptions = options;
+            if (Context == null)
+            {
+                Context = new GameScreenContext();
+            }
+            Context.Options = options;
             handle.Initialize(GetType());
             await handle.PreloadAsync(Context, cancellationToken);
         }
@@ -222,12 +253,14 @@ namespace Lilja.ScreenManagement
         async UniTask IGameScreenInternal<TArgs>.OpenAsync(
             TArgs args,
             Type previousScreenType,
+            ITransition overrideTransition,
             CancellationToken cancellationToken
         )
         {
             await TriggerInitializeAsync(args, cancellationToken);
 
-            var transitionHandle = new TransitionHandle(Context.Options.Transition, false);
+            var transition = overrideTransition ?? Options?.Transition;
+            var transitionHandle = new TransitionHandle(transition, false);
             var enterContext = new EnterContext(
                 EnterType.OnOpen,
                 previousScreenType,
@@ -245,10 +278,12 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         async UniTask IGameScreenInternal.CloseAsync(
             Type nextScreenType,
+            ITransition overrideTransition,
             CancellationToken cancellationToken
         )
         {
-            var transitionHandle = new TransitionHandle(Context.Options.Transition, true);
+            var transition = overrideTransition ?? Options?.Transition;
+            var transitionHandle = new TransitionHandle(transition, true);
             var exitContext = new ExitContext(ExitType.OnClose, nextScreenType, transitionHandle);
 
             await TriggerExitAsync(exitContext, cancellationToken);
@@ -262,10 +297,12 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         async UniTask IGameScreenInternal.ResumeAsync(
             Type previousScreenType,
+            ITransition overrideTransition,
             CancellationToken cancellationToken
         )
         {
-            var transitionHandle = new TransitionHandle(Context.Options.Transition, false);
+            var transition = overrideTransition ?? Options?.Transition;
+            var transitionHandle = new TransitionHandle(transition, false);
             var enterContext = new EnterContext(
                 EnterType.OnResume,
                 previousScreenType,
@@ -283,10 +320,12 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         async UniTask IGameScreenInternal.PauseAsync(
             Type nextScreenType,
+            ITransition overrideTransition,
             CancellationToken cancellationToken
         )
         {
-            var transitionHandle = new TransitionHandle(Context.Options.Transition, true);
+            var transition = overrideTransition ?? Options?.Transition;
+            var transitionHandle = new TransitionHandle(transition, true);
             var exitContext = new ExitContext(ExitType.OnPause, nextScreenType, transitionHandle);
 
             await TriggerExitAsync(exitContext, cancellationToken);

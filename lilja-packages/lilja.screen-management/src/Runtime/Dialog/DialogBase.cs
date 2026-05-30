@@ -93,21 +93,6 @@ namespace Lilja.ScreenManagement.Dialog
             return _cachedStackAnimation;
         }
 
-        /// <inheritdoc />
-        protected sealed override async UniTask TriggerInitializeAsync(
-            TArgs args,
-            CancellationToken cancellationToken
-        )
-        {
-            // 自分自身のコンテキストの一時オーバーライドオプションを自己完結的にセット！
-            Context.OverrideOptions = Context.Options with
-            {
-                // ダイアログ表示時は、システム全体のフェード等の割り込みを自動でブロックする
-                Transition = null,
-            };
-
-            await base.TriggerInitializeAsync(args, cancellationToken);
-        }
 
         /// <inheritdoc />
         protected override IViewHandle ViewHandle => _viewHandle ??= CreateViewHandle();
@@ -118,9 +103,30 @@ namespace Lilja.ScreenManagement.Dialog
         /// <returns>初期化されたダイアログビューハンドルインスタンス。</returns>
         private DialogViewHandle CreateViewHandle()
         {
-            // 重ね合わせ（スタック最前面が別のIDialog）かどうかに基づいて Backdrop を使うか決定
-            var parent = Context.Connector.Parent;
-            var useBackdrop = !(parent != null && parent.Owner is IDialog);
+            // 重ね合わせ（自分より手前が別のIDialog）かどうかに基づいて Backdrop を使うか決定
+            var useBackdrop = true;
+            if (Context != null)
+            {
+                var list = Context.ActiveScreens;
+                var index = -1;
+                for (var i = 0; i < list.Count; i++)
+                {
+                    if (ReferenceEquals(list[i], this))
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index > 0)
+                {
+                    var parentScreen = list[index - 1];
+                    if (parentScreen is IDialog)
+                    {
+                        useBackdrop = false;
+                    }
+                }
+            }
 
             return new DialogViewHandle(
                 GetFrameKey(),

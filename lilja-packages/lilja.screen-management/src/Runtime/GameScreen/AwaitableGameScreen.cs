@@ -14,6 +14,12 @@ namespace Lilja.ScreenManagement
         #region For Implementers
 
         /// <summary>
+        /// この画面がコールされた際の一時差し替えトランジション。
+        /// デフォルトは ITransition.None。
+        /// </summary>
+        public virtual ITransition OverrideTransition => ITransition.None;
+
+        /// <summary>
         /// 呼び出し元へ返す結果を確定して画面を閉じます。
         /// </summary>
         /// <param name="result">返却する結果オブジェクト</param>

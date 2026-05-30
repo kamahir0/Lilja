@@ -21,5 +21,16 @@ namespace Lilja.ScreenManagement
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         UniTask InAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// 演出を行わないデフォルトのトランジション。
+        /// </summary>
+        public static readonly ITransition None = new NoneTransition();
+
+        private sealed class NoneTransition : ITransition
+        {
+            public UniTask OutAsync(CancellationToken cancellationToken) => UniTask.CompletedTask;
+            public UniTask InAsync(CancellationToken cancellationToken) => UniTask.CompletedTask;
+        }
     }
 }

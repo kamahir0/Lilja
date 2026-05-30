@@ -8,7 +8,7 @@ namespace Lilja.ScreenManagement
     public static partial class Procedures
     {
         /// <summary>
-        /// AwaitableGameScreen（結果を待める画面）に関する手続きモジュール。
+        /// AwaitableGameScreen（結果を待てる画面）に関する手続きモジュール。
         /// </summary>
         public static class Awaitable
         {
@@ -27,37 +27,36 @@ namespace Lilja.ScreenManagement
                     throw new ArgumentNullException(nameof(calleeScreen));
                 }
 
-                var callerConnector = callerContext.Connector;
-                var calleeConnector = calleeScreen.Context.Connector;
+                calleeScreen.Context = callerContext;
 
-                if (callerConnector.Owner != null)
+                IGameScreenInternal callerScreen = null;
+                var list = callerContext.ActiveScreensInternal;
+                if (list.Count > 0)
                 {
-                    Connector.Connect(callerConnector, calleeConnector);
-                    calleeScreen.Context.Layer = callerContext.Layer + 1;
-                }
-                else
-                {
-                    calleeScreen.Context.Layer = callerContext.Layer;
+                    callerScreen = list[^1];
                 }
 
-                calleeScreen.Context.BaseOptions = callerContext.BaseOptions;
+                calleeScreen.Layer = callerScreen != null ? callerScreen.Layer + 1 : 0;
 
                 var result = default(TResult);
                 ExceptionDispatchInfo signalException = null;
 
                 try
                 {
-                    if (callerConnector.Owner is IGameScreenInternal callerScreen)
+                    if (callerScreen != null)
                     {
-                        await callerScreen.PauseAsync(calleeScreen.GetType(), cancellationToken);
+                        await callerScreen.PauseAsync(calleeScreen.GetType(), calleeScreen.OverrideTransition, cancellationToken);
                     }
+
+                    list.Add(calleeScreen);
 
                     await Screen.PrepareAsync(calleeScreen, cancellationToken);
 
-                    Type previousScreenType = callerConnector.Owner?.GetType();
+                    Type previousScreenType = callerScreen?.GetType();
                     await ((IGameScreenInternal<TArgs>)calleeScreen).OpenAsync(
                         args,
                         previousScreenType,
+                        calleeScreen.OverrideTransition,
                         cancellationToken
                     );
 
@@ -79,31 +78,23 @@ namespace Lilja.ScreenManagement
                 try
                 {
                     // 一括破棄（一括クローズ）の最中でない場合のみ、個別でのクリーンアップや親画面の再開を実行する
-                    if (!callerConnector.IsClosing && !calleeConnector.IsClosing)
+                    if (!callerContext.IsClosing && !calleeScreen.IsClosing)
                     {
-                        if (callerConnector.Owner != null)
+                        if (list.Contains(calleeScreen))
                         {
-                            if (callerConnector.Child == calleeConnector)
-                            {
-                                await Connector.DropSubtreeAsync(
-                                    calleeConnector,
-                                    callerConnector.Owner.GetType(),
-                                    CancellationToken.None
-                                );
-                            }
-                        }
-                        else
-                        {
-                            await Connector.DropSubtreeAsync(
-                                calleeConnector,
-                                null,
+                            var nextType = callerScreen?.GetType();
+                            await Group.DropSubtreeAsync(
+                                callerContext,
+                                calleeScreen,
+                                nextType,
+                                calleeScreen.OverrideTransition,
                                 CancellationToken.None
                             );
                         }
 
-                        if (callerConnector.Owner is IGameScreenInternal callerScreen)
+                        if (callerScreen != null)
                         {
-                            await callerScreen.ResumeAsync(calleeScreen.GetType(), cancellationToken);
+                            await callerScreen.ResumeAsync(calleeScreen.GetType(), calleeScreen.OverrideTransition, cancellationToken);
                         }
                     }
                 }
