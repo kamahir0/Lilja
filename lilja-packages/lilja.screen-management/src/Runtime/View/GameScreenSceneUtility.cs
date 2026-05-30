@@ -21,7 +21,11 @@ namespace Lilja.ScreenManagement
         /// <returns>有効化された "GameScreens" シーン</returns>
         public static UniTask<Scene> GetOrCreateSceneAsync(CancellationToken cancellationToken)
         {
-            if (_cachedScene.HasValue && _cachedScene.Value.IsValid() && _cachedScene.Value.isLoaded)
+            if (
+                _cachedScene.HasValue
+                && _cachedScene.Value.IsValid()
+                && _cachedScene.Value.isLoaded
+            )
             {
                 return UniTask.FromResult(_cachedScene.Value);
             }

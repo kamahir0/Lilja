@@ -159,9 +159,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 新しい <see cref="GameScreenBase{TArgs}"/> インスタンスを初期化します。
         /// </summary>
-        protected GameScreenBase()
-        {
-        }
+        protected GameScreenBase() { }
 
         /// <summary>
         /// この画面が所属する実行コンテキスト。
@@ -215,8 +213,10 @@ namespace Lilja.ScreenManagement
             {
                 Context = new GameScreenContext();
             }
-            if (prefabProvider != null) Context.PrefabProvider = prefabProvider;
-            if (sceneLoader != null) Context.SceneLoader = sceneLoader;
+            if (prefabProvider != null)
+                Context.PrefabProvider = prefabProvider;
+            if (sceneLoader != null)
+                Context.SceneLoader = sceneLoader;
             handle.Initialize(GetType());
             await handle.PreloadAsync(Context, cancellationToken);
         }

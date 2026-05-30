@@ -119,7 +119,9 @@ namespace Lilja.ScreenManagement.Dialog
             try
             {
                 // GameScreens シーンへ移動
-                var targetScene = await GameScreenSceneUtility.GetOrCreateSceneAsync(cancellationToken);
+                var targetScene = await GameScreenSceneUtility.GetOrCreateSceneAsync(
+                    cancellationToken
+                );
                 if (targetScene.IsValid() && targetScene.isLoaded && _root != null)
                 {
                     SceneManager.MoveGameObjectToScene(_root, targetScene);
@@ -142,8 +144,12 @@ namespace Lilja.ScreenManagement.Dialog
                 try
                 {
                     var results = await UniTask.WhenAll(
-                        provider.LoadAsync(_frameKey, cancellationToken).SuppressCancellationThrow(),
-                        provider.LoadAsync(_contentKey, cancellationToken).SuppressCancellationThrow()
+                        provider
+                            .LoadAsync(_frameKey, cancellationToken)
+                            .SuppressCancellationThrow(),
+                        provider
+                            .LoadAsync(_contentKey, cancellationToken)
+                            .SuppressCancellationThrow()
                     );
 
                     // いずれかがキャンセルされていた場合はフォールバックを生成せずに中断する。

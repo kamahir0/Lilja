@@ -25,7 +25,15 @@ namespace Lilja.ScreenManagement
             )
             {
                 var handle = new GameScreenGroupHandle();
-                CallAsyncInternal(callerContext, calleeGroup, initialScreenKey, initialScreenArgs, handle, cancellationToken).Forget();
+                CallAsyncInternal(
+                        callerContext,
+                        calleeGroup,
+                        initialScreenKey,
+                        initialScreenArgs,
+                        handle,
+                        cancellationToken
+                    )
+                    .Forget();
                 return handle;
             }
 
@@ -133,10 +141,12 @@ namespace Lilja.ScreenManagement
                 }
                 catch (Exception teardownException)
                 {
-                    UnityEngine.Debug.LogException(new Exception(
-                        $"[Lilja.ScreenManagement] 画面グループ '{calleeGroup.GetType().Name}' の終了後処理（ティアダウンまたは親画面の復元）中に例外が発生しました。",
-                        teardownException
-                    ));
+                    UnityEngine.Debug.LogException(
+                        new Exception(
+                            $"[Lilja.ScreenManagement] 画面グループ '{calleeGroup.GetType().Name}' の終了後処理（ティアダウンまたは親画面の復元）中に例外が発生しました。",
+                            teardownException
+                        )
+                    );
                 }
 
                 signalException?.Throw();
@@ -179,14 +189,23 @@ namespace Lilja.ScreenManagement
                             previousScreenType = oldScreen.GetType();
 
                             // 遷移元と遷移先のペアから一時差し替えトランジションを検索
-                            if (group.OverrideTransitionMap.TryGetValue((previousScreenType, nextScreenType), out var t))
+                            if (
+                                group.OverrideTransitionMap.TryGetValue(
+                                    (previousScreenType, nextScreenType),
+                                    out var t
+                                )
+                            )
                             {
                                 customTransition = t;
                             }
 
                             // 1. まず CloseAsync を呼び、画面を完全に覆う（暗転完了を待つ）
                             oldScreen.IsClosing = true;
-                            await oldScreen.CloseAsync(nextScreenType, customTransition, cancellationToken);
+                            await oldScreen.CloseAsync(
+                                nextScreenType,
+                                customTransition,
+                                cancellationToken
+                            );
 
                             // 2. 画面が完全に覆われたので、ここで初めて TempScene 防衛を開始する
                             var needsTempScene = SceneManager.sceneCount <= 1;
@@ -202,7 +221,12 @@ namespace Lilja.ScreenManagement
                         else
                         {
                             // 遷移元がnull（初期画面）時のToへの差し替え
-                            if (group.OverrideTransitionMap.TryGetValue((null, nextScreenType), out var t))
+                            if (
+                                group.OverrideTransitionMap.TryGetValue(
+                                    (null, nextScreenType),
+                                    out var t
+                                )
+                            )
                             {
                                 customTransition = t;
                             }
@@ -238,7 +262,13 @@ namespace Lilja.ScreenManagement
                         {
                             if (list.Contains(nextScreen))
                             {
-                                await TeardownAsyncInternal(context, nextScreen, null, null, CancellationToken.None);
+                                await TeardownAsyncInternal(
+                                    context,
+                                    nextScreen,
+                                    null,
+                                    null,
+                                    CancellationToken.None
+                                );
                             }
                             throw;
                         }
@@ -284,7 +314,11 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
-                    await frontScreen.CloseAsync(nextScreenType, overrideTransition, cancellationToken);
+                    await frontScreen.CloseAsync(
+                        nextScreenType,
+                        overrideTransition,
+                        cancellationToken
+                    );
                 }
                 catch (Exception exception)
                 {
@@ -326,8 +360,10 @@ namespace Lilja.ScreenManagement
 
                     if (closeException != null || teardownException != null)
                     {
-                        var firstEx = closeException?.SourceException ?? teardownException?.SourceException;
-                        var secondEx = closeException != null ? teardownException?.SourceException : null;
+                        var firstEx =
+                            closeException?.SourceException ?? teardownException?.SourceException;
+                        var secondEx =
+                            closeException != null ? teardownException?.SourceException : null;
                         if (secondEx != null)
                         {
                             throw new AggregateException(firstEx, secondEx);

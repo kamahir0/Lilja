@@ -42,7 +42,11 @@ namespace Lilja.ScreenManagement
         /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask CloseAsync(Type nextScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
+        UniTask CloseAsync(
+            Type nextScreenType,
+            ITransition overrideTransition,
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// 画面を再開します。
@@ -51,7 +55,11 @@ namespace Lilja.ScreenManagement
         /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask ResumeAsync(Type previousScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
+        UniTask ResumeAsync(
+            Type previousScreenType,
+            ITransition overrideTransition,
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// 画面を一時停止します。
@@ -60,7 +68,11 @@ namespace Lilja.ScreenManagement
         /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask PauseAsync(Type nextScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
+        UniTask PauseAsync(
+            Type nextScreenType,
+            ITransition overrideTransition,
+            CancellationToken cancellationToken
+        );
 
         /// <summary>
         /// ビューのロードおよび注入が完了したことを通知します。
@@ -87,6 +99,11 @@ namespace Lilja.ScreenManagement
         /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask OpenAsync(TArgs args, Type previousScreenType, ITransition overrideTransition, CancellationToken cancellationToken);
+        UniTask OpenAsync(
+            TArgs args,
+            Type previousScreenType,
+            ITransition overrideTransition,
+            CancellationToken cancellationToken
+        );
     }
 }

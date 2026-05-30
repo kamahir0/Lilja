@@ -45,7 +45,11 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerScreen != null)
                     {
-                        await callerScreen.PauseAsync(calleeScreen.GetType(), calleeScreen.OverrideTransition, cancellationToken);
+                        await callerScreen.PauseAsync(
+                            calleeScreen.GetType(),
+                            calleeScreen.OverrideTransition,
+                            cancellationToken
+                        );
                     }
 
                     list.Add(calleeScreen);
@@ -94,7 +98,11 @@ namespace Lilja.ScreenManagement
 
                         if (callerScreen != null)
                         {
-                            await callerScreen.ResumeAsync(calleeScreen.GetType(), calleeScreen.OverrideTransition, cancellationToken);
+                            await callerScreen.ResumeAsync(
+                                calleeScreen.GetType(),
+                                calleeScreen.OverrideTransition,
+                                cancellationToken
+                            );
                         }
                     }
                 }

@@ -12,9 +12,7 @@ namespace Lilja.ScreenManagement
         private readonly UniTaskCompletionSource _initialScreenEnterSource = new();
         private readonly UniTaskCompletionSource _groupLifetimeSource = new();
 
-        internal GameScreenGroupHandle()
-        {
-        }
+        internal GameScreenGroupHandle() { }
 
         /// <summary>
         /// 最初の画面のロードと入場演出（EnterAsync）が完了するまで非同期待機します。

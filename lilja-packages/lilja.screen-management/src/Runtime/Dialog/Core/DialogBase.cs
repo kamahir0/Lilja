@@ -93,7 +93,6 @@ namespace Lilja.ScreenManagement.Dialog
             return _cachedStackAnimation;
         }
 
-
         /// <inheritdoc />
         protected override IViewHandle ViewHandle
         {

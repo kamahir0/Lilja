@@ -30,6 +30,7 @@ namespace Lilja.ScreenManagement
         private sealed class NoneTransition : ITransition
         {
             public UniTask OutAsync(CancellationToken cancellationToken) => UniTask.CompletedTask;
+
             public UniTask InAsync(CancellationToken cancellationToken) => UniTask.CompletedTask;
         }
     }

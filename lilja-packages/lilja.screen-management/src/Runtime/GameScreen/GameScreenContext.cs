@@ -73,7 +73,13 @@ namespace Lilja.ScreenManagement
         public IPrefabProvider PrefabProvider
         {
             get => _prefabProvider;
-            set => _prefabProvider = value ?? throw new System.ArgumentNullException(nameof(value), "[Lilja.ScreenManagement] PrefabProvider に null を設定することはできません。");
+            set =>
+                _prefabProvider =
+                    value
+                    ?? throw new System.ArgumentNullException(
+                        nameof(value),
+                        "[Lilja.ScreenManagement] PrefabProvider に null を設定することはできません。"
+                    );
         }
 
         /// <summary>
@@ -82,7 +88,13 @@ namespace Lilja.ScreenManagement
         public ISceneLoader SceneLoader
         {
             get => _sceneLoader;
-            set => _sceneLoader = value ?? throw new System.ArgumentNullException(nameof(value), "[Lilja.ScreenManagement] SceneLoader に null を設定することはできません。");
+            set =>
+                _sceneLoader =
+                    value
+                    ?? throw new System.ArgumentNullException(
+                        nameof(value),
+                        "[Lilja.ScreenManagement] SceneLoader に null を設定することはできません。"
+                    );
         }
     }
 }

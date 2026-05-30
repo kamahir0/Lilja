@@ -10,7 +10,8 @@ namespace Lilja.ScreenManagement
     {
         internal readonly Dictionary<string, Func<object>> Factories = new();
         internal readonly Dictionary<string, Type> Types = new();
-        internal readonly Dictionary<(Type From, Type To), ITransition> OverrideTransitionMap = new();
+        internal readonly Dictionary<(Type From, Type To), ITransition> OverrideTransitionMap =
+            new();
 
         /// <inheritdoc />
         public IGameScreenGroupBuilder Register<TScreen, TArgs>(string key)

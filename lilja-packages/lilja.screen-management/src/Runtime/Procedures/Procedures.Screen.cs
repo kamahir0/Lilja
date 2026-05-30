@@ -36,7 +36,8 @@ namespace Lilja.ScreenManagement
                 {
                     if (viewHandle.UnloadsAncestors && screen.Context != null)
                     {
-                        var needsTempScene = UnityEngine.SceneManagement.SceneManager.sceneCount <= 1;
+                        var needsTempScene =
+                            UnityEngine.SceneManagement.SceneManager.sceneCount <= 1;
                         if (needsTempScene)
                         {
                             tempSceneScope = TempSceneUtility.CreateTempSceneScope();
