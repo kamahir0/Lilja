@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -15,7 +16,7 @@ namespace Lilja.ScreenManagement
         /// このグループ内の画面遷移設定を行います。
         /// </summary>
         /// <param name="builder">登録用ビルダー</param>
-        protected virtual void Configure(GameScreenGroupBuilder builder) { }
+        protected virtual void Configure(IGameScreenGroupBuilder builder) { }
 
         #endregion
 
@@ -39,16 +40,52 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public int Layer { get; set; }
 
-
-        /// <summary>
-        /// このグループ内の画面レジストリ。
-        /// </summary>
-        internal GameScreenGroupBuilder Builder { get; } = new();
+        private readonly Dictionary<string, Func<object>> _factories = new();
+        private readonly Dictionary<string, Type> _types = new();
 
         /// <summary>
         /// 画面遷移元と遷移先の組み合わせに応じた一時差し替えトランジションマップ。
         /// </summary>
-        public System.Collections.Generic.Dictionary<(System.Type From, System.Type To), ITransition> OverrideTransitionMap => Builder.OverrideTransitionMap;
+        public Dictionary<
+            (System.Type From, System.Type To),
+            ITransition
+        > OverrideTransitionMap { get; } = new();
+
+        /// <summary>
+        /// 指定されたキー名が登録されているか判定します。
+        /// </summary>
+        internal bool Contains(string key)
+        {
+            return _factories.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// キーに紐づく画面の型を取得します。
+        /// </summary>
+        internal Type GetScreenType(string key)
+        {
+            if (!_types.TryGetValue(key, out var type))
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] 画面キー '{key}' は登録されていません。"
+                );
+            }
+            return type;
+        }
+
+        /// <summary>
+        /// キーに紐づく画面オブジェクトを作成します。
+        /// </summary>
+        internal object Create(string key)
+        {
+            if (!_factories.TryGetValue(key, out var factory))
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] 画面キー '{key}' はこの GameScreenGroup に登録されていません。Configure(IGameScreenGroupBuilder) で登録されているか確認してください。"
+                );
+            }
+            return factory.Invoke();
+        }
 
         /// <summary>
         /// 多重画面遷移を防ぐための非同期セマフォ。
@@ -70,7 +107,22 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            Configure(Builder);
+            var builder = new GameScreenGroupBuilder();
+            Configure(builder);
+
+            foreach (var kvp in builder.Factories)
+            {
+                _factories[kvp.Key] = kvp.Value;
+            }
+            foreach (var kvp in builder.Types)
+            {
+                _types[kvp.Key] = kvp.Value;
+            }
+            foreach (var kvp in builder.OverrideTransitionMap)
+            {
+                OverrideTransitionMap[kvp.Key] = kvp.Value;
+            }
+
             _configured = true;
         }
 
@@ -192,22 +244,22 @@ namespace Lilja.ScreenManagement
         /// </summary>
         /// <param name="configure">画面登録を行うデリゲート</param>
         /// <returns>簡易生成された画面グループインスタンス</returns>
-        public static GameScreenGroup Create(Action<GameScreenGroupBuilder> configure)
+        public static GameScreenGroup Create(Action<IGameScreenGroupBuilder> configure)
         {
             return new ConfiguredGameScreenGroup(configure);
         }
 
         private sealed class ConfiguredGameScreenGroup : GameScreenGroup
         {
-            private readonly Action<GameScreenGroupBuilder> _configure;
+            private readonly Action<IGameScreenGroupBuilder> _configure;
 
-            public ConfiguredGameScreenGroup(Action<GameScreenGroupBuilder> configure)
+            public ConfiguredGameScreenGroup(Action<IGameScreenGroupBuilder> configure)
             {
                 _configure = configure ?? throw new ArgumentNullException(nameof(configure));
             }
 
             /// <inheritdoc />
-            protected override void Configure(GameScreenGroupBuilder builder)
+            protected override void Configure(IGameScreenGroupBuilder builder)
             {
                 _configure.Invoke(builder);
             }
