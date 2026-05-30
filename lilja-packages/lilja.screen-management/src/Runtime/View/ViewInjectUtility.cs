@@ -34,6 +34,7 @@ namespace Lilja.ScreenManagement
             // フィールドへのインジェクション
             foreach (var field in fields)
             {
+                var component = default(Component);
                 foreach (var root in rootObjects)
                 {
                     if (root == null)
@@ -41,18 +42,26 @@ namespace Lilja.ScreenManagement
                         continue;
                     }
 
-                    var component = root.GetComponentInChildren(field.FieldType, true);
+                    component = root.GetComponentInChildren(field.FieldType, true);
                     if (component != null)
                     {
                         field.SetValue(target, component);
                         break;
                     }
                 }
+
+                if (component == null)
+                {
+                    Debug.LogWarning(
+                        $"[Lilja.ScreenManagement] [View] 注入失敗: ターゲット '{type.Name}' のフィールド '{field.Name}' (型: '{field.FieldType.Name}') に適合するコンポーネントがビューオブジェクト内に見つかりません。"
+                    );
+                }
             }
 
             // プロパティへのインジェクション
             foreach (var property in properties)
             {
+                var component = default(Component);
                 foreach (var root in rootObjects)
                 {
                     if (root == null)
@@ -60,12 +69,19 @@ namespace Lilja.ScreenManagement
                         continue;
                     }
 
-                    var component = root.GetComponentInChildren(property.PropertyType, true);
+                    component = root.GetComponentInChildren(property.PropertyType, true);
                     if (component != null)
                     {
                         property.SetValue(target, component, null);
                         break;
                     }
+                }
+
+                if (component == null)
+                {
+                    Debug.LogWarning(
+                        $"[Lilja.ScreenManagement] [View] 注入失敗: ターゲット '{type.Name}' のプロパティ '{property.Name}' (型: '{property.PropertyType.Name}') に適合するコンポーネントがビューオブジェクト内に見つかりません。"
+                    );
                 }
             }
         }

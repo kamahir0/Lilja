@@ -82,10 +82,20 @@ namespace Lilja.ScreenManagement.Dialog
         )
         {
             var provider = context.Options.PrefabProvider;
-            await UniTask.WhenAll(
-                provider.LoadAsync(_frameKey, cancellationToken).SuppressCancellationThrow(),
-                provider.LoadAsync(_contentKey, cancellationToken).SuppressCancellationThrow()
-            );
+            try
+            {
+                await UniTask.WhenAll(
+                    provider.LoadAsync(_frameKey, cancellationToken).SuppressCancellationThrow(),
+                    provider.LoadAsync(_contentKey, cancellationToken).SuppressCancellationThrow()
+                );
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // フォールバックで対応するため、警告ログのみ残して例外は投げない
+                Debug.LogWarning(
+                    $"[Lilja.ScreenManagement.Dialog] PreloadAsync: ダイアログプレハブのロードに失敗しました。フォールバック処理を行います。エラー: {ex.Message}"
+                );
+            }
         }
 
         /// <inheritdoc />

@@ -124,13 +124,13 @@ namespace Lilja.ScreenManagement
             {
                 var list = context.ActiveScreensInternal;
                 var index = list.IndexOf(currentScreen);
-                if (index <= 0)
+                if (index < 0)
                 {
                     return;
                 }
 
                 var pendingScreens = new List<IGameScreenInternal>();
-                for (var i = index - 1; i >= 0; i--)
+                for (var i = index; i >= 0; i--)
                 {
                     var screen = list[i];
                     var handle = screen.GetViewHandle();
