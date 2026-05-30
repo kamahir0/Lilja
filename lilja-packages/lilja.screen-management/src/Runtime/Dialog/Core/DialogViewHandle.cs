@@ -113,6 +113,13 @@ namespace Lilja.ScreenManagement.Dialog
             _root = CreateRoot();
             _rootObjects = new[] { _root };
 
+            // GameScreens シーンへ移動
+            var targetScene = await GameScreenSceneUtility.GetOrCreateSceneAsync(cancellationToken);
+            if (targetScene.IsValid() && targetScene.isLoaded && _root != null)
+            {
+                SceneManager.MoveGameObjectToScene(_root, targetScene);
+            }
+
             // Backdrop生成
             if (_useBackdrop)
             {
@@ -225,18 +232,7 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary> Rootを生成する </summary>
         private static GameObject CreateRoot()
         {
-            var root = DialogRootUtility.Create();
-
-            // 現在ロードされている最後尾の有効なシーンにオブジェクトを移動してツリー階層を保護
-            if (SceneManager.sceneCount > 0)
-            {
-                var activeScene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
-                if (activeScene.IsValid() && activeScene.isLoaded)
-                {
-                    SceneManager.MoveGameObjectToScene(root, activeScene);
-                }
-            }
-            return root;
+            return DialogRootUtility.Create();
         }
 
         /// <summary> ContentをFrameの子にする </summary>

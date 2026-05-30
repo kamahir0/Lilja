@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
 {
@@ -118,6 +119,12 @@ namespace Lilja.ScreenManagement
 
             _instance = UnityEngine.Object.Instantiate(prefab);
             _rootObjects = new[] { _instance };
+
+            var targetScene = await GameScreenSceneUtility.GetOrCreateSceneAsync(cancellationToken);
+            if (targetScene.IsValid() && targetScene.isLoaded && _instance != null)
+            {
+                SceneManager.MoveGameObjectToScene(_instance, targetScene);
+            }
         }
 
         /// <inheritdoc />
