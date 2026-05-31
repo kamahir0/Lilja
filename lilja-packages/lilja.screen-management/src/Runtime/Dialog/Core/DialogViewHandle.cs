@@ -81,6 +81,7 @@ namespace Lilja.ScreenManagement.Dialog
         )
         {
             var provider = context.PrefabProvider;
+            _prefabProvider = provider;
             try
             {
                 await UniTask.WhenAll(
@@ -136,7 +137,8 @@ namespace Lilja.ScreenManagement.Dialog
                 OutsideButtonUtility.Create(_root.transform, UseBackdrop);
 
                 // Frame / Content ロードとインスタンス化
-                var provider = context.PrefabProvider;
+                _prefabProvider = context.PrefabProvider;
+                var provider = _prefabProvider;
 
                 GameObject framePrefab = null;
                 GameObject contentPrefab = null;
@@ -249,6 +251,20 @@ namespace Lilja.ScreenManagement.Dialog
             _rootObjects = Array.Empty<GameObject>();
             FrameRectTransform = null;
             ContentRectTransform = null;
+
+            if (_prefabProvider != null)
+            {
+                if (!string.IsNullOrEmpty(_frameKey))
+                {
+                    _prefabProvider.Unload(_frameKey);
+                }
+                if (!string.IsNullOrEmpty(_contentKey))
+                {
+                    _prefabProvider.Unload(_contentKey);
+                }
+                _prefabProvider = null;
+            }
+
             return UniTask.CompletedTask;
         }
 
@@ -311,5 +327,6 @@ namespace Lilja.ScreenManagement.Dialog
         private readonly string _contentKey;
         private readonly Func<GameObject> _fallbackFrameFactory;
         private readonly Func<GameObject> _fallbackContentFactory;
+        private IPrefabProvider _prefabProvider;
     }
 }

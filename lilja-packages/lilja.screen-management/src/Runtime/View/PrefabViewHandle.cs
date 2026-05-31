@@ -33,6 +33,7 @@ namespace Lilja.ScreenManagement
         private string _resolvedKey;
         private GameObject _instance;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
+        private IPrefabProvider _prefabProvider;
 
         private static string ResolveKeyFromType(Type ownerType)
         {
@@ -86,6 +87,7 @@ namespace Lilja.ScreenManagement
                     "[Lilja.ScreenManagement] PrefabViewHandle が型コンテキストで初期化されていません。"
                 );
             }
+            _prefabProvider = context.PrefabProvider;
             await context.PrefabProvider.LoadAsync(_resolvedKey, cancellationToken);
         }
 
@@ -107,8 +109,8 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            var provider = context.PrefabProvider;
-            var prefab = await provider.LoadAsync(_resolvedKey, cancellationToken);
+            _prefabProvider = context.PrefabProvider;
+            var prefab = await _prefabProvider.LoadAsync(_resolvedKey, cancellationToken);
 
             if (prefab == null)
             {
@@ -136,6 +138,13 @@ namespace Lilja.ScreenManagement
                 _instance = null;
             }
             _rootObjects = Array.Empty<GameObject>();
+
+            if (_prefabProvider != null && _resolvedKey != null)
+            {
+                _prefabProvider.Unload(_resolvedKey);
+                _prefabProvider = null;
+            }
+
             return UniTask.CompletedTask;
         }
 
