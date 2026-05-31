@@ -67,12 +67,9 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken = default
         )
         {
-            if (callerContext == null)
-            {
-                throw new ArgumentNullException(nameof(callerContext));
-            }
-
-            return Procedures.Awaitable.CallAsync(callerContext, this, args, cancellationToken);
+            return callerContext == null
+                ? throw new ArgumentNullException(nameof(callerContext))
+                : Procedures.Awaitable.CallAsync(callerContext, this, args, cancellationToken);
         }
 
         /// <inheritdoc />

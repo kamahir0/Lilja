@@ -56,7 +56,7 @@ namespace Lilja.ScreenManagement
 
                     await Screen.PrepareAsync(calleeScreen, cancellationToken);
 
-                    Type previousScreenType = callerScreen?.GetType();
+                    var previousScreenType = callerScreen?.GetType();
                     await ((IGameScreenInternal<TArgs>)calleeScreen).OpenAsync(
                         args,
                         previousScreenType,

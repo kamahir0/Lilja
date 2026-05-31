@@ -27,33 +27,15 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         );
 
-        private UniTaskCompletionSource<TResult> _completionSource = new();
-
         /// <inheritdoc />
         protected internal sealed override IViewHandle ViewHandle => ViewlessViewHandle.Instance;
 
         /// <inheritdoc />
         public sealed override bool IsViewless => true;
 
-        /// <inheritdoc />
-        protected sealed override UniTask InitializeAsync(TArgs args, CancellationToken cancellationToken)
-        {
-            return UniTask.CompletedTask;
-        }
-
-        /// <inheritdoc />
-        protected sealed override UniTask EnterAsync(EnterContext context, CancellationToken cancellationToken)
-        {
-            return UniTask.CompletedTask;
-        }
-
-        /// <inheritdoc />
-        protected sealed override UniTask ExitAsync(ExitContext context, CancellationToken cancellationToken)
-        {
-            return UniTask.CompletedTask;
-        }
-
         #endregion
+
+        private UniTaskCompletionSource<TResult> _completionSource = new();
 
         /// <summary>
         /// 指定された呼び出し元のコンテキストの下でこの論理フローを起動し、内部遷移を実行して結果が返るまで非同期待機します。
@@ -207,5 +189,23 @@ namespace Lilja.ScreenManagement
             _completionSource?.TrySetCanceled();
             _completionSource = null;
         }
+
+        /// <inheritdoc />
+        protected sealed override UniTask InitializeAsync(
+            TArgs args,
+            CancellationToken cancellationToken
+        ) => UniTask.CompletedTask;
+
+        /// <inheritdoc />
+        protected sealed override UniTask EnterAsync(
+            EnterContext context,
+            CancellationToken cancellationToken
+        ) => UniTask.CompletedTask;
+
+        /// <inheritdoc />
+        protected sealed override UniTask ExitAsync(
+            ExitContext context,
+            CancellationToken cancellationToken
+        ) => UniTask.CompletedTask;
     }
 }

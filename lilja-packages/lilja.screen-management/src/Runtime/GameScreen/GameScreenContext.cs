@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -76,7 +77,7 @@ namespace Lilja.ScreenManagement
             set =>
                 _prefabProvider =
                     value
-                    ?? throw new System.ArgumentNullException(
+                    ?? throw new ArgumentNullException(
                         nameof(value),
                         "[Lilja.ScreenManagement] PrefabProvider に null を設定することはできません。"
                     );
@@ -91,7 +92,7 @@ namespace Lilja.ScreenManagement
             set =>
                 _sceneLoader =
                     value
-                    ?? throw new System.ArgumentNullException(
+                    ?? throw new ArgumentNullException(
                         nameof(value),
                         "[Lilja.ScreenManagement] SceneLoader に null を設定することはできません。"
                     );

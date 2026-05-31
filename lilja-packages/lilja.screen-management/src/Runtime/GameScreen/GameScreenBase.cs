@@ -201,13 +201,11 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面がツリーに接続される前に、指定されたアセットプロバイダー等を用いてビューのアセットを事前に非同期ロードしてメモリにキャッシュします。
         /// </summary>
-        /// <param name="prefabProvider">プレハブアセットプロバイダー</param>
-        /// <param name="sceneLoader">シーンロードサービス</param>
+        /// <param name="callerContext">呼び出し側の画面コンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         public async UniTask PreloadViewAsync(
-            IPrefabProvider prefabProvider = null,
-            ISceneLoader sceneLoader = null,
+            GameScreenContext callerContext,
             CancellationToken cancellationToken = default
         )
         {
@@ -217,14 +215,8 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            if (Context == null)
-            {
-                Context = new GameScreenContext();
-            }
-            if (prefabProvider != null)
-                Context.PrefabProvider = prefabProvider;
-            if (sceneLoader != null)
-                Context.SceneLoader = sceneLoader;
+            Context = callerContext;
+
             handle.Initialize(GetType());
             await handle.PreloadAsync(Context, cancellationToken);
         }
