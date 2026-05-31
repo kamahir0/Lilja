@@ -8,6 +8,13 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TArgs">初期化引数の型</typeparam>
     public abstract class GameScreen<TArgs> : GameScreenBase<TArgs>
     {
+        #region Public / Protected Members
+
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
+
         /// <summary>
         /// この画面を所有している実行中の画面グループを取得します。
         /// </summary>
@@ -21,12 +28,21 @@ namespace Lilja.ScreenManagement
             internal set => _group = value;
         }
 
-        private GameScreenGroup _group;
+        // --- Methods ---
 
         /// <inheritdoc />
         protected override void OnDispose()
         {
             _group = null;
         }
+
+        #endregion
+
+        #region Internal / Private Members
+
+        // --- Fields ---
+        private GameScreenGroup _group;
+
+        #endregion
     }
 }

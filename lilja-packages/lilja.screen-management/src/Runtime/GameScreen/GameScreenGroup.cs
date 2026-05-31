@@ -10,19 +10,12 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public class GameScreenGroup
     {
-        /// <summary>
-        /// このグループ内の画面遷移設定を行います。
-        /// </summary>
-        /// <param name="builder">登録用ビルダー</param>
-        protected virtual void Configure(IGameScreenGroupBuilder builder) { }
+        #region Public / Protected Members
 
-        /// <summary>
-        /// 新しい <see cref="GameScreenGroup"/> インスタンスを初期化します。
-        /// </summary>
-        public GameScreenGroup()
-        {
-            Context = new GameScreenContext();
-        }
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
 
         /// <summary>
         /// このグループが属する画面階層コンテキスト。
@@ -43,7 +36,29 @@ namespace Lilja.ScreenManagement
         > OverrideTransitionMap { get; } = new();
 
         /// <summary>
-        /// 指定された型がこの画面グループの管理対象（登録済み画面）かどうかを判定します。
+        /// 戻り先となる遷移履歴がスタックに存在するかどうかを取得します。
+        /// </summary>
+        public bool CanGoBack => _history.Count > 0;
+
+        /// <summary>
+        /// 履歴スタックの数を取得します。
+        /// </summary>
+        public int HistoryCount => _history.Count;
+
+        // --- Constructors ---
+
+        /// <summary>
+        /// 新しい <see cref="GameScreenGroup"/> インスタンスを初期化します。
+        /// </summary>
+        public GameScreenGroup()
+        {
+            Context = new GameScreenContext();
+        }
+
+        // --- Methods ---
+
+        /// <summary>
+        /// 指定されたキー名が登録されているか判定します。
         /// </summary>
         /// <param name="screenType">判定対象の画面の型。</param>
         /// <returns>管理対象の画面であれば true、それ以外は false。</returns>
@@ -55,76 +70,6 @@ namespace Lilja.ScreenManagement
             }
             EnsureConfiguration();
             return _types.ContainsValue(screenType);
-        }
-
-        /// <summary>
-        /// 指定されたキー名が登録されているか判定します。
-        /// </summary>
-        internal bool Contains(string key)
-        {
-            return _factories.ContainsKey(key);
-        }
-
-        /// <summary>
-        /// キーに紐づく画面の型を取得します。
-        /// </summary>
-        internal Type GetScreenType(string key)
-        {
-            if (!_types.TryGetValue(key, out var type))
-            {
-                throw new InvalidOperationException(
-                    $"[Lilja.ScreenManagement] 画面キー '{key}' は登録されていません。"
-                );
-            }
-            return type;
-        }
-
-        /// <summary>
-        /// キーに紐づく画面オブジェクトを作成します。
-        /// </summary>
-        internal object Create(string key)
-        {
-            if (!_factories.TryGetValue(key, out var factory))
-            {
-                throw new InvalidOperationException(
-                    $"[Lilja.ScreenManagement] 画面キー '{key}' はこの GameScreenGroup に登録されていません。Configure(IGameScreenGroupBuilder) で登録されているか確認してください。"
-                );
-            }
-            return factory.Invoke();
-        }
-
-        /// <summary>
-        /// グループの生存期間を待機するための非同期ソース。
-        /// </summary>
-        internal UniTaskCompletionSource CompletionSource { get; private set; } = new();
-
-        /// <summary>
-        /// 内部的な初期設定を実行します。
-        /// </summary>
-        internal void EnsureConfiguration()
-        {
-            if (_configured)
-            {
-                return;
-            }
-
-            var builder = new GameScreenGroupBuilder();
-            Configure(builder);
-
-            foreach (var kvp in builder.Factories)
-            {
-                _factories[kvp.Key] = kvp.Value;
-            }
-            foreach (var kvp in builder.Types)
-            {
-                _types[kvp.Key] = kvp.Value;
-            }
-            foreach (var kvp in builder.OverrideTransitionMap)
-            {
-                OverrideTransitionMap[kvp.Key] = kvp.Value;
-            }
-
-            _configured = true;
         }
 
         /// <summary>
@@ -189,35 +134,12 @@ namespace Lilja.ScreenManagement
             );
         }
 
-        private string _currentKey;
-        private object _currentArgs;
-        private readonly Stack<(string Key, object Args)> _history = new();
-
-        /// <summary>
-        /// 戻り先となる遷移履歴がスタックに存在するかどうかを取得します。
-        /// </summary>
-        public bool CanGoBack => _history.Count > 0;
-
-        /// <summary>
-        /// 履歴スタックの数を取得します。
-        /// </summary>
-        public int HistoryCount => _history.Count;
-
         /// <summary>
         /// 履歴スタックをすべてクリアします。
         /// </summary>
         public void ClearHistory()
         {
             _history.Clear();
-        }
-
-        /// <summary>
-        /// 現在のアクティブ画面情報を設定します（システム内部用）。
-        /// </summary>
-        internal void SetCurrent(string key, object args)
-        {
-            _currentKey = key;
-            _currentArgs = args;
         }
 
         /// <summary>
@@ -239,18 +161,6 @@ namespace Lilja.ScreenManagement
                 _history.Push((_currentKey, _currentArgs));
             }
             return SwitchAsyncInternal(key, args, cancellationToken);
-        }
-
-        private UniTask SwitchAsyncInternal<TArgs>(
-            string key,
-            TArgs args,
-            CancellationToken cancellationToken
-        )
-        {
-            // 履歴プッシュを行わずに切り替えを行う内部メソッド。
-            _currentKey = key;
-            _currentArgs = args;
-            return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);
         }
 
         /// <summary>
@@ -343,6 +253,123 @@ namespace Lilja.ScreenManagement
             return new ConfiguredGameScreenGroup(configure);
         }
 
+        /// <summary>
+        /// このグループ内の画面遷移設定を行います。
+        /// </summary>
+        /// <param name="builder">登録用ビルダー</param>
+        protected virtual void Configure(IGameScreenGroupBuilder builder) { }
+
+        #endregion
+
+        #region Internal / Private Members
+
+        // --- Fields ---
+        private bool _called;
+        private bool _configured;
+        private string _currentKey;
+        private object _currentArgs;
+        private readonly Stack<(string Key, object Args)> _history = new();
+        private readonly Dictionary<string, Func<object>> _factories = new();
+        private readonly Dictionary<string, Type> _types = new();
+
+        // --- Properties ---
+        /// <summary>
+        /// グループの生存期間を待機するための非同期ソース。
+        /// </summary>
+        internal UniTaskCompletionSource CompletionSource { get; private set; } = new();
+
+        // --- Methods ---
+
+        /// <summary>
+        /// 指定されたキー名が登録されているか判定します。
+        /// </summary>
+        internal bool Contains(string key)
+        {
+            return _factories.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// キーに紐づく画面の型を取得します。
+        /// </summary>
+        internal Type GetScreenType(string key)
+        {
+            if (!_types.TryGetValue(key, out var type))
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] 画面キー '{key}' は登録されていません。"
+                );
+            }
+            return type;
+        }
+
+        /// <summary>
+        /// キーに紐づく画面オブジェクトを作成します。
+        /// </summary>
+        internal object Create(string key)
+        {
+            if (!_factories.TryGetValue(key, out var factory))
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] 画面キー '{key}' はこの GameScreenGroup に登録されていません。Configure(IGameScreenGroupBuilder) で登録されているか確認してください。"
+                );
+            }
+            return factory.Invoke();
+        }
+
+        /// <summary>
+        /// 内部的な初期設定を実行します。
+        /// </summary>
+        internal void EnsureConfiguration()
+        {
+            if (_configured)
+            {
+                return;
+            }
+
+            var builder = new GameScreenGroupBuilder();
+            Configure(builder);
+
+            foreach (var kvp in builder.Factories)
+            {
+                _factories[kvp.Key] = kvp.Value;
+            }
+            foreach (var kvp in builder.Types)
+            {
+                _types[kvp.Key] = kvp.Value;
+            }
+            foreach (var kvp in builder.OverrideTransitionMap)
+            {
+                OverrideTransitionMap[kvp.Key] = kvp.Value;
+            }
+
+            _configured = true;
+        }
+
+        /// <summary>
+        /// 現在のアクティブ画面情報を設定します（システム内部用）。
+        /// </summary>
+        internal void SetCurrent(string key, object args)
+        {
+            _currentKey = key;
+            _currentArgs = args;
+        }
+
+        private UniTask SwitchAsyncInternal<TArgs>(
+            string key,
+            TArgs args,
+            CancellationToken cancellationToken
+        )
+        {
+            // 履歴プッシュを行わずに切り替えを行う内部メソッド。
+            _currentKey = key;
+            _currentArgs = args;
+            return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);
+        }
+
+        #endregion
+
+        #region Private Nested Classes
+
         private sealed class ConfiguredGameScreenGroup : GameScreenGroup
         {
             private readonly Action<IGameScreenGroupBuilder> _configure;
@@ -359,9 +386,6 @@ namespace Lilja.ScreenManagement
             }
         }
 
-        private bool _called;
-        private bool _configured;
-        private readonly Dictionary<string, Func<object>> _factories = new();
-        private readonly Dictionary<string, Type> _types = new();
+        #endregion
     }
 }

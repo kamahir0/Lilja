@@ -13,17 +13,74 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TArgs">画面の初期化に受け取る引数の型</typeparam>
     public abstract class GameScreenBase<TArgs> : IGameScreenInternal<TArgs>
     {
+        #region Public / Protected Members
+
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
+
         /// <summary>
         /// この画面の表示と演出を担うビューハンドル。
         /// </summary>
         protected internal abstract IViewHandle ViewHandle { get; }
 
         /// <summary>
+        /// この画面がビューを持たない論理画面であるかどうかを示す値を取得します。デフォルトは false です。
+        /// </summary>
+        public virtual bool IsViewless => false;
+
+        /// <summary>
+        /// この画面が所属する実行コンテキスト。
+        /// </summary>
+        public GameScreenContext Context { get; internal set; }
+
+        /// <summary>
+        /// この画面のソート順などの描画レイヤー。
+        /// </summary>
+        public int Layer { get; internal set; }
+
+#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
+        /// <summary>
+        /// 画面インスタンス全体の寿命に紐づく CompositeDisposable。
+        /// Dispose 時に自動で破棄されます。
+        /// </summary>
+        public CompositeDisposable Lifetime { get; } = new();
+
+        /// <summary>
+        /// ビューの寿命（OnViewLoaded ～ OnViewUnloaded）に紐づく CompositeDisposable。
+        /// OnViewUnloaded 時に自動でクリアされます。
+        /// </summary>
+        public CompositeDisposable ViewLifetime { get; } = new();
+#endif
+
+        // --- Constructors ---
+
+        /// <summary>
+        /// 新しい <see cref="GameScreenBase{TArgs}"/> インスタンスを初期化します。
+        /// </summary>
+        protected GameScreenBase() { }
+
+        // --- Methods ---
+
+        /// <summary>
+        /// 画面遷移を事前に非同期ロードしてメモリにキャッシュします。
+        /// </summary>
+        public async UniTask PreloadViewAsync(
+            GameScreenContext callerContext,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var handle = ((IGameScreenInternal)this).GetViewHandle();
+            Context = callerContext;
+
+            handle.Initialize(GetType());
+            await handle.PreloadAsync(Context, cancellationToken);
+        }
+
+        /// <summary>
         /// 画面がツリーに接続された後、入場演出が走る前に呼び出されます。
         /// </summary>
-        /// <param name="args">初期化用引数</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
         protected virtual UniTask InitializeAsync(TArgs args, CancellationToken cancellationToken)
         {
             return UniTask.CompletedTask;
@@ -32,14 +89,6 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面が活性化される際（新規入場または復帰時）に呼び出されます。
         /// </summary>
-        /// <remarks>
-        /// コンテキスト内の <see cref="EnterContext.Transition"/> を手動で再生・制御することができます。<br/>
-        /// 手動再生（PlayAsync）を行う場合は、演出の完了を保証するために<b>必ず await してください。</b>（Forget() は避けてください）<br/>
-        /// このメソッド内で手動再生されなかった場合は、メソッドを抜けた後にシステム側で自動フォールバック再生されます。
-        /// </remarks>
-        /// <param name="context">入場遷移のコンテキスト</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
         protected virtual UniTask EnterAsync(
             EnterContext context,
             CancellationToken cancellationToken
@@ -51,14 +100,6 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 画面が非活性化される際（完全退出または一時停止時）に呼び出されます。
         /// </summary>
-        /// <remarks>
-        /// コンテキスト内の <see cref="ExitContext.Transition"/> を手動で再生・制御することができます。<br/>
-        /// 手動再生（PlayAsync）を行う場合は、演出の完了を保証するために<b>必ず await してください。</b>（Forget() は避けてください）<br/>
-        /// このメソッド内で手動再生されなかった場合は、メソッドを抜けた後にシステム側で自動フォールバック再生されます。
-        /// </remarks>
-        /// <param name="context">退場遷移のコンテキスト</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
         protected virtual UniTask ExitAsync(
             ExitContext context,
             CancellationToken cancellationToken
@@ -80,21 +121,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// ビューアセットが破棄され、[View] 属性付きフィールドが null クリアされる直前に呼び出されます。
         /// </summary>
-        protected virtual void OnViewUnloaded() { }
-
-#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
-        /// <summary>
-        /// 画面インスタンス全体の寿命に紐づく CompositeDisposable。
-        /// Dispose 時に自動で破棄されます。
-        /// </summary>
-        public CompositeDisposable Lifetime { get; } = new();
-
-        /// <summary>
-        /// ビューの寿命（OnViewLoaded ～ OnViewUnloaded）に紐づく CompositeDisposable。
-        /// OnViewUnloaded 時に自動でクリアされます。
-        /// </summary>
-        public CompositeDisposable ViewLifetime { get; } = new();
-#endif
+        protected virtual void OnViewUnload() { }
 
         /// <summary>
         /// システム用の画面初期化フック。デフォルトではユーザーの <see cref="InitializeAsync"/> を呼び出します。
@@ -129,79 +156,62 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// システム用のビューアンロードフック。デフォルトではユーザーの <see cref="OnViewUnloaded"/> を呼び出します。
+        /// システム用のビューアンロードフック。デフォルトではユーザーの <see cref="OnViewUnload"/> を呼び出します。
         /// </summary>
-        protected virtual void TriggerOnViewUnloaded()
+        protected virtual void TriggerOnViewUnload()
         {
-            OnViewUnloaded();
+            OnViewUnload();
         }
 
         /// <summary>
-        /// 新しい <see cref="GameScreenBase{TArgs}"/> インスタンスを初期化します。
+        /// 破棄前にツリー上の接続関係などの参照を外すための内部クリーンアップ処理。
         /// </summary>
-        protected GameScreenBase() { }
+        protected virtual void OnDispose()
+        {
+            _cachedViewHandle = null;
+#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
+            ViewLifetime.Dispose();
+            Lifetime.Dispose();
+#endif
+        }
 
+        #endregion
+
+        #region Internal / Private Members
+
+        // --- Fields ---
+        private bool _disposed;
+        private IViewHandle _cachedViewHandle;
+
+        // --- Properties ---
         /// <summary>
-        /// この画面がビューを持たない論理画面であるかどうかを示す値を取得します。デフォルトは false です。
+        /// この画面が現在クローズ処理中であるか。
         /// </summary>
-        public virtual bool IsViewless => false;
+        internal bool IsClosing { get; set; }
 
-        /// <inheritdoc />
+        // --- Methods ---
+        // (No internal or private methods)
+
+        #endregion
+
+        #region IGameScreenInternal
+
+        GameScreenContext IGameScreenInternal.Context => Context;
+
         bool IGameScreenInternal.IsViewless => IsViewless;
 
-        /// <summary>
-        /// この画面が所属する実行コンテキスト。
-        /// </summary>
-        public GameScreenContext Context { get; internal set; }
-
-        /// <summary>
-        /// この画面のソート順などの描画レイヤー。
-        /// </summary>
-        public int Layer { get; internal set; }
-
-        /// <inheritdoc />
         int IGameScreenInternal.Layer
         {
             get => Layer;
             set => Layer = value;
         }
 
-        /// <summary>
-        /// この画面が現在クローズ処理中であるか。
-        /// </summary>
-        internal bool IsClosing { get; set; }
-
-        /// <inheritdoc />
         bool IGameScreenInternal.IsClosing
         {
             get => IsClosing;
             set => IsClosing = value;
         }
 
-        /// <summary>
-        /// 画面がツリーに接続される前に、指定されたアセットプロバイダー等を用いてビューのアセットを事前に非同期ロードしてメモリにキャッシュします。
-        /// </summary>
-        /// <param name="callerContext">呼び出し側の画面コンテキスト</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
-        public async UniTask PreloadViewAsync(
-            GameScreenContext callerContext,
-            CancellationToken cancellationToken = default
-        )
-        {
-            var handle = ((IGameScreenInternal)this).GetViewHandle();
-            Context = callerContext;
-
-            handle.Initialize(GetType());
-            await handle.PreloadAsync(Context, cancellationToken);
-        }
-
-        #region IGameScreenInternal
-
-        /// <inheritdoc />
-        GameScreenContext IGameScreenInternal.Context => Context;
-
-        /// <inheritdoc />
         IViewHandle IGameScreenInternal.GetViewHandle()
         {
             if (_cachedViewHandle == null)
@@ -217,34 +227,24 @@ namespace Lilja.ScreenManagement
             return _cachedViewHandle;
         }
 
-        /// <inheritdoc />
-        UniTask IGameScreenInternal<TArgs>.InitializeAsync(
-            TArgs args,
-            CancellationToken cancellationToken
-        ) => TriggerInitializeAsync(args, cancellationToken);
-
-        /// <inheritdoc />
         UniTask IGameScreenInternal.ExecuteEnterAsync(
             EnterContext context,
             CancellationToken cancellationToken
         ) => TriggerEnterAsync(context, cancellationToken);
 
-        /// <inheritdoc />
         UniTask IGameScreenInternal.ExecuteExitAsync(
             ExitContext context,
             CancellationToken cancellationToken
         ) => TriggerExitAsync(context, cancellationToken);
 
-        /// <inheritdoc />
         void IGameScreenInternal.OnViewLoaded()
         {
             TriggerOnViewLoaded();
         }
 
-        /// <inheritdoc />
-        void IGameScreenInternal.OnViewUnloaded()
+        void IGameScreenInternal.OnViewUnload()
         {
-            TriggerOnViewUnloaded();
+            TriggerOnViewUnload();
 #if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
             ViewLifetime.Clear();
 #endif
@@ -252,9 +252,17 @@ namespace Lilja.ScreenManagement
 
         #endregion
 
+        #region IGameScreenInternal<TArgs>
+
+        UniTask IGameScreenInternal<TArgs>.InitializeAsync(
+            TArgs args,
+            CancellationToken cancellationToken
+        ) => TriggerInitializeAsync(args, cancellationToken);
+
+        #endregion
+
         #region IDisposable
 
-        /// <inheritdoc />
         void IDisposable.Dispose()
         {
             if (_disposed)
@@ -268,20 +276,5 @@ namespace Lilja.ScreenManagement
         }
 
         #endregion
-
-        /// <summary>
-        /// 破棄前にツリー上の接続関係などの参照を外すための内部クリーンアップ処理。
-        /// </summary>
-        protected virtual void OnDispose()
-        {
-            _cachedViewHandle = null;
-#if LILJA_SCREEN_MANAGEMENT_R3_SUPPORT
-            ViewLifetime.Dispose();
-            Lifetime.Dispose();
-#endif
-        }
-
-        private bool _disposed;
-        private IViewHandle _cachedViewHandle;
     }
 }

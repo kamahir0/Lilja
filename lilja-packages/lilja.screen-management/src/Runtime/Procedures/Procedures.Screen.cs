@@ -107,7 +107,7 @@ namespace Lilja.ScreenManagement
             {
                 try
                 {
-                    screen.OnViewUnloaded();
+                    screen.OnViewUnload();
                     ViewInjectUtility.Nullify(screen);
                 }
                 finally
@@ -147,7 +147,7 @@ namespace Lilja.ScreenManagement
                     var handle = screen.GetViewHandle();
                     if (handle != null && handle.IsLoaded)
                     {
-                        screen.OnViewUnloaded();
+                        screen.OnViewUnload();
 
                         ViewInjectUtility.Nullify(screen);
 

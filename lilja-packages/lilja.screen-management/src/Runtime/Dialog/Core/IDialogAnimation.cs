@@ -18,7 +18,7 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary>
         /// ダイアログビューのアセットが破棄・アンロードされる直前に、参照解放やクリーンアップを行うために呼び出されます。
         /// </summary>
-        void OnViewUnloaded();
+        void OnViewUnload();
 
         /// <summary>
         /// ダイアログ画面が表示される際（入場時）のアニメーションを非同期実行します。

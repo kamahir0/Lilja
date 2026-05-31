@@ -46,10 +46,7 @@ namespace Lilja.ScreenManagement
         /// <param name="context">入場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask ExecuteEnterAsync(
-            EnterContext context,
-            CancellationToken cancellationToken
-        );
+        UniTask ExecuteEnterAsync(EnterContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// 画面からの退場演出・処理を実行します。
@@ -57,10 +54,7 @@ namespace Lilja.ScreenManagement
         /// <param name="context">退場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask ExecuteExitAsync(
-            ExitContext context,
-            CancellationToken cancellationToken
-        );
+        UniTask ExecuteExitAsync(ExitContext context, CancellationToken cancellationToken);
 
         /// <summary>
         /// ビューのロードおよび注入が完了したことを通知します。
@@ -70,7 +64,7 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// ビューがアンロードされる直前であることを通知します。
         /// </summary>
-        void OnViewUnloaded();
+        void OnViewUnload();
     }
 
     /// <summary>
@@ -85,9 +79,6 @@ namespace Lilja.ScreenManagement
         /// <param name="args">初期化引数</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask InitializeAsync(
-            TArgs args,
-            CancellationToken cancellationToken
-        );
+        UniTask InitializeAsync(TArgs args, CancellationToken cancellationToken);
     }
 }

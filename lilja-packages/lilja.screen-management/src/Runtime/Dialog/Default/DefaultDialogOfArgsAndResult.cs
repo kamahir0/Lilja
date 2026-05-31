@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +13,13 @@ namespace Lilja.ScreenManagement.Dialog
     public class DefaultDialog<TArgs, TResult>
         : DialogBase<TArgs, TResult, DefaultDialogFrame, DefaultDialogContent>
     {
+        #region Public / Protected Members
+
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
+
         /// <summary>
         /// 枠外部分をクリックした際にクローズを許容するかどうかを取得または設定します。
         /// </summary>
@@ -20,8 +28,6 @@ namespace Lilja.ScreenManagement.Dialog
             get => _enableOutsideButton;
             set => _enableOutsideButton = value;
         }
-
-        private bool _enableOutsideButton;
 
         /// <summary>
         /// 枠外クリックでクローズした際に返却するデフォルト結果を取得または設定します。
@@ -32,8 +38,6 @@ namespace Lilja.ScreenManagement.Dialog
             set => _outsideButtonResult = value;
         }
 
-        private TResult _outsideButtonResult;
-
         /// <summary>
         /// ダイアログ表示時のアニメーションを取得または設定します。
         /// </summary>
@@ -43,8 +47,6 @@ namespace Lilja.ScreenManagement.Dialog
             set => _animation = value;
         }
 
-        private IDialogAnimation _animation = new DefaultDialogAnimation();
-
         /// <summary>
         /// ダイアログが重ね合わされた（スタック）際のアニメーションを取得または設定します。
         /// </summary>
@@ -53,8 +55,6 @@ namespace Lilja.ScreenManagement.Dialog
             get => _stackAnimation;
             set => _stackAnimation = value;
         }
-
-        private IDialogStackAnimation _stackAnimation = new DefaultStackAnimation();
 
         /// <inheritdoc />
         protected override bool EnableOutsideButton => _enableOutsideButton;
@@ -67,6 +67,8 @@ namespace Lilja.ScreenManagement.Dialog
 
         /// <inheritdoc />
         protected override IDialogStackAnimation StackAnimation => _stackAnimation;
+
+        // --- Methods ---
 
         /// <summary>
         /// 動的構築用のタイトルを設定します。
@@ -150,8 +152,19 @@ namespace Lilja.ScreenManagement.Dialog
             return DefaultDialogFallbackUtility.CreateContent();
         }
 
+        #endregion
+
+        #region Internal / Private Members
+
+        // --- Fields ---
+        private bool _enableOutsideButton;
+        private TResult _outsideButtonResult;
+        private IDialogAnimation _animation = new DefaultDialogAnimation();
+        private IDialogStackAnimation _stackAnimation = new DefaultStackAnimation();
         private string _dynamicTitle;
         private readonly List<string> _dynamicTexts = new();
         private readonly List<(string Label, TResult Result)> _dynamicButtons = new();
+
+        #endregion
     }
 }

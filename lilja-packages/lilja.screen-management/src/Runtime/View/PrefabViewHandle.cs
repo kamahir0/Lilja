@@ -12,10 +12,19 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public sealed class PrefabViewHandle : IViewHandle
     {
+        #region Public / Protected Members
+
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
+
         /// <summary>
         /// プレハブキー自動解決に対応した、空のデフォルトハンドルインスタンスを取得します。
         /// </summary>
         public static PrefabViewHandle Default => new(null);
+
+        // --- Constructors ---
 
         /// <summary>
         /// 新しい <see cref="PrefabViewHandle"/> インスタンスを初期化します。
@@ -27,6 +36,25 @@ namespace Lilja.ScreenManagement
             _specifiedKey = prefabKey;
             _unloadsAncestors = unloadsAncestors;
         }
+
+        // --- Methods ---
+        // (No public or protected methods)
+
+        #endregion
+
+        #region Internal / Private Members
+
+        // --- Fields ---
+        private readonly string _specifiedKey;
+        private readonly bool _unloadsAncestors;
+        private string _resolvedKey;
+        private GameObject _instance;
+        private GameObject[] _rootObjects = Array.Empty<GameObject>();
+
+        // --- Properties ---
+        // (No internal or private properties)
+
+        // --- Methods ---
 
         private static string ResolveKeyFromType(Type ownerType)
         {
@@ -41,17 +69,17 @@ namespace Lilja.ScreenManagement
             return $"Screens/{typeName}";
         }
 
+        #endregion
+
         #region IViewHandle
+
+        // --- Properties ---
 
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
-        private GameObject[] _rootObjects = Array.Empty<GameObject>();
-
         /// <inheritdoc />
         public bool IsLoaded => _instance != null;
-
-        private GameObject _instance;
 
         /// <inheritdoc />
         public bool IsUnloadedTemporarily { get; set; }
@@ -59,7 +87,7 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
 
-        private readonly bool _unloadsAncestors;
+        // --- Methods ---
 
         /// <inheritdoc />
         public void Initialize(Type ownerType)
@@ -138,9 +166,6 @@ namespace Lilja.ScreenManagement
             _rootObjects = Array.Empty<GameObject>();
             return UniTask.CompletedTask;
         }
-
-        private readonly string _specifiedKey;
-        private string _resolvedKey;
 
         #endregion
     }

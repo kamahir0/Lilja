@@ -12,24 +12,20 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TResult">フローが最終的に返却する結果の型</typeparam>
     public abstract class GameFlow<TArgs, TResult> : GameScreenBase<TArgs>
     {
-        /// <summary>
-        /// ユーザー定義の画面遷移シーケンス（フロー）の実行ロジックを記述します。
-        /// </summary>
-        /// <param name="context">遷移スタックを操作する共通コンテキスト</param>
-        /// <param name="args">開始引数</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>フローが完了した時の返却タスク</returns>
-        protected abstract UniTask<TResult> RunAsync(
-            GameScreenContext context,
-            TArgs args,
-            CancellationToken cancellationToken
-        );
+        #region Public / Protected Members
+
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
 
         /// <inheritdoc />
         protected internal sealed override IViewHandle ViewHandle => ViewlessViewHandle.Instance;
 
         /// <inheritdoc />
         public sealed override bool IsViewless => true;
+
+        // --- Methods ---
 
         /// <summary>
         /// 指定された呼び出し元のコンテキストの下でこの論理フローを起動し、内部遷移を実行して結果が返るまで非同期待機します。
@@ -174,6 +170,19 @@ namespace Lilja.ScreenManagement
             }
         }
 
+        /// <summary>
+        /// ユーザー定義の画面遷移シーケンス（フロー）の実行ロジックを記述します。
+        /// </summary>
+        /// <param name="context">遷移スタックを操作する共通コンテキスト</param>
+        /// <param name="args">開始引数</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>フローが完了した時の返却タスク</returns>
+        protected abstract UniTask<TResult> RunAsync(
+            GameScreenContext context,
+            TArgs args,
+            CancellationToken cancellationToken
+        );
+
         /// <inheritdoc />
         protected override void OnDispose() { }
 
@@ -194,5 +203,7 @@ namespace Lilja.ScreenManagement
             ExitContext context,
             CancellationToken cancellationToken
         ) => UniTask.CompletedTask;
+
+        #endregion
     }
 }

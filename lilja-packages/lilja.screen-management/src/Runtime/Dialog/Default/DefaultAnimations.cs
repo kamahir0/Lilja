@@ -32,7 +32,7 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
-        public void OnViewUnloaded()
+        public void OnViewUnload()
         {
             _target = null;
         }
@@ -181,7 +181,7 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         /// <inheritdoc />
-        public void OnViewUnloaded()
+        public void OnViewUnload()
         {
             _target = null;
         }

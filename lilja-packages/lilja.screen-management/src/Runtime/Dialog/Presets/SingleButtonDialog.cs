@@ -9,6 +9,29 @@ namespace Lilja.ScreenManagement.Dialog
     /// </summary>
     public sealed class SingleButtonDialog : DefaultDialog<ValueTuple, ValueTuple>
     {
+        #region Public / Protected Members
+
+        // --- Fields ---
+        // (No public or protected fields)
+
+        // --- Properties ---
+        // (No public or protected properties)
+
+        // --- Constructors & Methods ---
+
+        /// <summary>
+        /// SingleButtonDialog の新しいインスタンスを初期化します。
+        /// </summary>
+        /// <param name="title">ダイアログのタイトル。</param>
+        /// <param name="body">ダイアログの本文。</param>
+        /// <param name="buttonText">ボタンのラベルテキスト（デフォルト: "OK"）。</param>
+        public SingleButtonDialog(string title, string body, string buttonText = "OK")
+        {
+            _title = title;
+            _body = body;
+            _buttonText = buttonText;
+        }
+
         /// <summary>
         /// 指定された呼び出し元のコンテキストの下でこの画面をロード・表示し、結果が確定するまで非同期で待機します。
         /// </summary>
@@ -17,7 +40,7 @@ namespace Lilja.ScreenManagement.Dialog
         /// <param name="body">ダイアログの本文。</param>
         /// <param name="buttonText">ボタンのテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>画面の結果を返す非同期タスク</returns>
+        /// <returns>画面の結果を返す non-static な非同期タスク</returns>
         public UniTask CallAsync(
             GameScreenContext callerContext,
             string title,
@@ -33,23 +56,6 @@ namespace Lilja.ScreenManagement.Dialog
             );
         }
 
-        private readonly string _title;
-        private readonly string _body;
-        private readonly string _buttonText;
-
-        /// <summary>
-        /// SingleButtonDialog の新しいインスタンスを初期化します。
-        /// </summary>
-        /// <param name="title">ダイアログのタイトル。</param>
-        /// <param name="body">ダイアログの本文。</param>
-        /// <param name="buttonText">ボタンのラベルテキスト（デフォルト: "OK"）。</param>
-        public SingleButtonDialog(string title, string body, string buttonText = "OK")
-        {
-            _title = title;
-            _body = body;
-            _buttonText = buttonText;
-        }
-
         /// <inheritdoc />
         protected override void Build()
         {
@@ -57,5 +63,16 @@ namespace Lilja.ScreenManagement.Dialog
             Content.AddText(_body);
             Frame.AddButton(_buttonText, () => Complete(default));
         }
+
+        #endregion
+
+        #region Internal / Private Members
+
+        // --- Fields ---
+        private readonly string _title;
+        private readonly string _body;
+        private readonly string _buttonText;
+
+        #endregion
     }
 }
