@@ -41,41 +41,24 @@ namespace Lilja.ScreenManagement
         IViewHandle GetViewHandle();
 
         /// <summary>
-        /// 画面を閉じます。
+        /// 画面への入場演出・処理を実行します。
         /// </summary>
-        /// <param name="nextScreenType">遷移先の画面の型</param>
-        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
+        /// <param name="context">入場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask CloseAsync(
-            Type nextScreenType,
-            ITransition overrideTransition,
+        UniTask ExecuteEnterAsync(
+            EnterContext context,
             CancellationToken cancellationToken
         );
 
         /// <summary>
-        /// 画面を再開します。
+        /// 画面からの退場演出・処理を実行します。
         /// </summary>
-        /// <param name="previousScreenType">遷移元の画面の型</param>
-        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
+        /// <param name="context">退場遷移のコンテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
-        UniTask ResumeAsync(
-            Type previousScreenType,
-            ITransition overrideTransition,
-            CancellationToken cancellationToken
-        );
-
-        /// <summary>
-        /// 画面を一時停止します。
-        /// </summary>
-        /// <param name="nextScreenType">遷移先の画面の型</param>
-        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
-        UniTask PauseAsync(
-            Type nextScreenType,
-            ITransition overrideTransition,
+        UniTask ExecuteExitAsync(
+            ExitContext context,
             CancellationToken cancellationToken
         );
 
@@ -104,19 +87,6 @@ namespace Lilja.ScreenManagement
         /// <returns>非同期タスク</returns>
         UniTask InitializeAsync(
             TArgs args,
-            CancellationToken cancellationToken
-        );
-
-        /// <summary>
-        /// 画面をオープンします。
-        /// </summary>
-        /// <param name="previousScreenType">遷移元の画面の型</param>
-        /// <param name="overrideTransition">一時差し替え用のトランジション</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>非同期タスク</returns>
-        UniTask OpenAsync(
-            Type previousScreenType,
-            ITransition overrideTransition,
             CancellationToken cancellationToken
         );
     }

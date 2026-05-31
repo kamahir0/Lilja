@@ -34,9 +34,12 @@ namespace Lilja.ScreenManagement
                 await Screen.PrepareAsync(screen, cancellationToken);
 
                 // オープン演出（フェードイン等）
-                await screen.OpenAsync(
+                await ExecuteEnterWithTransitionAsync(
+                    screen,
+                    EnterType.OnOpen,
                     previousScreenType,
                     transition,
+                    false,
                     cancellationToken
                 );
             }
@@ -48,6 +51,62 @@ namespace Lilja.ScreenManagement
                     await Screen.TeardownAsync(screen, CancellationToken.None);
                 }
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 画面への入場演出・処理を、トランジションハンドルとコンテキストを内部で自動生成し、フォールバック再生とあわせて非同期で実行します。
+        /// </summary>
+        /// <param name="screen">入場させる画面オブジェクト</param>
+        /// <param name="enterType">入場遷移の種類</param>
+        /// <param name="previousScreenType">遷移元（手前）の画面 of 型</param>
+        /// <param name="transition">使用するトランジション演出</param>
+        /// <param name="isReverse">トランジション演出を逆再生するかどうか</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>非同期タスク</returns>
+        internal static async UniTask ExecuteEnterWithTransitionAsync(
+            IGameScreenInternal screen,
+            EnterType enterType,
+            Type previousScreenType,
+            ITransition transition,
+            bool isReverse,
+            CancellationToken cancellationToken
+        )
+        {
+            var transitionHandle = new TransitionHandle(transition, isReverse);
+            var context = new EnterContext(enterType, previousScreenType, transitionHandle);
+            await screen.ExecuteEnterAsync(context, cancellationToken);
+            if (!context.Transition.IsPlayed && !screen.IsViewless)
+            {
+                await context.Transition.PlayAsync(cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// 画面からの退場演出・処理を、トランジションハンドルとコンテキストを内部で自動生成し、フォールバック再生とあわせて非同期で実行します。
+        /// </summary>
+        /// <param name="screen">退場させる画面オブジェクト</param>
+        /// <param name="exitType">退場遷移の種類</param>
+        /// <param name="nextScreenType">遷移先（次）の画面 of 型</param>
+        /// <param name="transition">使用するトランジション演出</param>
+        /// <param name="isReverse">トランジション演出を逆再生するかどうか</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>非同期タスク</returns>
+        internal static async UniTask ExecuteExitWithTransitionAsync(
+            IGameScreenInternal screen,
+            ExitType exitType,
+            Type nextScreenType,
+            ITransition transition,
+            bool isReverse,
+            CancellationToken cancellationToken
+        )
+        {
+            var transitionHandle = new TransitionHandle(transition, isReverse);
+            var context = new ExitContext(exitType, nextScreenType, transitionHandle);
+            await screen.ExecuteExitAsync(context, cancellationToken);
+            if (!context.Transition.IsPlayed && !screen.IsViewless)
+            {
+                await context.Transition.PlayAsync(cancellationToken);
             }
         }
     }

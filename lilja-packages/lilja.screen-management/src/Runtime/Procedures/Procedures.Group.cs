@@ -68,7 +68,14 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerScreen != null)
                     {
-                        await callerScreen.PauseAsync(initialScreenType, null, cancellationToken);
+                        await ExecuteExitWithTransitionAsync(
+                            callerScreen,
+                            ExitType.OnPause,
+                            initialScreenType,
+                            callerContext.Transition,
+                            true,
+                            cancellationToken
+                        );
                     }
 
                     // --- 初回表示フローの完全分離 ---
@@ -152,7 +159,14 @@ namespace Lilja.ScreenManagement
 
                     if (callerScreen != null)
                     {
-                        await callerScreen.ResumeAsync(previousScreenType, null, cancellationToken);
+                        await ExecuteEnterWithTransitionAsync(
+                            callerScreen,
+                            EnterType.OnResume,
+                            previousScreenType,
+                            callerContext.Transition,
+                            false,
+                            cancellationToken
+                        );
                     }
                 }
                 catch (Exception teardownException)
@@ -210,9 +224,13 @@ namespace Lilja.ScreenManagement
                             oldScreen.IsClosing = true;
                             try
                             {
-                                await oldScreen.CloseAsync(
+                                var transition = customTransition ?? context.Transition;
+                                await ExecuteExitWithTransitionAsync(
+                                    oldScreen,
+                                    ExitType.OnClose,
                                     nextScreenType,
-                                    customTransition,
+                                    transition,
+                                    true,
                                     cancellationToken
                                 );
                             }
@@ -306,9 +324,13 @@ namespace Lilja.ScreenManagement
 
                 try
                 {
-                    await frontScreen.CloseAsync(
+                    var transition = overrideTransition ?? context.Transition;
+                    await ExecuteExitWithTransitionAsync(
+                        frontScreen,
+                        ExitType.OnClose,
                         nextScreenType,
-                        overrideTransition,
+                        transition,
+                        true,
                         cancellationToken
                     );
                 }
@@ -401,7 +423,15 @@ namespace Lilja.ScreenManagement
                 screen.IsClosing = true;
                 try
                 {
-                    await screen.CloseAsync(nextScreenType, overrideTransition, cancellationToken);
+                    var transition = overrideTransition ?? context.Transition;
+                    await ExecuteExitWithTransitionAsync(
+                        screen,
+                        ExitType.OnClose,
+                        nextScreenType,
+                        transition,
+                        true,
+                        cancellationToken
+                    );
                 }
                 finally
                 {

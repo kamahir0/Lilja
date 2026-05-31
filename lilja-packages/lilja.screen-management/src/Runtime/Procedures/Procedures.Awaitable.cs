@@ -45,9 +45,13 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerScreen != null)
                     {
-                        await callerScreen.PauseAsync(
+                        var transition = calleeScreen.OverrideTransition ?? callerContext.Transition;
+                        await ExecuteExitWithTransitionAsync(
+                            callerScreen,
+                            ExitType.OnPause,
                             calleeScreen.GetType(),
-                            calleeScreen.OverrideTransition,
+                            transition,
+                            true,
                             cancellationToken
                         );
                     }
@@ -95,9 +99,13 @@ namespace Lilja.ScreenManagement
 
                         if (callerScreen != null)
                         {
-                            await callerScreen.ResumeAsync(
+                            var transition = calleeScreen.OverrideTransition ?? callerContext.Transition;
+                            await ExecuteEnterWithTransitionAsync(
+                                callerScreen,
+                                EnterType.OnResume,
                                 calleeScreen.GetType(),
-                                calleeScreen.OverrideTransition,
+                                transition,
+                                false,
                                 CancellationToken.None
                             );
                         }

@@ -236,99 +236,21 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        async UniTask IGameScreenInternal<TArgs>.OpenAsync(
-            Type previousScreenType,
-            ITransition overrideTransition,
+        async UniTask IGameScreenInternal.ExecuteEnterAsync(
+            EnterContext context,
             CancellationToken cancellationToken
         )
         {
-            await ExecuteEnterTransitionAsync(EnterType.OnOpen, previousScreenType, overrideTransition, cancellationToken);
+            await TriggerEnterAsync(context, cancellationToken);
         }
 
         /// <inheritdoc />
-        async UniTask IGameScreenInternal.CloseAsync(
-            Type nextScreenType,
-            ITransition overrideTransition,
+        async UniTask IGameScreenInternal.ExecuteExitAsync(
+            ExitContext context,
             CancellationToken cancellationToken
         )
         {
-            await ExecuteExitTransitionAsync(ExitType.OnClose, nextScreenType, overrideTransition, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        async UniTask IGameScreenInternal.ResumeAsync(
-            Type previousScreenType,
-            ITransition overrideTransition,
-            CancellationToken cancellationToken
-        )
-        {
-            await ExecuteEnterTransitionAsync(EnterType.OnResume, previousScreenType, overrideTransition, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        async UniTask IGameScreenInternal.PauseAsync(
-            Type nextScreenType,
-            ITransition overrideTransition,
-            CancellationToken cancellationToken
-        )
-        {
-            await ExecuteExitTransitionAsync(ExitType.OnPause, nextScreenType, overrideTransition, cancellationToken);
-        }
-
-        private async UniTask ExecuteEnterTransitionAsync(
-            EnterType enterType,
-            Type previousScreenType,
-            ITransition overrideTransition,
-            CancellationToken cancellationToken
-        )
-        {
-            var transition = overrideTransition ?? Context?.Transition;
-            var transitionHandle = new TransitionHandle(transition, false);
-            var enterContext = new EnterContext(
-                enterType,
-                previousScreenType,
-                transitionHandle
-            );
-
-            await TriggerEnterAsync(enterContext, cancellationToken);
-
-            if (!transitionHandle.IsPlayed)
-            {
-                if (IsViewless)
-                {
-                    // ビューレス画面の場合は暗転維持（フェードインスキップ）
-                }
-                else
-                {
-                    await transitionHandle.PlayAsync(cancellationToken);
-                }
-            }
-        }
-
-        private async UniTask ExecuteExitTransitionAsync(
-            ExitType exitType,
-            Type nextScreenType,
-            ITransition overrideTransition,
-            CancellationToken cancellationToken
-        )
-        {
-            var transition = overrideTransition ?? Context?.Transition;
-            var transitionHandle = new TransitionHandle(transition, true);
-            var exitContext = new ExitContext(exitType, nextScreenType, transitionHandle);
-
-            await TriggerExitAsync(exitContext, cancellationToken);
-
-            if (!transitionHandle.IsPlayed)
-            {
-                if (IsViewless)
-                {
-                    // ビューレス画面の場合はフェードアウト演出スキップ
-                }
-                else
-                {
-                    await transitionHandle.PlayAsync(cancellationToken);
-                }
-            }
+            await TriggerExitAsync(context, cancellationToken);
         }
 
         /// <inheritdoc />

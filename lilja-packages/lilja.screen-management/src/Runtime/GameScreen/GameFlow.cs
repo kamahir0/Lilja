@@ -63,7 +63,14 @@ namespace Lilja.ScreenManagement
                 // 2. 親画面を一時停止（Pause演出）
                 if (callerScreen != null)
                 {
-                    await callerScreen.PauseAsync(GetType(), null, cancellationToken);
+                    await Procedures.ExecuteExitWithTransitionAsync(
+                        callerScreen,
+                        ExitType.OnPause,
+                        GetType(),
+                        null,
+                        true,
+                        cancellationToken
+                    );
                 }
 
                 // 3. 自分（ヘッドレス画面）をスタックに追加して準備
@@ -72,9 +79,12 @@ namespace Lilja.ScreenManagement
                 await Procedures.Screen.PrepareAsync(this, cancellationToken);
 
                 // 4. オープン処理の実行（ビューレスのため演出はスキップされる）
-                await ((IGameScreenInternal<TArgs>)this).OpenAsync(
+                await Procedures.ExecuteEnterWithTransitionAsync(
+                    (IGameScreenInternal)this,
+                    EnterType.OnOpen,
                     callerScreen?.GetType(),
                     null,
+                    false,
                     cancellationToken
                 );
 
@@ -142,7 +152,14 @@ namespace Lilja.ScreenManagement
                 {
                     try
                     {
-                        await callerScreen.ResumeAsync(GetType(), null, CancellationToken.None);
+                        await Procedures.ExecuteEnterWithTransitionAsync(
+                            callerScreen,
+                            EnterType.OnResume,
+                            GetType(),
+                            null,
+                            false,
+                            CancellationToken.None
+                        );
                     }
                     catch (Exception resumeEx)
                     {
