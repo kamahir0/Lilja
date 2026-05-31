@@ -43,6 +43,7 @@ namespace Lilja.ScreenManagement
             _completionSource?.TrySetCanceled();
         }
 
+        private bool _called;
         private UniTaskCompletionSource<TResult> _completionSource = new();
 
         /// <summary>
@@ -63,9 +64,20 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken = default
         )
         {
-            return callerContext == null
-                ? throw new ArgumentNullException(nameof(callerContext))
-                : Procedures.Awaitable.CallAsync(callerContext, this, args, cancellationToken);
+            if (callerContext == null)
+            {
+                throw new ArgumentNullException(nameof(callerContext));
+            }
+
+            if (_called)
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] この AwaitableGameScreen '{GetType().Name}' は既に呼び出されています。画面は使い捨て（再利用不可）です。"
+                );
+            }
+            _called = true;
+
+            return Procedures.Awaitable.CallAsync(callerContext, this, args, cancellationToken);
         }
 
         /// <inheritdoc />

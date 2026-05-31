@@ -83,13 +83,6 @@ namespace Lilja.ScreenManagement
         /// </summary>
         internal UniTaskCompletionSource CompletionSource { get; private set; } = new();
 
-        /// <summary>
-        /// 寿命待機用のCompletionSourceを再生成し、グループの再利用を可能にします。
-        /// </summary>
-        internal void ResetCompletionSource()
-        {
-            CompletionSource = new UniTaskCompletionSource();
-        }
 
         /// <summary>
         /// 内部的な初期設定を実行します。
@@ -141,7 +134,14 @@ namespace Lilja.ScreenManagement
                 throw new ArgumentNullException(nameof(callerContext));
             }
 
-            ResetCompletionSource();
+            if (_called)
+            {
+                throw new InvalidOperationException(
+                    $"[Lilja.ScreenManagement] この GameScreenGroup '{GetType().Name}' は既に呼び出されています。画面グループは使い捨て（再利用不可）です。"
+                );
+            }
+            _called = true;
+
 
             return Procedures.Group.CallAsync(
                 callerContext,
@@ -261,6 +261,7 @@ namespace Lilja.ScreenManagement
             }
         }
 
+        private bool _called;
         private bool _configured;
         private readonly Dictionary<string, Func<object>> _factories = new();
         private readonly Dictionary<string, Type> _types = new();
