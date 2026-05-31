@@ -57,6 +57,9 @@ namespace Lilja.ScreenManagement
                     callerScreen = list[^1];
                 }
 
+                // 呼び出し元の画面レイヤーを基準に、グループのレイヤーをインクリメント初期化する
+                calleeGroup.Layer = callerScreen != null ? callerScreen.Layer + 1 : 0;
+
                 ExceptionDispatchInfo signalException = null;
                 var initialScreenType = calleeGroup.GetScreenType(initialScreenKey);
                 var insertIndex = -1;
