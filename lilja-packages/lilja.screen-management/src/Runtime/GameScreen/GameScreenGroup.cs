@@ -43,6 +43,21 @@ namespace Lilja.ScreenManagement
         > OverrideTransitionMap { get; } = new();
 
         /// <summary>
+        /// 指定された型がこの画面グループの管理対象（登録済み画面）かどうかを判定します。
+        /// </summary>
+        /// <param name="screenType">判定対象の画面の型。</param>
+        /// <returns>管理対象の画面であれば true、それ以外は false。</returns>
+        public bool ContainsScreenType(Type screenType)
+        {
+            if (screenType == null)
+            {
+                return false;
+            }
+            EnsureConfiguration();
+            return _types.ContainsValue(screenType);
+        }
+
+        /// <summary>
         /// 指定されたキー名が登録されているか判定します。
         /// </summary>
         internal bool Contains(string key)
@@ -83,11 +98,10 @@ namespace Lilja.ScreenManagement
         /// </summary>
         internal UniTaskCompletionSource CompletionSource { get; private set; } = new();
 
-
         /// <summary>
         /// 内部的な初期設定を実行します。
         /// </summary>
-        internal void ConfigureInternal()
+        internal void EnsureConfiguration()
         {
             if (_configured)
             {
@@ -141,7 +155,6 @@ namespace Lilja.ScreenManagement
                 );
             }
             _called = true;
-
 
             return Procedures.Group.CallAsync(
                 callerContext,
@@ -276,21 +289,23 @@ namespace Lilja.ScreenManagement
 
             // 引数の型を動的に解決（nullの場合はValueTupleとして扱う）
             var argType = prevArgs != null ? prevArgs.GetType() : typeof(ValueTuple);
-            
+
             // 型パラメータ付きの SwitchAsyncInternal を動的に構築して実行
-            var method = typeof(GameScreenGroup)
-                .GetMethod(
-                    nameof(SwitchAsyncInternal),
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
-                );
+            var method = typeof(GameScreenGroup).GetMethod(
+                nameof(SwitchAsyncInternal),
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+            );
 
             if (method == null)
             {
-                throw new InvalidOperationException("[Lilja.ScreenManagement] 内部切り替えメソッドの解決に失敗しました。");
+                throw new InvalidOperationException(
+                    "[Lilja.ScreenManagement] 内部切り替えメソッドの解決に失敗しました。"
+                );
             }
 
             var genericMethod = method.MakeGenericMethod(argType);
-            await (UniTask)genericMethod.Invoke(this, new[] { prevKey, prevArgs, cancellationToken });
+            await (UniTask)
+                genericMethod.Invoke(this, new[] { prevKey, prevArgs, cancellationToken });
         }
 
         /// <summary>

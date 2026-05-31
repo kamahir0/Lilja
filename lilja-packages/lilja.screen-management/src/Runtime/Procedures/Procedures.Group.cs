@@ -48,7 +48,7 @@ namespace Lilja.ScreenManagement
             {
                 // グループ側のコンテキストとして、呼び出し元のコンテキスト参照を共有
                 calleeGroup.Context = callerContext;
-                calleeGroup.ConfigureInternal();
+                calleeGroup.EnsureConfiguration();
 
                 IGameScreenInternal callerScreen = null;
                 var list = callerContext.ActiveScreensInternal;
@@ -84,7 +84,12 @@ namespace Lilja.ScreenManagement
 
                     // 初期表示時のカスタムトランジション検索
                     ITransition customTransition = null;
-                    if (calleeGroup.OverrideTransitionMap.TryGetValue((null, initialScreenType), out var t))
+                    if (
+                        calleeGroup.OverrideTransitionMap.TryGetValue(
+                            (null, initialScreenType),
+                            out var t
+                        )
+                    )
                     {
                         customTransition = t;
                     }
@@ -187,7 +192,12 @@ namespace Lilja.ScreenManagement
                     var list = context.ActiveScreensInternal;
 
                     var previousScreenType = list.Count > 0 ? list[^1].GetType() : null;
-                    ITransition customTransition = group.OverrideTransitionMap.TryGetValue((previousScreenType, nextScreenType), out var t) ? t : null;
+                    ITransition customTransition = group.OverrideTransitionMap.TryGetValue(
+                        (previousScreenType, nextScreenType),
+                        out var t
+                    )
+                        ? t
+                        : null;
                     TempSceneUtility.TempSceneScope tempSceneScope = default;
 
                     try
