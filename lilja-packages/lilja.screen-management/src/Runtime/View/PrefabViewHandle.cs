@@ -17,12 +17,6 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public static PrefabViewHandle Default => new(null);
 
-        private readonly string _specifiedKey;
-        private readonly bool _unloadsAncestors;
-        private string _resolvedKey;
-        private GameObject _instance;
-        private GameObject[] _rootObjects = Array.Empty<GameObject>();
-
         /// <summary>
         /// 新しい <see cref="PrefabViewHandle"/> インスタンスを初期化します。
         /// </summary>
@@ -52,14 +46,20 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
+        private GameObject[] _rootObjects = Array.Empty<GameObject>();
+
         /// <inheritdoc />
         public bool IsLoaded => _instance != null;
+
+        private GameObject _instance;
 
         /// <inheritdoc />
         public bool IsUnloadedTemporarily { get; set; }
 
         /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
+
+        private readonly bool _unloadsAncestors;
 
         /// <inheritdoc />
         public void Initialize(Type ownerType)
@@ -138,6 +138,9 @@ namespace Lilja.ScreenManagement
             _rootObjects = Array.Empty<GameObject>();
             return UniTask.CompletedTask;
         }
+
+        private readonly string _specifiedKey;
+        private string _resolvedKey;
 
         #endregion
     }

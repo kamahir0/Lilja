@@ -10,15 +10,11 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public class GameScreenGroup
     {
-
         /// <summary>
         /// このグループ内の画面遷移設定を行います。
         /// </summary>
         /// <param name="builder">登録用ビルダー</param>
         protected virtual void Configure(IGameScreenGroupBuilder builder) { }
-
-
-        private bool _configured;
 
         /// <summary>
         /// 新しい <see cref="GameScreenGroup"/> インスタンスを初期化します。
@@ -37,9 +33,6 @@ namespace Lilja.ScreenManagement
         /// このグループが使用するソート順などの描画レイヤー。
         /// </summary>
         public int Layer { get; set; }
-
-        private readonly Dictionary<string, Func<object>> _factories = new();
-        private readonly Dictionary<string, Type> _types = new();
 
         /// <summary>
         /// 画面遷移元と遷移先の組み合わせに応じた一時差し替えトランジションマップ。
@@ -267,5 +260,9 @@ namespace Lilja.ScreenManagement
                 _configure.Invoke(builder);
             }
         }
+
+        private bool _configured;
+        private readonly Dictionary<string, Func<object>> _factories = new();
+        private readonly Dictionary<string, Type> _types = new();
     }
 }

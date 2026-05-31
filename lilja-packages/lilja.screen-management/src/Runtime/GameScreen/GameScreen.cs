@@ -8,7 +8,6 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TArgs">初期化引数の型</typeparam>
     public abstract class GameScreen<TArgs> : GameScreenBase<TArgs>
     {
-
         /// <summary>
         /// この画面を所有している実行中の画面グループを取得します。
         /// </summary>
@@ -21,7 +20,6 @@ namespace Lilja.ScreenManagement
                 );
             internal set => _group = value;
         }
-
 
         private GameScreenGroup _group;
 

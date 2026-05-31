@@ -15,9 +15,7 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public static readonly ViewlessViewHandle Instance = new();
 
-        private ViewlessViewHandle()
-        {
-        }
+        private ViewlessViewHandle() { }
 
         #region IViewHandle
 
@@ -34,9 +32,7 @@ namespace Lilja.ScreenManagement
         public bool UnloadsAncestors => false;
 
         /// <inheritdoc />
-        public void Initialize(Type ownerType)
-        {
-        }
+        public void Initialize(Type ownerType) { }
 
         /// <inheritdoc />
         public UniTask PreloadAsync(GameScreenContext context, CancellationToken cancellationToken)

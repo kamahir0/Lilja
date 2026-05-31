@@ -20,7 +20,9 @@ namespace Lilja.ScreenManagement
         /// </summary>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>有効化された "GameScreens" シーン</returns>
-        public static async UniTask<Scene> GetOrCreateSceneAsync(CancellationToken cancellationToken)
+        public static async UniTask<Scene> GetOrCreateSceneAsync(
+            CancellationToken cancellationToken
+        )
         {
             // すでにキャッシュが有効であれば、ロックを取得せずに即座に返す（ファストパス）
             if (

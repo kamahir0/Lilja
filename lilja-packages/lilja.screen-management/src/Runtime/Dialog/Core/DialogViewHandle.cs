@@ -13,13 +13,6 @@ namespace Lilja.ScreenManagement.Dialog
     /// </summary>
     public sealed class DialogViewHandle : IViewHandle
     {
-        private readonly string _frameKey;
-        private readonly string _contentKey;
-        private readonly Func<GameObject> _fallbackFrameFactory;
-        private readonly Func<GameObject> _fallbackContentFactory;
-
-        private GameObject _root;
-
         /// <summary>
         /// 背景イメージを使用するかどうか。
         /// </summary>
@@ -37,13 +30,16 @@ namespace Lilja.ScreenManagement.Dialog
 
         #region IViewHandle
 
-        private GameObject[] _rootObjects = Array.Empty<GameObject>();
 
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
+        private GameObject[] _rootObjects = Array.Empty<GameObject>();
+
         /// <inheritdoc />
         public bool IsLoaded => _root != null;
+
+        private GameObject _root;
 
         /// <inheritdoc />
         public bool IsUnloadedTemporarily { get; set; }
@@ -301,5 +297,10 @@ namespace Lilja.ScreenManagement.Dialog
                 content.SetParent(frame, false);
             }
         }
+
+        private readonly string _frameKey;
+        private readonly string _contentKey;
+        private readonly Func<GameObject> _fallbackFrameFactory;
+        private readonly Func<GameObject> _fallbackContentFactory;
     }
 }

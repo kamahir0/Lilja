@@ -9,8 +9,6 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public sealed class GameScreenContext
     {
-        private readonly List<IGameScreenInternal> _activeScreens = new();
-
         internal GameScreenContext()
         {
             Gate = new SemaphoreSlim(1, 1);
@@ -49,6 +47,8 @@ namespace Lilja.ScreenManagement
         /// 内部（Procedures等）での遷移・破棄操作に使用する実体リスト。
         /// </summary>
         internal List<IGameScreenInternal> ActiveScreensInternal => _activeScreens;
+
+        private readonly List<IGameScreenInternal> _activeScreens = new();
 
         /// <summary>
         /// 多重遷移を防ぐための非同期セマフォ。

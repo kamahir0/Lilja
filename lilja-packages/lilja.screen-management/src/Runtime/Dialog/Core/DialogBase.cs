@@ -17,7 +17,6 @@ namespace Lilja.ScreenManagement.Dialog
         where TFrame : MonoBehaviour, IDialogFrame
         where TContent : MonoBehaviour
     {
-
         /// <summary>
         /// ダイアログの「枠」コンポーネントを取得します。
         /// </summary>
@@ -51,11 +50,6 @@ namespace Lilja.ScreenManagement.Dialog
 
         /// <summary> プレハブが見つからなかった場合のフォールバック用コンテンツ生成ファクトリ </summary>
         protected virtual GameObject CreateFallbackContent() => null;
-
-
-        private DialogViewHandle _viewHandle;
-        private IDialogAnimation _cachedAnimation;
-        private IDialogStackAnimation _cachedStackAnimation;
 
         /// <summary>
         /// フレームの Resources/Addressable アセットキーを取得します。
@@ -275,5 +269,9 @@ namespace Lilja.ScreenManagement.Dialog
 
             await base.TriggerExitAsync(context, cancellationToken);
         }
+
+        private DialogViewHandle _viewHandle;
+        private IDialogAnimation _cachedAnimation;
+        private IDialogStackAnimation _cachedStackAnimation;
     }
 }

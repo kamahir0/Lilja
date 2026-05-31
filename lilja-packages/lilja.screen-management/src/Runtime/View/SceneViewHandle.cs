@@ -16,13 +16,6 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public static SceneViewHandle Default => new(null);
 
-        private readonly string _specifiedSceneName;
-        private readonly bool _unloadsAncestors;
-        private string _resolvedSceneName;
-        private Scene _loadedScene;
-        private ISceneLoader _cachedLoader;
-        private GameObject[] _rootObjects = Array.Empty<GameObject>();
-
         /// <summary>
         /// 新しい <see cref="SceneViewHandle"/> インスタンスを初期化します。
         /// </summary>
@@ -52,14 +45,20 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
 
+        private GameObject[] _rootObjects = Array.Empty<GameObject>();
+
         /// <inheritdoc />
         public bool IsLoaded => _loadedScene.IsValid() && _loadedScene.isLoaded;
+
+        private Scene _loadedScene;
 
         /// <inheritdoc />
         public bool IsUnloadedTemporarily { get; set; }
 
         /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
+
+        private readonly bool _unloadsAncestors;
 
         /// <inheritdoc />
         public void Initialize(Type ownerType)
@@ -136,6 +135,10 @@ namespace Lilja.ScreenManagement
                 _rootObjects = Array.Empty<GameObject>();
             }
         }
+
+        private readonly string _specifiedSceneName;
+        private string _resolvedSceneName;
+        private ISceneLoader _cachedLoader;
 
         #endregion
     }

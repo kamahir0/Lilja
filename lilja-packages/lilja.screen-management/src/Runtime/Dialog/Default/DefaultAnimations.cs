@@ -25,8 +25,6 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary> 非表示時のイージング </summary>
         public AnimationCurve HideEase { get; set; } = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-        private RectTransform _target;
-
         /// <inheritdoc />
         public void OnViewLoaded(RectTransform frame)
         {
@@ -147,6 +145,8 @@ namespace Lilja.ScreenManagement.Dialog
             target.anchoredPosition = endPos;
             canvasGroup.alpha = endAlpha;
         }
+
+        private RectTransform _target;
     }
 
     /// <summary>
@@ -168,10 +168,6 @@ namespace Lilja.ScreenManagement.Dialog
 
         /// <summary> 復帰時のイージング </summary>
         public AnimationCurve PopEase { get; set; } = CreateEaseOutCurve();
-
-        private RectTransform _target;
-        private bool _isPushed;
-        private Vector2 _pushedPosition;
 
         /// <inheritdoc />
         public void OnViewLoaded(RectTransform frame)
@@ -280,5 +276,9 @@ namespace Lilja.ScreenManagement.Dialog
         {
             return new AnimationCurve(new Keyframe(0f, 0f, 0f, 2f), new Keyframe(1f, 1f, 0f, 0f));
         }
+
+        private RectTransform _target;
+        private bool _isPushed;
+        private Vector2 _pushedPosition;
     }
 }

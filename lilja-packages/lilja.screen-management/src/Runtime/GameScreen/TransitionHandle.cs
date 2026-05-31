@@ -30,12 +30,10 @@ namespace Lilja.ScreenManagement
     /// </summary>
     internal sealed class TransitionHandle : ITransitionHandle
     {
-        private readonly ITransition _transition;
-        private readonly bool _isOut;
-        private int _played;
-
         /// <inheritdoc />
         public bool IsPlayed => _played != 0;
+
+        private int _played;
 
         /// <summary>
         /// 新しい <see cref="TransitionHandle"/> インスタンスを初期化します。
@@ -70,5 +68,8 @@ namespace Lilja.ScreenManagement
                 await _transition.InAsync(cancellationToken);
             }
         }
+
+        private readonly ITransition _transition;
+        private readonly bool _isOut;
     }
 }

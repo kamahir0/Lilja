@@ -10,7 +10,8 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public sealed class InvalidViewInjectionTypeException : Exception
     {
-        public InvalidViewInjectionTypeException(string message) : base(message) { }
+        public InvalidViewInjectionTypeException(string message)
+            : base(message) { }
     }
 
     /// <summary>
@@ -86,7 +87,10 @@ namespace Lilja.ScreenManagement
                         }
                         catch (Exception)
                         {
-                            var backingField = type.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+                            var backingField = type.GetField(
+                                $"<{property.Name}>k__BackingField",
+                                BindingFlags.Instance | BindingFlags.NonPublic
+                            );
                             if (backingField != null)
                             {
                                 backingField.SetValue(target, component);
@@ -137,7 +141,10 @@ namespace Lilja.ScreenManagement
                 }
                 catch (Exception)
                 {
-                    var backingField = type.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+                    var backingField = type.GetField(
+                        $"<{property.Name}>k__BackingField",
+                        BindingFlags.Instance | BindingFlags.NonPublic
+                    );
                     if (backingField != null)
                     {
                         backingField.SetValue(target, null);
@@ -172,7 +179,10 @@ namespace Lilja.ScreenManagement
                         if (field.GetCustomAttribute<ViewAttribute>() != null)
                         {
                             // バリデーション：型が Component またはインターフェースでなければならない
-                            if (!typeof(Component).IsAssignableFrom(field.FieldType) && !field.FieldType.IsInterface)
+                            if (
+                                !typeof(Component).IsAssignableFrom(field.FieldType)
+                                && !field.FieldType.IsInterface
+                            )
                             {
                                 throw new InvalidViewInjectionTypeException(
                                     $"[Lilja.ScreenManagement] [View] 注入対象フィールド '{field.Name}' (型: '{field.FieldType.FullName}') の型指定が不正です。[View] 属性は UnityEngine.Component を継承したクラス、またはインターフェース型に対してのみ使用できます。"
@@ -225,7 +235,10 @@ namespace Lilja.ScreenManagement
                             if (property.CanWrite)
                             {
                                 // バリデーション：型が Component またはインターフェースでなければならない
-                                if (!typeof(Component).IsAssignableFrom(property.PropertyType) && !property.PropertyType.IsInterface)
+                                if (
+                                    !typeof(Component).IsAssignableFrom(property.PropertyType)
+                                    && !property.PropertyType.IsInterface
+                                )
                                 {
                                     throw new InvalidViewInjectionTypeException(
                                         $"[Lilja.ScreenManagement] [View] 注入対象プロパティ '{property.Name}' (型: '{property.PropertyType.FullName}') の型指定が不正です。[View] 属性は UnityEngine.Component を継承したクラス、またはインターフェース型に対してのみ使用できます。"
