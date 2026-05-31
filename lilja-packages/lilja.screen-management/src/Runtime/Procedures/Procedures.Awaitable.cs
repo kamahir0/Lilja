@@ -46,7 +46,7 @@ namespace Lilja.ScreenManagement
                     if (callerScreen != null)
                     {
                         var transition = calleeScreen.OverrideTransition ?? callerContext.Transition;
-                        await ExecuteExitWithTransitionAsync(
+                        await Screen.ExecuteExitWithTransitionAsync(
                             callerScreen,
                             ExitType.OnPause,
                             calleeScreen.GetType(),
@@ -56,7 +56,7 @@ namespace Lilja.ScreenManagement
                         );
                     }
 
-                    await PrepareAndOpenAsync(
+                    await Screen.PrepareAndOpenAsync(
                         callerContext,
                         calleeScreen,
                         args,
@@ -100,7 +100,7 @@ namespace Lilja.ScreenManagement
                         if (callerScreen != null)
                         {
                             var transition = calleeScreen.OverrideTransition ?? callerContext.Transition;
-                            await ExecuteEnterWithTransitionAsync(
+                            await Screen.ExecuteEnterWithTransitionAsync(
                                 callerScreen,
                                 EnterType.OnResume,
                                 calleeScreen.GetType(),

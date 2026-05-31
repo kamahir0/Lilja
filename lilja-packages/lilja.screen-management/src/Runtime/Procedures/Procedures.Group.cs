@@ -68,7 +68,7 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerScreen != null)
                     {
-                        await ExecuteExitWithTransitionAsync(
+                        await Screen.ExecuteExitWithTransitionAsync(
                             callerScreen,
                             ExitType.OnPause,
                             initialScreenType,
@@ -101,7 +101,7 @@ namespace Lilja.ScreenManagement
                         customTransition = t;
                     }
 
-                    await PrepareAndOpenAsync(
+                    await Screen.PrepareAndOpenAsync(
                         callerContext,
                         initialScreen,
                         initialScreenArgs,
@@ -159,7 +159,7 @@ namespace Lilja.ScreenManagement
 
                     if (callerScreen != null)
                     {
-                        await ExecuteEnterWithTransitionAsync(
+                        await Screen.ExecuteEnterWithTransitionAsync(
                             callerScreen,
                             EnterType.OnResume,
                             previousScreenType,
@@ -225,7 +225,7 @@ namespace Lilja.ScreenManagement
                             try
                             {
                                 var transition = customTransition ?? context.Transition;
-                                await ExecuteExitWithTransitionAsync(
+                                await Screen.ExecuteExitWithTransitionAsync(
                                     oldScreen,
                                     ExitType.OnClose,
                                     nextScreenType,
@@ -264,7 +264,7 @@ namespace Lilja.ScreenManagement
 
                         try
                         {
-                            await PrepareAndOpenAsync(
+                            await Screen.PrepareAndOpenAsync(
                                 context,
                                 nextScreen,
                                 args,
@@ -325,7 +325,7 @@ namespace Lilja.ScreenManagement
                 try
                 {
                     var transition = overrideTransition ?? context.Transition;
-                    await ExecuteExitWithTransitionAsync(
+                    await Screen.ExecuteExitWithTransitionAsync(
                         frontScreen,
                         ExitType.OnClose,
                         nextScreenType,
@@ -424,7 +424,7 @@ namespace Lilja.ScreenManagement
                 try
                 {
                     var transition = overrideTransition ?? context.Transition;
-                    await ExecuteExitWithTransitionAsync(
+                    await Screen.ExecuteExitWithTransitionAsync(
                         screen,
                         ExitType.OnClose,
                         nextScreenType,

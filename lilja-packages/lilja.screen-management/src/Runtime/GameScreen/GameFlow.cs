@@ -63,7 +63,7 @@ namespace Lilja.ScreenManagement
                 // 2. 親画面を一時停止（Pause演出）
                 if (callerScreen != null)
                 {
-                    await Procedures.ExecuteExitWithTransitionAsync(
+                    await Procedures.Screen.ExecuteExitWithTransitionAsync(
                         callerScreen,
                         ExitType.OnPause,
                         GetType(),
@@ -79,7 +79,7 @@ namespace Lilja.ScreenManagement
                 await Procedures.Screen.PrepareAsync(this, cancellationToken);
 
                 // 4. オープン処理の実行（ビューレスのため演出はスキップされる）
-                await Procedures.ExecuteEnterWithTransitionAsync(
+                await Procedures.Screen.ExecuteEnterWithTransitionAsync(
                     (IGameScreenInternal)this,
                     EnterType.OnOpen,
                     callerScreen?.GetType(),
@@ -152,7 +152,7 @@ namespace Lilja.ScreenManagement
                 {
                     try
                     {
-                        await Procedures.ExecuteEnterWithTransitionAsync(
+                        await Procedures.Screen.ExecuteEnterWithTransitionAsync(
                             callerScreen,
                             EnterType.OnResume,
                             GetType(),
