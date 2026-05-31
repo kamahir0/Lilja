@@ -33,7 +33,6 @@ namespace Lilja.ScreenManagement
         public sealed override bool IsViewless => true;
 
 
-        private UniTaskCompletionSource<TResult> _completionSource = new();
 
         /// <summary>
         /// 指定された呼び出し元のコンテキストの下でこの論理フローを起動し、内部遷移を実行して結果が返るまで非同期待機します。
@@ -84,12 +83,10 @@ namespace Lilja.ScreenManagement
 
                 // 5. ユーザーの定義したフローシナリオを呼び出し
                 var result = await RunAsync(callerContext, args, cancellationToken);
-                _completionSource?.TrySetResult(result);
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _completionSource?.TrySetException(ex);
 
                 // 6. ロールバック保護：例外・キャンセル発生時、開始後に積み上げられた画面を逆順で強制物理破棄してクリーンアップ
                 while (list.Count > startIndex)
@@ -167,8 +164,6 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         protected override void OnDispose()
         {
-            _completionSource?.TrySetCanceled();
-            _completionSource = null;
         }
 
         /// <inheritdoc />

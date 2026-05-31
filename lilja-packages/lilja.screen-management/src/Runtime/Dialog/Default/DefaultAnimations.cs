@@ -134,7 +134,7 @@ namespace Lilja.ScreenManagement.Dialog
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 var t = Mathf.Clamp01(elapsed / duration);
                 var easedT = curve.Evaluate(t);
 
@@ -265,7 +265,7 @@ namespace Lilja.ScreenManagement.Dialog
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 var t = Mathf.Clamp01(elapsed / duration);
                 var easedT = curve.Evaluate(t);
                 target.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, easedT);

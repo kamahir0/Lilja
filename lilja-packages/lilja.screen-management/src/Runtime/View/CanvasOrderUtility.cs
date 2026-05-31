@@ -52,6 +52,7 @@ namespace Lilja.ScreenManagement
                     );
                     continue;
                 }
+                canvas.overrideSorting = true;
                 canvas.sortingOrder = baseOrder + i;
             }
         }

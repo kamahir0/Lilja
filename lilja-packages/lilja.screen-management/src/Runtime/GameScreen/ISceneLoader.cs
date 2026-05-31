@@ -47,7 +47,7 @@ namespace Lilja.ScreenManagement
                 );
             }
             await op.WithCancellation(cancellationToken);
-            return SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
+            return SceneManager.GetSceneByName(sceneName);
         }
 
         /// <inheritdoc />

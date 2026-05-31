@@ -80,7 +80,22 @@ namespace Lilja.ScreenManagement
                     component = root.GetComponentInChildren(property.PropertyType, true);
                     if (component != null)
                     {
-                        property.SetValue(target, component, null);
+                        try
+                        {
+                            property.SetValue(target, component, null);
+                        }
+                        catch (Exception)
+                        {
+                            var backingField = type.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+                            if (backingField != null)
+                            {
+                                backingField.SetValue(target, component);
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
                         break;
                     }
                 }
@@ -116,7 +131,18 @@ namespace Lilja.ScreenManagement
             var properties = GetProperties(type);
             foreach (var property in properties)
             {
-                property.SetValue(target, null, null);
+                try
+                {
+                    property.SetValue(target, null, null);
+                }
+                catch (Exception)
+                {
+                    var backingField = type.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+                    if (backingField != null)
+                    {
+                        backingField.SetValue(target, null);
+                    }
+                }
             }
         }
 
@@ -150,6 +176,12 @@ namespace Lilja.ScreenManagement
                             {
                                 throw new InvalidViewInjectionTypeException(
                                     $"[Lilja.ScreenManagement] [View] 注入対象フィールド '{field.Name}' (型: '{field.FieldType.FullName}') の型指定が不正です。[View] 属性は UnityEngine.Component を継承したクラス、またはインターフェース型に対してのみ使用できます。"
+                                );
+                            }
+                            if (field.IsInitOnly || field.IsLiteral)
+                            {
+                                throw new InvalidViewInjectionTypeException(
+                                    $"[Lilja.ScreenManagement] [View] 注入対象フィールド '{field.Name}' は readonly または const です。[View] 属性による書き込みはできません。"
                                 );
                             }
                             list.Add(field);

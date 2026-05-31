@@ -206,11 +206,6 @@ namespace Lilja.ScreenManagement
         )
         {
             var handle = ((IGameScreenInternal)this).GetViewHandle();
-            if (handle == null)
-            {
-                return;
-            }
-
             Context = callerContext;
 
             handle.Initialize(GetType());
