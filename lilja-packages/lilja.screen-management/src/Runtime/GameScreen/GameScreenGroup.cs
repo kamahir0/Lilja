@@ -88,11 +88,6 @@ namespace Lilja.ScreenManagement
         }
 
         /// <summary>
-        /// 多重画面遷移を防ぐための非同期セマフォ。
-        /// </summary>
-        internal SemaphoreSlim Gate { get; } = new(1, 1);
-
-        /// <summary>
         /// グループの生存期間を待機するための非同期ソース。
         /// </summary>
         internal UniTaskCompletionSource CompletionSource { get; } = new();
