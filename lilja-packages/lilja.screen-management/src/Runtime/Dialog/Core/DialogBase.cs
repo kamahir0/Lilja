@@ -17,7 +17,6 @@ namespace Lilja.ScreenManagement.Dialog
         where TFrame : MonoBehaviour, IDialogFrame
         where TContent : MonoBehaviour
     {
-        #region For Implementers
 
         /// <summary>
         /// ダイアログの「枠」コンポーネントを取得します。
@@ -53,7 +52,6 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary> プレハブが見つからなかった場合のフォールバック用コンテンツ生成ファクトリ </summary>
         protected virtual GameObject CreateFallbackContent() => null;
 
-        #endregion
 
         private DialogViewHandle _viewHandle;
         private IDialogAnimation _cachedAnimation;

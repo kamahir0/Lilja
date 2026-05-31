@@ -10,7 +10,6 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public class GameScreenGroup
     {
-        #region For Implementers
 
         /// <summary>
         /// このグループ内の画面遷移設定を行います。
@@ -18,7 +17,6 @@ namespace Lilja.ScreenManagement
         /// <param name="builder">登録用ビルダー</param>
         protected virtual void Configure(IGameScreenGroupBuilder builder) { }
 
-        #endregion
 
         private bool _configured;
 

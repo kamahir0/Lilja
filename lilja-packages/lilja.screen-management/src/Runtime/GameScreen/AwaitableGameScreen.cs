@@ -11,7 +11,6 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TResult">返却する結果の型</typeparam>
     public abstract class AwaitableGameScreen<TArgs, TResult> : GameScreenBase<TArgs>
     {
-        #region For Implementers
 
         /// <summary>
         /// この画面がコールされた際の一時差し替えトランジション。
@@ -45,7 +44,6 @@ namespace Lilja.ScreenManagement
             _completionSource?.TrySetCanceled();
         }
 
-        #endregion
 
         private UniTaskCompletionSource<TResult> _completionSource = new();
 

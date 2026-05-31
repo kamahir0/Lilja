@@ -13,7 +13,6 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TArgs">画面の初期化に受け取る引数の型</typeparam>
     public abstract class GameScreenBase<TArgs> : IGameScreenInternal<TArgs>
     {
-        #region For Implementers
 
         /// <summary>
         /// この画面の表示と演出を担うビューハンドル。
@@ -98,9 +97,7 @@ namespace Lilja.ScreenManagement
         public CompositeDisposable ViewLifetime { get; } = new();
 #endif
 
-        #endregion
 
-        #region Trigger Life Cycle
 
         /// <summary>
         /// システム用の画面初期化フック。デフォルトではユーザーの <see cref="InitializeAsync"/> を呼び出します。
@@ -151,7 +148,6 @@ namespace Lilja.ScreenManagement
             OnViewUnloaded();
         }
 
-        #endregion
 
         private bool _disposed;
         private IViewHandle _cachedViewHandle;

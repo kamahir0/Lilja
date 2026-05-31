@@ -12,7 +12,6 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TResult">フローが最終的に返却する結果の型</typeparam>
     public abstract class GameFlow<TArgs, TResult> : GameScreenBase<TArgs>
     {
-        #region For Implementers
 
         /// <summary>
         /// ユーザー定義の画面遷移シーケンス（フロー）の実行ロジックを記述します。
@@ -33,7 +32,6 @@ namespace Lilja.ScreenManagement
         /// <inheritdoc />
         public sealed override bool IsViewless => true;
 
-        #endregion
 
         private UniTaskCompletionSource<TResult> _completionSource = new();
 
