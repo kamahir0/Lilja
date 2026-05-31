@@ -52,14 +52,11 @@ namespace Lilja.ScreenManagement
                         );
                     }
 
-                    list.Add(calleeScreen);
-
-                    await Screen.PrepareAsync(calleeScreen, cancellationToken);
-
-                    var previousScreenType = callerScreen?.GetType();
-                    await ((IGameScreenInternal<TArgs>)calleeScreen).OpenAsync(
+                    await PrepareAndOpenAsync(
+                        callerContext,
+                        calleeScreen,
                         args,
-                        previousScreenType,
+                        callerScreen?.GetType(),
                         calleeScreen.OverrideTransition,
                         cancellationToken
                     );

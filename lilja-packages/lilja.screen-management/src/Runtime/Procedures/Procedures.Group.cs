@@ -59,6 +59,7 @@ namespace Lilja.ScreenManagement
 
                 ExceptionDispatchInfo signalException = null;
                 var initialScreenType = calleeGroup.GetScreenType(initialScreenKey);
+                var insertIndex = -1;
 
                 try
                 {
@@ -67,9 +68,29 @@ namespace Lilja.ScreenManagement
                         await callerScreen.PauseAsync(initialScreenType, null, cancellationToken);
                     }
 
-                    await calleeGroup.SwitchAsync(
-                        initialScreenKey,
+                    // --- 初回表示フローの完全分離 ---
+                    var initialScreenObj = calleeGroup.Create(initialScreenKey);
+                    var initialScreen = (GameScreen<TArgs>)initialScreenObj;
+
+                    initialScreen.Context = callerContext;
+                    initialScreen.Layer = calleeGroup.Layer;
+                    initialScreen.Group = calleeGroup;
+
+                    insertIndex = list.Count;
+
+                    // 初期表示時のカスタムトランジション検索
+                    ITransition customTransition = null;
+                    if (calleeGroup.OverrideTransitionMap.TryGetValue((null, initialScreenType), out var t))
+                    {
+                        customTransition = t;
+                    }
+
+                    await PrepareAndOpenAsync(
+                        callerContext,
+                        initialScreen,
                         initialScreenArgs,
+                        callerScreen?.GetType(),
+                        customTransition,
                         cancellationToken
                     );
 
@@ -107,31 +128,17 @@ namespace Lilja.ScreenManagement
 
                     // グループによって追加された画面があれば破棄
                     // グループ開始時のリストの状態に戻す
-                    if (calleeGroup.Contains(initialScreenKey))
+                    if (insertIndex >= 0 && insertIndex < list.Count)
                     {
-                        // calleeGroup.SwitchAsyncによって最初に追加された初期画面から末尾までを破棄
-                        // 初期画面は initialScreenType の型を持つ
-                        IGameScreenInternal groupInitialScreen = null;
-                        for (var i = list.Count - 1; i >= 0; i--)
-                        {
-                            if (list[i].GetType() == initialScreenType)
-                            {
-                                groupInitialScreen = list[i];
-                                break;
-                            }
-                        }
-
-                        if (groupInitialScreen != null)
-                        {
-                            var nextType = callerScreen?.GetType();
-                            await DropSubtreeAsync(
-                                callerContext,
-                                groupInitialScreen,
-                                nextType,
-                                null,
-                                CancellationToken.None
-                            );
-                        }
+                        var groupActiveScreen = list[insertIndex];
+                        var nextType = callerScreen?.GetType();
+                        await DropSubtreeAsync(
+                            callerContext,
+                            groupActiveScreen,
+                            nextType,
+                            null,
+                            CancellationToken.None
+                        );
                     }
 
                     if (callerScreen != null)
@@ -248,37 +255,24 @@ namespace Lilja.ScreenManagement
                         nextScreen.Layer = group.Layer;
                         nextScreen.Group = group;
 
-                        list.Add(nextScreen);
-
                         try
                         {
-                            // 4. 新シーンをロードし、アクティブにする
-                            await Screen.PrepareAsync(nextScreen, cancellationToken);
-
-                            // 5. 新シーンが正常にアクティブになったので、ここで TempScene を破棄する
-                            tempSceneScope.Dispose();
-                            tempSceneScope = default;
-
-                            // 6. トランジションを明ける（フェードイン）
-                            await ((IGameScreenInternal<TArgs>)nextScreen).OpenAsync(
+                            await PrepareAndOpenAsync(
+                                context,
+                                nextScreen,
                                 args,
                                 previousScreenType,
                                 customTransition,
                                 cancellationToken
                             );
+
+                            // 新シーンが正常にアクティブになったので、ここで TempScene を破棄する
+                            tempSceneScope.Dispose();
+                            tempSceneScope = default;
                         }
                         catch
                         {
-                            if (list.Contains(nextScreen))
-                            {
-                                await TeardownAsyncInternal(
-                                    context,
-                                    nextScreen,
-                                    null,
-                                    null,
-                                    CancellationToken.None
-                                );
-                            }
+                            tempSceneScope.Dispose();
                             throw;
                         }
                     }
