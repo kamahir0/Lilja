@@ -80,8 +80,7 @@ namespace Lilja.ScreenManagement.Dialog
         /// </summary>
         private IDialogAnimation GetAnimation()
         {
-            _cachedAnimation ??= Animation;
-            return _cachedAnimation;
+            return _cachedAnimation ??= Animation;
         }
 
         /// <summary>
@@ -89,8 +88,7 @@ namespace Lilja.ScreenManagement.Dialog
         /// </summary>
         private IDialogStackAnimation GetStackAnimation()
         {
-            _cachedStackAnimation ??= StackAnimation;
-            return _cachedStackAnimation;
+            return _cachedStackAnimation ??= StackAnimation;
         }
 
         /// <inheritdoc />
@@ -101,9 +99,9 @@ namespace Lilja.ScreenManagement.Dialog
                 if (_viewHandle == null)
                 {
                     _viewHandle = CreateViewHandle();
+                    // 初期段階では安全のために判定しておく
+                    _viewHandle.UseBackdrop = EvaluateUseBackdrop();
                 }
-                // ゲッターが呼ばれるたびに最新のコンテキストスタックに基づき動的再判定して流し込む
-                _viewHandle.UseBackdrop = EvaluateUseBackdrop();
                 return _viewHandle;
             }
         }
@@ -194,6 +192,22 @@ namespace Lilja.ScreenManagement.Dialog
             {
                 Complete(OutsideButtonResult);
             }
+        }
+
+        /// <inheritdoc />
+        protected sealed override async UniTask TriggerInitializeAsync(
+            TArgs args,
+            CancellationToken cancellationToken
+        )
+        {
+            // ビューロード前に最新のコンテキストに基づき背景イメージの使用有無を一度だけ確定する
+            if (_viewHandle == null)
+            {
+                _viewHandle = CreateViewHandle();
+            }
+            _viewHandle.UseBackdrop = EvaluateUseBackdrop();
+
+            await base.TriggerInitializeAsync(args, cancellationToken);
         }
 
         /// <inheritdoc />

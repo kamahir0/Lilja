@@ -168,7 +168,10 @@ namespace Lilja.ScreenManagement.Dialog
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // フォールバックで対応する
+                    // フォールバックで対応するが、アセットロードに失敗した原因究明のために必ずログを出力する
+                    Debug.LogWarning(
+                        $"[Lilja.ScreenManagement.Dialog] LoadAsync: ダイアログプレハブのロードに失敗しました。フォールバック処理を行います。エラー: {ex.Message}\n{ex.StackTrace}"
+                    );
                 }
 
                 // Frame生成

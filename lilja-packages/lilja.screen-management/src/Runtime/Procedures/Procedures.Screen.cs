@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
 namespace Lilja.ScreenManagement
 {
@@ -36,8 +37,7 @@ namespace Lilja.ScreenManagement
                 {
                     if (viewHandle.UnloadsAncestors && screen.Context != null)
                     {
-                        var needsTempScene =
-                            UnityEngine.SceneManagement.SceneManager.sceneCount <= 1;
+                        var needsTempScene = SceneManager.sceneCount <= 1;
                         if (needsTempScene)
                         {
                             tempSceneScope = TempSceneUtility.CreateTempSceneScope();
@@ -50,6 +50,33 @@ namespace Lilja.ScreenManagement
 
                     tempSceneScope.Dispose();
                     tempSceneScope = default;
+                }
+                catch
+                {
+                    // 自身のロード失敗・キャンセル時、すでに先祖が一時アンロードされている場合は
+                    // CancellationToken.None を用いて確実に復元（ロールバック）し、完全ブラックアウトを防ぐ
+                    if (viewHandle.UnloadsAncestors && screen.Context != null)
+                    {
+                        try
+                        {
+                            await RestoreAncestorsAsync(
+                                screen.Context,
+                                screen,
+                                null,
+                                CancellationToken.None
+                            );
+                        }
+                        catch (Exception restoreEx)
+                        {
+                            UnityEngine.Debug.LogException(
+                                new Exception(
+                                    $"[Lilja.ScreenManagement] LoadAsync 失敗後の先祖復元処理においてさらに例外が発生しました。",
+                                    restoreEx
+                                )
+                            );
+                        }
+                    }
+                    throw;
                 }
                 finally
                 {

@@ -90,7 +90,15 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// グループの生存期間を待機するための非同期ソース。
         /// </summary>
-        internal UniTaskCompletionSource CompletionSource { get; } = new();
+        internal UniTaskCompletionSource CompletionSource { get; private set; } = new();
+
+        /// <summary>
+        /// 寿命待機用のCompletionSourceを再生成し、グループの再利用を可能にします。
+        /// </summary>
+        internal void ResetCompletionSource()
+        {
+            CompletionSource = new UniTaskCompletionSource();
+        }
 
         /// <summary>
         /// 内部的な初期設定を実行します。
@@ -141,6 +149,8 @@ namespace Lilja.ScreenManagement
             {
                 throw new ArgumentNullException(nameof(callerContext));
             }
+
+            ResetCompletionSource();
 
             return Procedures.Group.CallAsync(
                 callerContext,

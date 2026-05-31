@@ -148,8 +148,6 @@ namespace Lilja.ScreenManagement
                         )
                     );
                 }
-
-                signalException?.Throw();
             }
 
             /// <summary>
@@ -201,11 +199,22 @@ namespace Lilja.ScreenManagement
 
                             // 1. まず CloseAsync を呼び、画面を完全に覆う（暗転完了を待つ）
                             oldScreen.IsClosing = true;
-                            await oldScreen.CloseAsync(
-                                nextScreenType,
-                                customTransition,
-                                cancellationToken
-                            );
+                            try
+                            {
+                                await oldScreen.CloseAsync(
+                                    nextScreenType,
+                                    customTransition,
+                                    cancellationToken
+                                );
+                            }
+                            catch
+                            {
+                                // CloseAsync中に例外・キャンセルが発生した場合でも、
+                                // ゾンビ画面がリストに残らないようにリストから削除し物理的に破棄する
+                                list.Remove(oldScreen);
+                                await Screen.TeardownAsync(oldScreen, CancellationToken.None);
+                                throw;
+                            }
 
                             // 2. 画面が完全に覆われたので、ここで初めて TempScene 防衛を開始する
                             var needsTempScene = SceneManager.sceneCount <= 1;
@@ -347,6 +356,12 @@ namespace Lilja.ScreenManagement
                         }
                         catch (Exception ex)
                         {
+                            UnityEngine.Debug.LogException(
+                                new Exception(
+                                    $"[Lilja.ScreenManagement] DropSubtree: 画面 '{screen.GetType().Name}' の TeardownAsync 中に例外が発生しました。",
+                                    ex
+                                )
+                            );
                             if (teardownException == null)
                             {
                                 teardownException = ExceptionDispatchInfo.Capture(ex);

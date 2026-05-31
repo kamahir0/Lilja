@@ -101,7 +101,7 @@ namespace Lilja.ScreenManagement
                             await callerScreen.ResumeAsync(
                                 calleeScreen.GetType(),
                                 calleeScreen.OverrideTransition,
-                                cancellationToken
+                                CancellationToken.None
                             );
                         }
                     }

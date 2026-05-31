@@ -6,6 +6,14 @@ using UnityEngine;
 namespace Lilja.ScreenManagement
 {
     /// <summary>
+    /// [View] 属性が付与されたフィールドやプロパティの型指定が Component またはインターフェースに適合しない場合にスローされる例外。
+    /// </summary>
+    public sealed class InvalidViewInjectionTypeException : Exception
+    {
+        public InvalidViewInjectionTypeException(string message) : base(message) { }
+    }
+
+    /// <summary>
     /// ロードされたビュー（GameObjectツリー）から、画面オブジェクト（GameScreenBase）の [View] 属性付きフィールドまたはプロパティへ参照をリフレクションを用いて動的自動注入・ null クリアするユーティリティクラス。
     /// </summary>
     public static class ViewInjectUtility
@@ -137,6 +145,13 @@ namespace Lilja.ScreenManagement
                     {
                         if (field.GetCustomAttribute<ViewAttribute>() != null)
                         {
+                            // バリデーション：型が Component またはインターフェースでなければならない
+                            if (!typeof(Component).IsAssignableFrom(field.FieldType) && !field.FieldType.IsInterface)
+                            {
+                                throw new InvalidViewInjectionTypeException(
+                                    $"[Lilja.ScreenManagement] [View] 注入対象フィールド '{field.Name}' (型: '{field.FieldType.FullName}') の型指定が不正です。[View] 属性は UnityEngine.Component を継承したクラス、またはインターフェース型に対してのみ使用できます。"
+                                );
+                            }
                             list.Add(field);
                         }
                     }
@@ -177,6 +192,13 @@ namespace Lilja.ScreenManagement
                             // 値の書き込み（代入）が可能なプロパティのみ登録
                             if (property.CanWrite)
                             {
+                                // バリデーション：型が Component またはインターフェースでなければならない
+                                if (!typeof(Component).IsAssignableFrom(property.PropertyType) && !property.PropertyType.IsInterface)
+                                {
+                                    throw new InvalidViewInjectionTypeException(
+                                        $"[Lilja.ScreenManagement] [View] 注入対象プロパティ '{property.Name}' (型: '{property.PropertyType.FullName}') の型指定が不正です。[View] 属性は UnityEngine.Component を継承したクラス、またはインターフェース型に対してのみ使用できます。"
+                                    );
+                                }
                                 list.Add(property);
                             }
                         }

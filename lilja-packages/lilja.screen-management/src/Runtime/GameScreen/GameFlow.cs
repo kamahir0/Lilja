@@ -116,24 +116,6 @@ namespace Lilja.ScreenManagement
                     }
                 }
 
-                // 7. 元の親画面が残っていれば Resume
-                if (callerScreen != null && list.Count > 0 && list[^1] == callerScreen)
-                {
-                    try
-                    {
-                        await callerScreen.ResumeAsync(GetType(), null, CancellationToken.None);
-                    }
-                    catch (Exception resumeEx)
-                    {
-                        Debug.LogException(
-                            new Exception(
-                                $"[Lilja.ScreenManagement] GameFlow ロールバック後の親画面復帰において例外が発生しました。親画面型: '{callerScreen.GetType().Name}'",
-                                resumeEx
-                            )
-                        );
-                    }
-                }
-
                 throw;
             }
             finally
@@ -164,17 +146,18 @@ namespace Lilja.ScreenManagement
                 }
 
                 // 9. 親画面が存在し、かつロールバックで既に復元されていない場合は正常復旧
+                // ロールバック時・正常時を問わず、必ず CancellationToken.None を用いて安全かつ確実に復旧させる
                 if (callerScreen != null && list.Count > 0 && list[^1] == callerScreen)
                 {
                     try
                     {
-                        await callerScreen.ResumeAsync(GetType(), null, cancellationToken);
+                        await callerScreen.ResumeAsync(GetType(), null, CancellationToken.None);
                     }
                     catch (Exception resumeEx)
                     {
                         Debug.LogException(
                             new Exception(
-                                $"[Lilja.ScreenManagement] GameFlow 正常終了後の親画面復帰において例外が発生しました。親画面型: '{callerScreen.GetType().Name}'",
+                                $"[Lilja.ScreenManagement] GameFlow 終了後の親画面復帰において例外が発生しました。親画面型: '{callerScreen.GetType().Name}'",
                                 resumeEx
                             )
                         );
