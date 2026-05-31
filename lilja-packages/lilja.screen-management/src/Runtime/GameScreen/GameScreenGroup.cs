@@ -228,15 +228,13 @@ namespace Lilja.ScreenManagement
             return SwitchAsyncInternal(key, args, cancellationToken);
         }
 
-        /// <summary>
-        /// 履歴プッシュを行わずに切り替えを行う内部メソッド。
-        /// </summary>
         private UniTask SwitchAsyncInternal<TArgs>(
             string key,
             TArgs args,
             CancellationToken cancellationToken
         )
         {
+            // 履歴プッシュを行わずに切り替えを行う内部メソッド。
             _currentKey = key;
             _currentArgs = args;
             return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);

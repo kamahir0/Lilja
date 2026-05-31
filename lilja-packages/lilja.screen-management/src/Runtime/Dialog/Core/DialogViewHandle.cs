@@ -254,9 +254,9 @@ namespace Lilja.ScreenManagement.Dialog
 
         #endregion
 
-        /// <summary> Rootを生成する </summary>
         private static GameObject CreateRoot()
         {
+            // Rootを生成する
             var root = new GameObject("Dialog");
 
             // Canvas の自動アタッチと設定
@@ -274,9 +274,9 @@ namespace Lilja.ScreenManagement.Dialog
             return root;
         }
 
-        /// <summary> ContentをFrameの子にする </summary>
         private static void SetContentParent(RectTransform content, RectTransform frame)
         {
+            // ContentをFrameの子にする
             if (content == null || frame == null)
             {
                 Debug.LogError(

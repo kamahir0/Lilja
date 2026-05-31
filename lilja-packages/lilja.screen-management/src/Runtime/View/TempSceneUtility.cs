@@ -18,11 +18,9 @@ namespace Lilja.ScreenManagement
             return new TempSceneScope(Create());
         }
 
-        /// <summary>
-        /// 防衛用の一時シーンを新規作成、または既存のものを取得してロードし、アクティブシーンに設定します。
-        /// </summary>
         private static Scene Create()
         {
+            // 防衛用の一時シーンを新規作成、または既存のものを取得してロードし、アクティブシーンに設定します。
             var scene = SceneManager.GetSceneByName(SceneName);
             if (scene.IsValid() && scene.isLoaded)
             {

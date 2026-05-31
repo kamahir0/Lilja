@@ -186,8 +186,8 @@ namespace Lilja.ScreenManagement
                     var nextScreenType = group.GetScreenType(key);
                     var list = context.ActiveScreensInternal;
 
-                    Type previousScreenType = null;
-                    ITransition customTransition = null;
+                    var previousScreenType = list.Count > 0 ? list[^1].GetType() : null;
+                    ITransition customTransition = group.OverrideTransitionMap.TryGetValue((previousScreenType, nextScreenType), out var t) ? t : null;
                     TempSceneUtility.TempSceneScope tempSceneScope = default;
 
                     try
@@ -195,18 +195,6 @@ namespace Lilja.ScreenManagement
                         if (list.Count > 0)
                         {
                             var oldScreen = list[^1];
-                            previousScreenType = oldScreen.GetType();
-
-                            // 遷移元と遷移先のペアから一時差し替えトランジションを検索
-                            if (
-                                group.OverrideTransitionMap.TryGetValue(
-                                    (previousScreenType, nextScreenType),
-                                    out var t
-                                )
-                            )
-                            {
-                                customTransition = t;
-                            }
 
                             // 1. まず CloseAsync を呼び、画面を完全に覆う（暗転完了を待つ）
                             oldScreen.IsClosing = true;
@@ -237,19 +225,6 @@ namespace Lilja.ScreenManagement
                             // 3. 旧画面を物理的にアンロード
                             list.Remove(oldScreen);
                             await Screen.TeardownAsync(oldScreen, cancellationToken);
-                        }
-                        else
-                        {
-                            // 遷移元がnull（初期画面）時のToへの差し替え
-                            if (
-                                group.OverrideTransitionMap.TryGetValue(
-                                    (null, nextScreenType),
-                                    out var t
-                                )
-                            )
-                            {
-                                customTransition = t;
-                            }
                         }
 
                         var nextScreenObj = group.Create(key);

@@ -10,11 +10,9 @@ namespace Lilja.ScreenManagement.Dialog
     {
         private static Font _defaultFont;
 
-        /// <summary>
-        /// Unity ビルトインのデフォルトフォントを取得します。複数のフォールバック経路を試すことで NullReferenceException を防止します。
-        /// </summary>
         private static Font GetDefaultFont()
         {
+            // Unity ビルトインのデフォルトフォントを取得します。複数のフォールバック経路を試すことで NullReferenceException を防止します。
             if (_defaultFont == null)
             {
                 // 1. Unity 2022.3+ 等の一部の環境のデフォルトフォントを試行
@@ -191,11 +189,9 @@ namespace Lilja.ScreenManagement.Dialog
             return root;
         }
 
-        /// <summary>
-        /// ボタンのテンプレートオブジェクトを生成します。
-        /// </summary>
         private static GameObject CreateButtonPrefab(Transform parent)
         {
+            // ボタンのテンプレートオブジェクトを生成します。
             var button = CreateUiElement("ButtonPrefab", parent);
             var buttonRect = button.GetComponent<RectTransform>();
             buttonRect.sizeDelta = new Vector2(120f, 50f);

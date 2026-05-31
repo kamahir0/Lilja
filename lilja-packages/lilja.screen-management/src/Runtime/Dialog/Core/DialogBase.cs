@@ -29,7 +29,6 @@ namespace Lilja.ScreenManagement.Dialog
         [View]
         protected TContent Content { get; private set; }
 
-        /// <summary> 枠外クリック検知ボタン </summary>
         [View]
         private OutsideButton _outsideButton;
 
@@ -51,35 +50,27 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary> プレハブが見つからなかった場合のフォールバック用コンテンツ生成ファクトリ </summary>
         protected virtual GameObject CreateFallbackContent() => null;
 
-        /// <summary>
-        /// フレームの Resources/Addressable アセットキーを取得します。
-        /// </summary>
         private static string GetFrameKey()
         {
+            // フレームの Resources/Addressable アセットキーを取得します。
             return $"DialogFrame/{typeof(TFrame).Name}";
         }
 
-        /// <summary>
-        /// コンテンツの Resources/Addressable アセットキーを取得します。
-        /// </summary>
         private static string GetContentKey()
         {
+            // コンテンツの Resources/Addressable アセットキーを取得します。
             return $"DialogContent/{typeof(TContent).Name}";
         }
 
-        /// <summary>
-        /// キャッシュ保護された表示アニメーションインスタンスを取得します（GameScreenBase.GetViewHandle を参考にした設計）。
-        /// </summary>
         private IDialogAnimation GetAnimation()
         {
+            // キャッシュ保護された表示アニメーションインスタンスを取得します（GameScreenBase.GetViewHandle を参考にした設計）。
             return _cachedAnimation ??= Animation;
         }
 
-        /// <summary>
-        /// キャッシュ保護されたスタックアニメーションインスタンスを取得します（GameScreenBase.GetViewHandle を参考にした設計）。
-        /// </summary>
         private IDialogStackAnimation GetStackAnimation()
         {
+            // キャッシュ保護されたスタックアニメーションインスタンスを取得します（GameScreenBase.GetViewHandle を参考にした設計）。
             return _cachedStackAnimation ??= StackAnimation;
         }
 
@@ -98,12 +89,9 @@ namespace Lilja.ScreenManagement.Dialog
             }
         }
 
-        /// <summary>
-        /// ダイアログ専用の合成ビューハンドルを生成・遅延初期化します。
-        /// </summary>
-        /// <returns>初期化されたダイアログビューハンドルインスタンス。</returns>
         private DialogViewHandle CreateViewHandle()
         {
+            // ダイアログ専用の合成ビューハンドルを生成・遅延初期化します。
             return new DialogViewHandle(
                 GetFrameKey(),
                 GetContentKey(),
@@ -112,12 +100,9 @@ namespace Lilja.ScreenManagement.Dialog
             );
         }
 
-        /// <summary>
-        /// 最新のコンテキスト状態を走査し、背景イメージ（Backdrop）を表示すべきかどうか動的に判定します。
-        /// </summary>
-        /// <returns>背景を表示すべきなら true、それ以外は false。</returns>
         private bool EvaluateUseBackdrop()
         {
+            // 最新のコンテキスト状態を走査し、背景イメージ（Backdrop）を表示すべきかどうか動的に判定します。
             if (Context == null)
             {
                 return true;
