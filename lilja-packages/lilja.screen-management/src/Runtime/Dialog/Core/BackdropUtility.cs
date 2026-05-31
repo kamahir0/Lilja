@@ -32,7 +32,7 @@ namespace Lilja.ScreenManagement.Dialog
         /// <summary>
         /// 指定された RectTransform を親オブジェクトの全領域にフィットするようストレッチ設定を適用します。
         /// </summary>
-        private static void SetFullStretch(RectTransform rect)
+        internal static void SetFullStretch(RectTransform rect)
         {
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;

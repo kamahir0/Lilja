@@ -127,7 +127,7 @@ namespace Lilja.ScreenManagement.Dialog
         {
             var root = new GameObject("DefaultDialogContent", typeof(RectTransform));
             var rootRect = root.GetComponent<RectTransform>();
-            SetFullStretch(rootRect);
+            BackdropUtility.SetFullStretch(rootRect);
 
             // 1. ScrollRect (スクロールコンポーネント) をルートに追加
             var scrollRect = root.AddComponent<ScrollRect>();
@@ -139,7 +139,7 @@ namespace Lilja.ScreenManagement.Dialog
             // 2. Viewport の生成（はみ出たテキストのクリッピングマスク用）
             var viewport = CreateUiElement("Viewport", root.transform);
             var viewportRect = viewport.GetComponent<RectTransform>();
-            SetFullStretch(viewportRect);
+            BackdropUtility.SetFullStretch(viewportRect);
             viewport.AddComponent<RectMask2D>(); // 描画軽量マスク
 
             // 3. ScrollContent の生成（縦スクロール用コンテナ）
@@ -212,7 +212,7 @@ namespace Lilja.ScreenManagement.Dialog
             // ボタンテキスト
             var textObj = CreateUiElement("Text", button.transform);
             var textRect = textObj.GetComponent<RectTransform>();
-            SetFullStretch(textRect);
+            BackdropUtility.SetFullStretch(textRect);
             var text = textObj.AddComponent<Text>();
             text.font = GetDefaultFont();
             text.fontSize = 20;
@@ -223,17 +223,6 @@ namespace Lilja.ScreenManagement.Dialog
             button.SetActive(false);
 
             return button;
-        }
-
-        /// <summary>
-        /// RectTransform を親オブジェクト全体に広げるように設定します。
-        /// </summary>
-        private static void SetFullStretch(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
         }
 
         private static GameObject CreateUiElement(string name, Transform parent)

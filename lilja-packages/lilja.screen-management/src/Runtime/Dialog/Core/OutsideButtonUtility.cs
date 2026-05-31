@@ -25,7 +25,7 @@ namespace Lilja.ScreenManagement.Dialog
             outside.transform.SetSiblingIndex(siblingIndex);
 
             var rect = outside.GetComponent<RectTransform>();
-            SetFullStretch(rect);
+            BackdropUtility.SetFullStretch(rect);
 
             // 描画オーバーヘッドなしでクリック入力を遮断・検知する独自の InvisibleGraphic コンポーネントをアタッチ
             var graphic = outside.AddComponent<InvisibleGraphic>();
@@ -36,17 +36,6 @@ namespace Lilja.ScreenManagement.Dialog
             button.transition = Selectable.Transition.None;
 
             return button;
-        }
-
-        /// <summary>
-        /// 指定された RectTransform を親オブジェクトの全領域にフィットするようストレッチ設定を適用します。
-        /// </summary>
-        private static void SetFullStretch(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
         }
     }
 }
