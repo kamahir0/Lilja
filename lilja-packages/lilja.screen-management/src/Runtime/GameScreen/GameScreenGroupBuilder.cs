@@ -10,8 +10,8 @@ namespace Lilja.ScreenManagement
     {
         internal readonly Dictionary<string, Func<object>> Factories = new();
         internal readonly Dictionary<string, Type> Types = new();
-        internal readonly Dictionary<(Type From, Type To), ITransition> OverrideTransitionMap =
-            new();
+        internal readonly Dictionary<(Type From, Type To), ITransition> OverrideTransitionMap = new();
+        internal ITransition GroupOverrideTransition;
 
         /// <inheritdoc />
         public IGameScreenGroupBuilder Register<TScreen, TArgs>(string key)
@@ -66,11 +66,22 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        public IGameScreenGroupBuilder OverrideTransition<TFrom, TTo>(ITransition transition)
+        public IGameScreenGroupBuilder OverrideTransition<TFrom, TTo>(ITransition transition, bool bidirectional = false)
             where TFrom : IGameScreen
             where TTo : IGameScreen
         {
             OverrideTransitionMap[(typeof(TFrom), typeof(TTo))] = transition;
+            if (bidirectional)
+            {
+                OverrideTransitionMap[(typeof(TTo), typeof(TFrom))] = transition;
+            }
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IGameScreenGroupBuilder OverrideTransition(ITransition transition)
+        {
+            GroupOverrideTransition = transition;
             return this;
         }
     }

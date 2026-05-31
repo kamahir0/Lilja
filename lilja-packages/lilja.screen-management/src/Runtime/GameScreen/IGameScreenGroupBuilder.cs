@@ -72,9 +72,17 @@ namespace Lilja.ScreenManagement
         /// <typeparam name="TFrom">遷移元の画面の型</typeparam>
         /// <typeparam name="TTo">遷移先の画面の型</typeparam>
         /// <param name="transition">一時差し替え用のトランジション演出</param>
+        /// <param name="bidirectional">双方向に（逆方向の遷移にも同じトランジションを）適用するかどうか</param>
         /// <returns>メソッドチェーン用のビルダーインターフェース</returns>
-        IGameScreenGroupBuilder OverrideTransition<TFrom, TTo>(ITransition transition)
+        IGameScreenGroupBuilder OverrideTransition<TFrom, TTo>(ITransition transition, bool bidirectional = false)
             where TFrom : IGameScreen
             where TTo : IGameScreen;
+
+        /// <summary>
+        /// 画面グループ全体のデフォルトトランジション（グループ起動時および完了時）を設定します。
+        /// </summary>
+        /// <param name="transition">登録するトランジション演出</param>
+        /// <returns>メソッドチェーン用のビルダーインターフェース</returns>
+        IGameScreenGroupBuilder OverrideTransition(ITransition transition);
     }
 }

@@ -68,11 +68,12 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerScreen != null)
                     {
+                        var transition = calleeGroup.OverrideTransition ?? callerContext.Transition;
                         await Screen.ExecuteExitWithTransitionAsync(
                             callerScreen,
                             ExitType.OnPause,
                             initialScreenType,
-                            callerContext.Transition,
+                            transition,
                             true,
                             cancellationToken
                         );
@@ -89,17 +90,8 @@ namespace Lilja.ScreenManagement
                     insertIndex = list.Count;
                     calleeGroup.SetCurrent(initialScreenKey, initialScreenArgs);
 
-                    // 初期表示時のカスタムトランジション検索
-                    ITransition customTransition = null;
-                    if (
-                        calleeGroup.OverrideTransitionMap.TryGetValue(
-                            (null, initialScreenType),
-                            out var t
-                        )
-                    )
-                    {
-                        customTransition = t;
-                    }
+                    // 初期表示時はグループ全体の OverrideTransition を使用
+                    ITransition customTransition = calleeGroup.OverrideTransition;
 
                     await Screen.PrepareAndOpenAsync(
                         callerContext,
@@ -152,18 +144,19 @@ namespace Lilja.ScreenManagement
                             callerContext,
                             groupActiveScreen,
                             nextType,
-                            null,
+                            calleeGroup.OverrideTransition,
                             CancellationToken.None
                         );
                     }
 
                     if (callerScreen != null)
                     {
+                        var transition = calleeGroup.OverrideTransition ?? callerContext.Transition;
                         await Screen.ExecuteEnterWithTransitionAsync(
                             callerScreen,
                             EnterType.OnResume,
                             previousScreenType,
-                            callerContext.Transition,
+                            transition,
                             false,
                             cancellationToken
                         );

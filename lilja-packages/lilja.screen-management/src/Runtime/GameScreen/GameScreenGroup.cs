@@ -29,6 +29,11 @@ namespace Lilja.ScreenManagement
         > OverrideTransitionMap { get; } = new();
 
         /// <summary>
+        /// グループ自身の開始および完了（Complete）時に使用される一時差し替えトランジションを取得します。
+        /// </summary>
+        public ITransition OverrideTransition { get; private set; }
+
+        /// <summary>
         /// 戻り先となる遷移履歴がスタックに存在するかどうかを取得します。
         /// </summary>
         public bool CanGoBack => _history.Count > 0;
@@ -322,6 +327,8 @@ namespace Lilja.ScreenManagement
             {
                 OverrideTransitionMap[kvp.Key] = kvp.Value;
             }
+
+            OverrideTransition = builder.GroupOverrideTransition;
 
             _configured = true;
         }
