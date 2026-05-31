@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace Lilja.ScreenManagement
 {
@@ -47,26 +48,24 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        public async UniTask PlayAsync(CancellationToken cancellationToken)
+        public UniTask PlayAsync(CancellationToken cancellationToken)
         {
             if (Interlocked.CompareExchange(ref _played, 1, 0) != 0)
             {
-                return;
+                return UniTask.CompletedTask;
             }
 
             if (_transition == null)
             {
-                return;
+                UnityEngine.Debug.LogError(
+                    "[Lilja.ScreenManagement] 実行しようとした ITransition が null です。デフォルトのトランジション設定やフォールバック処理を確認してください。"
+                );
+                return UniTask.CompletedTask;
             }
 
-            if (_isOut)
-            {
-                await _transition.OutAsync(cancellationToken);
-            }
-            else
-            {
-                await _transition.InAsync(cancellationToken);
-            }
+            return _isOut
+                ? _transition.OutAsync(cancellationToken)
+                : _transition.InAsync(cancellationToken);
         }
 
         private readonly ITransition _transition;

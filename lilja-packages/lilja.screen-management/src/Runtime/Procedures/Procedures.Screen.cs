@@ -281,7 +281,8 @@ namespace Lilja.ScreenManagement
                 CancellationToken cancellationToken
             )
             {
-                var transitionHandle = new TransitionHandle(transition, isReverse);
+                var resolvedTransition = transition ?? screen.Context?.Transition;
+                var transitionHandle = new TransitionHandle(resolvedTransition, isReverse);
                 var context = new EnterContext(enterType, previousScreenType, transitionHandle);
                 await screen.ExecuteEnterAsync(context, cancellationToken);
                 if (!context.Transition.IsPlayed && !screen.IsViewless)
@@ -309,7 +310,8 @@ namespace Lilja.ScreenManagement
                 CancellationToken cancellationToken
             )
             {
-                var transitionHandle = new TransitionHandle(transition, isReverse);
+                var resolvedTransition = transition ?? screen.Context?.Transition;
+                var transitionHandle = new TransitionHandle(resolvedTransition, isReverse);
                 var context = new ExitContext(exitType, nextScreenType, transitionHandle);
                 await screen.ExecuteExitAsync(context, cancellationToken);
                 if (!context.Transition.IsPlayed && !screen.IsViewless)
