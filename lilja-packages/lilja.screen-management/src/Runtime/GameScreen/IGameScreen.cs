@@ -97,15 +97,24 @@ namespace Lilja.ScreenManagement
     internal interface IGameScreenInternal<in TArgs> : IGameScreenInternal
     {
         /// <summary>
-        /// 画面を初期化してオープンします。
+        /// 画面を初期化します。
         /// </summary>
         /// <param name="args">初期化引数</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>非同期タスク</returns>
+        UniTask InitializeAsync(
+            TArgs args,
+            CancellationToken cancellationToken
+        );
+
+        /// <summary>
+        /// 画面をオープンします。
+        /// </summary>
         /// <param name="previousScreenType">遷移元の画面の型</param>
         /// <param name="overrideTransition">一時差し替え用のトランジション</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>非同期タスク</returns>
         UniTask OpenAsync(
-            TArgs args,
             Type previousScreenType,
             ITransition overrideTransition,
             CancellationToken cancellationToken

@@ -68,11 +68,11 @@ namespace Lilja.ScreenManagement
 
                 // 3. 自分（ヘッドレス画面）をスタックに追加して準備
                 list.Add(this);
+                await ((IGameScreenInternal<TArgs>)this).InitializeAsync(args, cancellationToken);
                 await Procedures.Screen.PrepareAsync(this, cancellationToken);
 
                 // 4. オープン処理の実行（ビューレスのため演出はスキップされる）
                 await ((IGameScreenInternal<TArgs>)this).OpenAsync(
-                    args,
                     callerScreen?.GetType(),
                     null,
                     cancellationToken

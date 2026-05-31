@@ -227,15 +227,21 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        async UniTask IGameScreenInternal<TArgs>.OpenAsync(
+        async UniTask IGameScreenInternal<TArgs>.InitializeAsync(
             TArgs args,
+            CancellationToken cancellationToken
+        )
+        {
+            await TriggerInitializeAsync(args, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        async UniTask IGameScreenInternal<TArgs>.OpenAsync(
             Type previousScreenType,
             ITransition overrideTransition,
             CancellationToken cancellationToken
         )
         {
-            await TriggerInitializeAsync(args, cancellationToken);
-
             var transition = overrideTransition ?? Context?.Transition;
             var transitionHandle = new TransitionHandle(transition, false);
             var enterContext = new EnterContext(

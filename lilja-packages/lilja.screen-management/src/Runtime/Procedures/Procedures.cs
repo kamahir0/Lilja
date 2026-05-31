@@ -27,12 +27,14 @@ namespace Lilja.ScreenManagement
 
             try
             {
+                // 先にInitializeAsyncを実行
+                await screen.InitializeAsync(args, cancellationToken);
+
                 // アセットのロード＆配置（低レイヤーインフラへの委譲）
                 await Screen.PrepareAsync(screen, cancellationToken);
 
                 // オープン演出（フェードイン等）
                 await screen.OpenAsync(
-                    args,
                     previousScreenType,
                     transition,
                     cancellationToken
