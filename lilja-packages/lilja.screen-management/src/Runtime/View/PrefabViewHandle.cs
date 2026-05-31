@@ -12,19 +12,10 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public sealed class PrefabViewHandle : IViewHandle
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// プレハブキー自動解決に対応した、空のデフォルトハンドルインスタンスを取得します。
         /// </summary>
         public static PrefabViewHandle Default => new(null);
-
-        // --- Constructors ---
 
         /// <summary>
         /// 新しい <see cref="PrefabViewHandle"/> インスタンスを初期化します。
@@ -37,24 +28,11 @@ namespace Lilja.ScreenManagement
             _unloadsAncestors = unloadsAncestors;
         }
 
-        // --- Methods ---
-        // (No public or protected methods)
-
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private readonly string _specifiedKey;
         private readonly bool _unloadsAncestors;
         private string _resolvedKey;
         private GameObject _instance;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
-
-        // --- Properties ---
-        // (No internal or private properties)
-
-        // --- Methods ---
 
         private static string ResolveKeyFromType(Type ownerType)
         {
@@ -69,11 +47,7 @@ namespace Lilja.ScreenManagement
             return $"Screens/{typeName}";
         }
 
-        #endregion
-
         #region IViewHandle
-
-        // --- Properties ---
 
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
@@ -86,8 +60,6 @@ namespace Lilja.ScreenManagement
 
         /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
-
-        // --- Methods ---
 
         /// <inheritdoc />
         public void Initialize(Type ownerType)

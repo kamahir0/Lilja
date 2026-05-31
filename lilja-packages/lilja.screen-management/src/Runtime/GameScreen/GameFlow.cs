@@ -12,20 +12,11 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TResult">フローが最終的に返却する結果の型</typeparam>
     public abstract class GameFlow<TArgs, TResult> : GameScreenBase<TArgs>
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <inheritdoc />
         protected internal sealed override IViewHandle ViewHandle => ViewlessViewHandle.Instance;
 
         /// <inheritdoc />
         public sealed override bool IsViewless => true;
-
-        // --- Methods ---
 
         /// <summary>
         /// 指定された呼び出し元のコンテキストの下でこの論理フローを起動し、内部遷移を実行して結果が返るまで非同期待機します。
@@ -203,7 +194,5 @@ namespace Lilja.ScreenManagement
             ExitContext context,
             CancellationToken cancellationToken
         ) => UniTask.CompletedTask;
-
-        #endregion
     }
 }

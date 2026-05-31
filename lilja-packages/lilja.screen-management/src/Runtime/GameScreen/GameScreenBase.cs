@@ -13,13 +13,6 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TArgs">画面の初期化に受け取る引数の型</typeparam>
     public abstract class GameScreenBase<TArgs> : IGameScreenInternal<TArgs>
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// この画面の表示と演出を担うビューハンドル。
         /// </summary>
@@ -54,14 +47,10 @@ namespace Lilja.ScreenManagement
         public CompositeDisposable ViewLifetime { get; } = new();
 #endif
 
-        // --- Constructors ---
-
         /// <summary>
         /// 新しい <see cref="GameScreenBase{TArgs}"/> インスタンスを初期化します。
         /// </summary>
         protected GameScreenBase() { }
-
-        // --- Methods ---
 
         /// <summary>
         /// 画面遷移を事前に非同期ロードしてメモリにキャッシュします。
@@ -175,24 +164,13 @@ namespace Lilja.ScreenManagement
 #endif
         }
 
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private bool _disposed;
         private IViewHandle _cachedViewHandle;
 
-        // --- Properties ---
         /// <summary>
         /// この画面が現在クローズ処理中であるか。
         /// </summary>
         internal bool IsClosing { get; set; }
-
-        // --- Methods ---
-        // (No internal or private methods)
-
-        #endregion
 
         #region IGameScreenInternal
 

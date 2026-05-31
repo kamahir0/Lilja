@@ -11,20 +11,11 @@ namespace Lilja.ScreenManagement
     /// <typeparam name="TResult">返却する結果の型</typeparam>
     public abstract class AwaitableGameScreen<TArgs, TResult> : GameScreenBase<TArgs>
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// この画面がコールされた際の一時差し替えトランジション。
         /// デフォルトは ITransition.None。
         /// </summary>
         public virtual ITransition OverrideTransition => ITransition.None;
-
-        // --- Methods ---
 
         /// <summary>
         /// 指定された呼び出し元のコンテキストの下でこの画面をロード・表示し、結果が確定するまで非同期で待機します。
@@ -88,20 +79,12 @@ namespace Lilja.ScreenManagement
             _completionSource = null;
         }
 
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private bool _called;
         private UniTaskCompletionSource<TResult> _completionSource = new();
 
-        // --- Properties ---
         /// <summary>
         /// ランタイムがこの画面の結果待機を行うための内部プロパティ。
         /// </summary>
         internal UniTaskCompletionSource<TResult> CompletionSource => _completionSource;
-
-        #endregion
     }
 }

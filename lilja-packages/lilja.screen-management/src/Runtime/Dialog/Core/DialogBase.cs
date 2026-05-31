@@ -17,13 +17,6 @@ namespace Lilja.ScreenManagement.Dialog
         where TFrame : MonoBehaviour, IDialogFrame
         where TContent : MonoBehaviour
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// ダイアログの「枠」コンポーネントを取得します。
         /// </summary>
@@ -62,8 +55,6 @@ namespace Lilja.ScreenManagement.Dialog
                 return _viewHandle;
             }
         }
-
-        // --- Methods ---
 
         /// <summary> プレハブが見つからなかった場合のフォールバック用フレーム生成ファクトリ </summary>
         protected virtual GameObject CreateFallbackFrame() => null;
@@ -187,21 +178,11 @@ namespace Lilja.ScreenManagement.Dialog
             await base.TriggerExitAsync(context, cancellationToken);
         }
 
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         [View]
         private OutsideButton _outsideButton;
         private DialogViewHandle _viewHandle;
         private IDialogAnimation _cachedAnimation;
         private IDialogStackAnimation _cachedStackAnimation;
-
-        // --- Properties ---
-        // (No internal or private properties)
-
-        // --- Methods ---
 
         private static string GetFrameKey()
         {
@@ -276,7 +257,5 @@ namespace Lilja.ScreenManagement.Dialog
                 Complete(OutsideButtonResult);
             }
         }
-
-        #endregion
     }
 }

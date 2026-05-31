@@ -11,19 +11,10 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public sealed class SceneViewHandle : IViewHandle
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// シーン名自動解決に対応した、空のデフォルトハンドルインスタンスを取得します。
         /// </summary>
         public static SceneViewHandle Default => new(null);
-
-        // --- Constructors ---
 
         /// <summary>
         /// 新しい <see cref="SceneViewHandle"/> インスタンスを初期化します。
@@ -36,25 +27,12 @@ namespace Lilja.ScreenManagement
             _unloadsAncestors = unloadsAncestors;
         }
 
-        // --- Methods ---
-        // (No public or protected methods)
-
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private readonly string _specifiedSceneName;
         private readonly bool _unloadsAncestors;
         private string _resolvedSceneName;
         private Scene _loadedScene;
         private ISceneLoader _cachedLoader;
         private GameObject[] _rootObjects = Array.Empty<GameObject>();
-
-        // --- Properties ---
-        // (No internal or private properties)
-
-        // --- Methods ---
 
         private static string ResolveSceneNameFromType(Type ownerType)
         {
@@ -69,11 +47,7 @@ namespace Lilja.ScreenManagement
             return typeName;
         }
 
-        #endregion
-
         #region IViewHandle
-
-        // --- Properties ---
 
         /// <inheritdoc />
         public GameObject[] RootObjects => _rootObjects;
@@ -86,8 +60,6 @@ namespace Lilja.ScreenManagement
 
         /// <inheritdoc />
         public bool UnloadsAncestors => _unloadsAncestors;
-
-        // --- Methods ---
 
         /// <inheritdoc />
         public void Initialize(Type ownerType)

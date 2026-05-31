@@ -78,7 +78,7 @@ namespace Lilja.ScreenManagement
                         );
                     }
 
-                    // --- 初回表示フローの完全分離 ---
+                    // 初回表示フローの完全分離
                     var initialScreenObj = calleeGroup.Create(initialScreenKey);
                     var initialScreen = (GameScreen<TArgs>)initialScreenObj;
 

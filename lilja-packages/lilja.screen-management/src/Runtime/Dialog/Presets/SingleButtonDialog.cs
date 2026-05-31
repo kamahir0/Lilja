@@ -9,16 +9,6 @@ namespace Lilja.ScreenManagement.Dialog
     /// </summary>
     public sealed class SingleButtonDialog : DefaultDialog<ValueTuple, ValueTuple>
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-        // (No public or protected properties)
-
-        // --- Constructors & Methods ---
-
         /// <summary>
         /// SingleButtonDialog の新しいインスタンスを初期化します。
         /// </summary>
@@ -64,15 +54,8 @@ namespace Lilja.ScreenManagement.Dialog
             Frame.AddButton(_buttonText, () => Complete(default));
         }
 
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private readonly string _title;
         private readonly string _body;
         private readonly string _buttonText;
-
-        #endregion
     }
 }

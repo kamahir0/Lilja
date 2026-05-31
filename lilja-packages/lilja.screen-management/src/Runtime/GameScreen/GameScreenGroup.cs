@@ -10,13 +10,6 @@ namespace Lilja.ScreenManagement
     /// </summary>
     public class GameScreenGroup
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// このグループが属する画面階層コンテキスト。
         /// </summary>
@@ -45,8 +38,6 @@ namespace Lilja.ScreenManagement
         /// </summary>
         public int HistoryCount => _history.Count;
 
-        // --- Constructors ---
-
         /// <summary>
         /// 新しい <see cref="GameScreenGroup"/> インスタンスを初期化します。
         /// </summary>
@@ -54,8 +45,6 @@ namespace Lilja.ScreenManagement
         {
             Context = new GameScreenContext();
         }
-
-        // --- Methods ---
 
         /// <summary>
         /// 指定されたキー名が登録されているか判定します。
@@ -116,7 +105,7 @@ namespace Lilja.ScreenManagement
         /// <typeparam name="TScreen">初期画面の型</typeparam>
         /// <typeparam name="TArgs">引数の型</typeparam>
         /// <param name="callerContext">呼び出し側の画面コンテキスト</param>
-        /// <param name="initialScreenArgs">初期表示画面の引数</param>
+        /// <param name="initialScreenArgs">初期表示画面 of 引数</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>グループの生存期間を表す非同期タスク</returns>
         public GameScreenGroupHandle CallAsync<TScreen, TArgs>(
@@ -259,11 +248,6 @@ namespace Lilja.ScreenManagement
         /// <param name="builder">登録用ビルダー</param>
         protected virtual void Configure(IGameScreenGroupBuilder builder) { }
 
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private bool _called;
         private bool _configured;
         private string _currentKey;
@@ -272,13 +256,10 @@ namespace Lilja.ScreenManagement
         private readonly Dictionary<string, Func<object>> _factories = new();
         private readonly Dictionary<string, Type> _types = new();
 
-        // --- Properties ---
         /// <summary>
         /// グループの生存期間を待機するための非同期ソース。
         /// </summary>
         internal UniTaskCompletionSource CompletionSource { get; private set; } = new();
-
-        // --- Methods ---
 
         /// <summary>
         /// 指定されたキー名が登録されているか判定します。
@@ -366,10 +347,6 @@ namespace Lilja.ScreenManagement
             return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);
         }
 
-        #endregion
-
-        #region Private Nested Classes
-
         private sealed class ConfiguredGameScreenGroup : GameScreenGroup
         {
             private readonly Action<IGameScreenGroupBuilder> _configure;
@@ -385,7 +362,5 @@ namespace Lilja.ScreenManagement
                 _configure.Invoke(builder);
             }
         }
-
-        #endregion
     }
 }

@@ -13,13 +13,6 @@ namespace Lilja.ScreenManagement.Dialog
     public class DefaultDialog<TArgs, TResult>
         : DialogBase<TArgs, TResult, DefaultDialogFrame, DefaultDialogContent>
     {
-        #region Public / Protected Members
-
-        // --- Fields ---
-        // (No public or protected fields)
-
-        // --- Properties ---
-
         /// <summary>
         /// 枠外部分をクリックした際にクローズを許容するかどうかを取得または設定します。
         /// </summary>
@@ -67,8 +60,6 @@ namespace Lilja.ScreenManagement.Dialog
 
         /// <inheritdoc />
         protected override IDialogStackAnimation StackAnimation => _stackAnimation;
-
-        // --- Methods ---
 
         /// <summary>
         /// 動的構築用のタイトルを設定します。
@@ -152,11 +143,6 @@ namespace Lilja.ScreenManagement.Dialog
             return DefaultDialogFallbackUtility.CreateContent();
         }
 
-        #endregion
-
-        #region Internal / Private Members
-
-        // --- Fields ---
         private bool _enableOutsideButton;
         private TResult _outsideButtonResult;
         private IDialogAnimation _animation = new DefaultDialogAnimation();
@@ -164,7 +150,5 @@ namespace Lilja.ScreenManagement.Dialog
         private string _dynamicTitle;
         private readonly List<string> _dynamicTexts = new();
         private readonly List<(string Label, TResult Result)> _dynamicButtons = new();
-
-        #endregion
     }
 }
