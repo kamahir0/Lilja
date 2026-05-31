@@ -99,35 +99,26 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// システム用の画面初期化フック。デフォルトではユーザーの <see cref="InitializeAsync"/> を呼び出します。
         /// </summary>
-        protected virtual async UniTask TriggerInitializeAsync(
+        protected virtual UniTask TriggerInitializeAsync(
             TArgs args,
             CancellationToken cancellationToken
-        )
-        {
-            await InitializeAsync(args, cancellationToken);
-        }
+        ) => InitializeAsync(args, cancellationToken);
 
         /// <summary>
         /// システム用の入場演出フック。デフォルトではユーザーの <see cref="EnterAsync"/> を呼び出します。
         /// </summary>
-        protected virtual async UniTask TriggerEnterAsync(
+        protected virtual UniTask TriggerEnterAsync(
             EnterContext context,
             CancellationToken cancellationToken
-        )
-        {
-            await EnterAsync(context, cancellationToken);
-        }
+        ) => EnterAsync(context, cancellationToken);
 
         /// <summary>
         /// システム用の退場演出フック。 デフォルトではユーザーの <see cref="ExitAsync"/> を呼び出します。
         /// </summary>
-        protected virtual async UniTask TriggerExitAsync(
+        protected virtual UniTask TriggerExitAsync(
             ExitContext context,
             CancellationToken cancellationToken
-        )
-        {
-            await ExitAsync(context, cancellationToken);
-        }
+        ) => ExitAsync(context, cancellationToken);
 
         /// <summary>
         /// システム用のビューロード完了フック。デフォルトではユーザーの <see cref="OnViewLoaded"/> を呼び出します。
@@ -227,31 +218,22 @@ namespace Lilja.ScreenManagement
         }
 
         /// <inheritdoc />
-        async UniTask IGameScreenInternal<TArgs>.InitializeAsync(
+        UniTask IGameScreenInternal<TArgs>.InitializeAsync(
             TArgs args,
             CancellationToken cancellationToken
-        )
-        {
-            await TriggerInitializeAsync(args, cancellationToken);
-        }
+        ) => TriggerInitializeAsync(args, cancellationToken);
 
         /// <inheritdoc />
-        async UniTask IGameScreenInternal.ExecuteEnterAsync(
+        UniTask IGameScreenInternal.ExecuteEnterAsync(
             EnterContext context,
             CancellationToken cancellationToken
-        )
-        {
-            await TriggerEnterAsync(context, cancellationToken);
-        }
+        ) => TriggerEnterAsync(context, cancellationToken);
 
         /// <inheritdoc />
-        async UniTask IGameScreenInternal.ExecuteExitAsync(
+        UniTask IGameScreenInternal.ExecuteExitAsync(
             ExitContext context,
             CancellationToken cancellationToken
-        )
-        {
-            await TriggerExitAsync(context, cancellationToken);
-        }
+        ) => TriggerExitAsync(context, cancellationToken);
 
         /// <inheritdoc />
         void IGameScreenInternal.OnViewLoaded()
