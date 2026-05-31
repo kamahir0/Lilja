@@ -90,10 +90,13 @@ namespace Lilja.ScreenManagement.Dialog
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                // フォールバックで対応するため、警告ログのみ残して例外は投げない
-                Debug.LogWarning(
-                    $"[Lilja.ScreenManagement.Dialog] PreloadAsync: ダイアログプレハブのロードに失敗しました。フォールバック処理を行います。エラー: {ex.Message}"
-                );
+                // デフォルトのフォールバックキーの場合は警告を表示しない
+                if (!IsDefaultFallbackKey)
+                {
+                    Debug.LogWarning(
+                        $"[Lilja.ScreenManagement.Dialog] PreloadAsync: ダイアログプレハブのロードに失敗しました。フォールバック処理を行います。エラー: {ex.Message}"
+                    );
+                }
             }
         }
 
@@ -164,10 +167,13 @@ namespace Lilja.ScreenManagement.Dialog
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // フォールバックで対応するが、アセットロードに失敗した原因究明のために必ずログを出力する
-                    Debug.LogWarning(
-                        $"[Lilja.ScreenManagement.Dialog] LoadAsync: ダイアログプレハブのロードに失敗しました。フォールバック処理を行います。エラー: {ex.Message}\n{ex.StackTrace}"
-                    );
+                    // デフォルトのフォールバックキーの場合は警告を表示しない
+                    if (!IsDefaultFallbackKey)
+                    {
+                        Debug.LogWarning(
+                            $"[Lilja.ScreenManagement.Dialog] LoadAsync: ダイアログプレハブのロードに失敗しました。フォールバック処理を行います。エラー: {ex.Message}\n{ex.StackTrace}"
+                        );
+                    }
                 }
 
                 // Frame生成
@@ -297,6 +303,9 @@ namespace Lilja.ScreenManagement.Dialog
                 content.SetParent(frame, false);
             }
         }
+
+        private bool IsDefaultFallbackKey =>
+            _frameKey == "DialogFrame/DefaultDialogFrame" && _contentKey == "DialogContent/DefaultDialogContent";
 
         private readonly string _frameKey;
         private readonly string _contentKey;
