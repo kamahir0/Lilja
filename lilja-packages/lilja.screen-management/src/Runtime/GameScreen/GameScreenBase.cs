@@ -162,6 +162,14 @@ namespace Lilja.ScreenManagement
         protected GameScreenBase() { }
 
         /// <summary>
+        /// この画面がビューを持たない論理画面であるかどうかを示す値を取得します。デフォルトは false です。
+        /// </summary>
+        public virtual bool IsViewless => false;
+
+        /// <inheritdoc />
+        bool IGameScreenInternal.IsViewless => IsViewless;
+
+        /// <summary>
         /// この画面が所属する実行コンテキスト。
         /// </summary>
         public GameScreenContext Context { get; internal set; }
@@ -264,7 +272,14 @@ namespace Lilja.ScreenManagement
 
             if (!transitionHandle.IsPlayed)
             {
-                await transitionHandle.PlayAsync(cancellationToken);
+                if (IsViewless)
+                {
+                    // ビューレス画面の場合は暗転維持（フェードインスキップ）
+                }
+                else
+                {
+                    await transitionHandle.PlayAsync(cancellationToken);
+                }
             }
         }
 
@@ -283,7 +298,14 @@ namespace Lilja.ScreenManagement
 
             if (!transitionHandle.IsPlayed)
             {
-                await transitionHandle.PlayAsync(cancellationToken);
+                if (IsViewless)
+                {
+                    // ビューレス画面の場合はフェードアウト演出スキップ
+                }
+                else
+                {
+                    await transitionHandle.PlayAsync(cancellationToken);
+                }
             }
         }
 
@@ -306,7 +328,14 @@ namespace Lilja.ScreenManagement
 
             if (!transitionHandle.IsPlayed)
             {
-                await transitionHandle.PlayAsync(cancellationToken);
+                if (IsViewless)
+                {
+                    // ビューレス画面の場合は暗転維持（フェードインスキップ）
+                }
+                else
+                {
+                    await transitionHandle.PlayAsync(cancellationToken);
+                }
             }
         }
 
@@ -325,7 +354,14 @@ namespace Lilja.ScreenManagement
 
             if (!transitionHandle.IsPlayed)
             {
-                await transitionHandle.PlayAsync(cancellationToken);
+                if (IsViewless)
+                {
+                    // ビューレス画面の場合はフェードアウト演出スキップ
+                }
+                else
+                {
+                    await transitionHandle.PlayAsync(cancellationToken);
+                }
             }
         }
 

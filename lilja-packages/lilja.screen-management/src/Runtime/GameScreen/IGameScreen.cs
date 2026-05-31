@@ -15,6 +15,11 @@ namespace Lilja.ScreenManagement
     internal interface IGameScreenInternal : IGameScreen
     {
         /// <summary>
+        /// この画面がビューを持たない論理画面（GameFlow等）であるかどうかを示す値を取得します。
+        /// </summary>
+        bool IsViewless { get; }
+
+        /// <summary>
         /// 伝播された画面遷移コンテキストを取得します。
         /// </summary>
         GameScreenContext Context { get; }
