@@ -80,6 +80,7 @@ namespace Lilja.ScreenManagement
                     initialScreen.Group = calleeGroup;
 
                     insertIndex = list.Count;
+                    calleeGroup.SetCurrent(initialScreenKey, initialScreenArgs);
 
                     // 初期表示時のカスタムトランジション検索
                     ITransition customTransition = null;

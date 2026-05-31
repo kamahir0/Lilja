@@ -176,6 +176,37 @@ namespace Lilja.ScreenManagement
             );
         }
 
+        private string _currentKey;
+        private object _currentArgs;
+        private readonly Stack<(string Key, object Args)> _history = new();
+
+        /// <summary>
+        /// 戻り先となる遷移履歴がスタックに存在するかどうかを取得します。
+        /// </summary>
+        public bool CanGoBack => _history.Count > 0;
+
+        /// <summary>
+        /// 履歴スタックの数を取得します。
+        /// </summary>
+        public int HistoryCount => _history.Count;
+
+        /// <summary>
+        /// 履歴スタックをすべてクリアします。
+        /// </summary>
+        public void ClearHistory()
+        {
+            _history.Clear();
+        }
+
+        /// <summary>
+        /// 現在のアクティブ画面情報を設定します（システム内部用）。
+        /// </summary>
+        internal void SetCurrent(string key, object args)
+        {
+            _currentKey = key;
+            _currentArgs = args;
+        }
+
         /// <summary>
         /// このグループ内のアクティブな画面を、キー名を指定して別の画面へと排他切り替えします。
         /// </summary>
@@ -190,6 +221,24 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken = default
         )
         {
+            if (_currentKey != null)
+            {
+                _history.Push((_currentKey, _currentArgs));
+            }
+            return SwitchAsyncInternal(key, args, cancellationToken);
+        }
+
+        /// <summary>
+        /// 履歴プッシュを行わずに切り替えを行う内部メソッド。
+        /// </summary>
+        private UniTask SwitchAsyncInternal<TArgs>(
+            string key,
+            TArgs args,
+            CancellationToken cancellationToken
+        )
+        {
+            _currentKey = key;
+            _currentArgs = args;
             return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);
         }
 
@@ -208,6 +257,42 @@ namespace Lilja.ScreenManagement
             where TScreen : GameScreen<TArgs>
         {
             return SwitchAsync(typeof(TScreen).FullName, args, cancellationToken);
+        }
+
+        /// <summary>
+        /// 遷移履歴を一つ戻り、前回の画面へ前回の引数と共に切り替えます。
+        /// 戻り先の履歴が存在しない場合は、自動的に Complete() を実行してこの画面グループを正常終了します。
+        /// </summary>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>切り替え、または終了処理の完了を待つタスク</returns>
+        public async UniTask SwitchBackAsync(CancellationToken cancellationToken = default)
+        {
+            if (_history.Count == 0)
+            {
+                // 戻る履歴が残っていない場合は、グループを正常終了・クローズする
+                Complete();
+                return;
+            }
+
+            var (prevKey, prevArgs) = _history.Pop();
+
+            // 引数の型を動的に解決（nullの場合はValueTupleとして扱う）
+            var argType = prevArgs != null ? prevArgs.GetType() : typeof(ValueTuple);
+            
+            // 型パラメータ付きの SwitchAsyncInternal を動的に構築して実行
+            var method = typeof(GameScreenGroup)
+                .GetMethod(
+                    nameof(SwitchAsyncInternal),
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+                );
+
+            if (method == null)
+            {
+                throw new InvalidOperationException("[Lilja.ScreenManagement] 内部切り替えメソッドの解決に失敗しました。");
+            }
+
+            var genericMethod = method.MakeGenericMethod(argType);
+            await (UniTask)genericMethod.Invoke(this, new[] { prevKey, prevArgs, cancellationToken });
         }
 
         /// <summary>
