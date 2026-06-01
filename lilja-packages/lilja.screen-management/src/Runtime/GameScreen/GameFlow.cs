@@ -175,7 +175,10 @@ namespace Lilja.ScreenManagement
         );
 
         /// <inheritdoc />
-        protected override void OnDispose() { }
+        protected override void OnDispose()
+        {
+            base.OnDispose();
+        }
 
         /// <inheritdoc />
         protected sealed override UniTask InitializeAsync(

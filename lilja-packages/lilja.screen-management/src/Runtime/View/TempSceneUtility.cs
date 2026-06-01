@@ -53,6 +53,7 @@ namespace Lilja.ScreenManagement
                 {
                     SceneManager.UnloadSceneAsync(_scene);
                 }
+                _scene = default;
             }
 
             #endregion

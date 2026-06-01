@@ -25,6 +25,7 @@ namespace Lilja.ScreenManagement
         protected override void OnDispose()
         {
             _group = null;
+            base.OnDispose();
         }
 
         private GameScreenGroup _group;

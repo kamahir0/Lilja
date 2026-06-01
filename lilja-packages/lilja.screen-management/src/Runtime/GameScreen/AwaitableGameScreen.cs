@@ -77,6 +77,7 @@ namespace Lilja.ScreenManagement
         {
             _completionSource?.TrySetCanceled();
             _completionSource = null;
+            base.OnDispose();
         }
 
         private bool _called;

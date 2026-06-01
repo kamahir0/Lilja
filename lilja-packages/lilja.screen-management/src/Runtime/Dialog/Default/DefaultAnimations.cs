@@ -29,6 +29,10 @@ namespace Lilja.ScreenManagement.Dialog
         public void OnViewLoaded(RectTransform frame)
         {
             _target = frame;
+            if (frame != null)
+            {
+                _originalPosition = frame.anchoredPosition;
+            }
         }
 
         /// <inheritdoc />
@@ -50,8 +54,8 @@ namespace Lilja.ScreenManagement.Dialog
             }
 
             var canvasGroup = GetOrAddCanvasGroup(_target);
-            var startPos = _target.anchoredPosition - new Vector2(0, MoveDistance);
-            var endPos = _target.anchoredPosition;
+            var endPos = _originalPosition;
+            var startPos = endPos - new Vector2(0, MoveDistance);
 
             canvasGroup.alpha = 0f;
             _target.anchoredPosition = startPos;
@@ -82,7 +86,7 @@ namespace Lilja.ScreenManagement.Dialog
             }
 
             var canvasGroup = GetOrAddCanvasGroup(_target);
-            var startPos = _target.anchoredPosition;
+            var startPos = _originalPosition;
             var endPos = startPos - new Vector2(0, MoveDistance);
 
             await AnimateAsync(
@@ -127,19 +131,34 @@ namespace Lilja.ScreenManagement.Dialog
                 return;
             }
 
-            var elapsed = 0f;
-            while (elapsed < duration)
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                var elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / duration);
-                var easedT = curve.Evaluate(t);
+                    elapsed += Time.unscaledDeltaTime;
+                    var t = Mathf.Clamp01(elapsed / duration);
+                    var easedT = curve.Evaluate(t);
 
-                target.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, easedT);
-                canvasGroup.alpha = Mathf.LerpUnclamped(startAlpha, endAlpha, easedT);
+                    target.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, easedT);
+                    canvasGroup.alpha = Mathf.LerpUnclamped(startAlpha, endAlpha, easedT);
 
-                await UniTask.Yield(cancellationToken);
+                    await UniTask.Yield(cancellationToken);
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
+                if (target != null)
+                {
+                    target.anchoredPosition = endPos;
+                }
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = endAlpha;
+                }
+                throw;
             }
 
             target.anchoredPosition = endPos;
@@ -147,6 +166,7 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         private RectTransform _target;
+        private Vector2 _originalPosition;
     }
 
     /// <summary>
@@ -173,6 +193,10 @@ namespace Lilja.ScreenManagement.Dialog
         public void OnViewLoaded(RectTransform frame)
         {
             _target = frame;
+            if (frame != null)
+            {
+                _originalPosition = frame.anchoredPosition;
+            }
 
             if (_isPushed && _target != null)
             {
@@ -198,7 +222,7 @@ namespace Lilja.ScreenManagement.Dialog
                 return;
             }
 
-            var startPos = _target.anchoredPosition;
+            var startPos = _originalPosition;
             var endPos = startPos + new Vector2(0, PushDistance);
 
             await AnimatePositionAsync(
@@ -227,7 +251,7 @@ namespace Lilja.ScreenManagement.Dialog
             }
 
             var startPos = _target.anchoredPosition;
-            var endPos = startPos - new Vector2(0, PushDistance);
+            var endPos = _originalPosition;
 
             await AnimatePositionAsync(
                 _target,
@@ -256,17 +280,28 @@ namespace Lilja.ScreenManagement.Dialog
                 return;
             }
 
-            var elapsed = 0f;
-            while (elapsed < duration)
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                var elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / duration);
-                var easedT = curve.Evaluate(t);
-                target.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, easedT);
+                    elapsed += Time.unscaledDeltaTime;
+                    var t = Mathf.Clamp01(elapsed / duration);
+                    var easedT = curve.Evaluate(t);
+                    target.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, easedT);
 
-                await UniTask.Yield(cancellationToken);
+                    await UniTask.Yield(cancellationToken);
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
+                if (target != null)
+                {
+                    target.anchoredPosition = endPos;
+                }
+                throw;
             }
 
             target.anchoredPosition = endPos;
@@ -280,5 +315,6 @@ namespace Lilja.ScreenManagement.Dialog
         private RectTransform _target;
         private bool _isPushed;
         private Vector2 _pushedPosition;
+        private Vector2 _originalPosition;
     }
 }

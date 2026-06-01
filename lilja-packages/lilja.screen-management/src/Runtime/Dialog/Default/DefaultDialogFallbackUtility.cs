@@ -10,6 +10,12 @@ namespace Lilja.ScreenManagement.Dialog
     {
         private static Font _defaultFont;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            _defaultFont = null;
+        }
+
         private static Font GetDefaultFont()
         {
             // Unity ビルトインのデフォルトフォントを取得します。複数のフォールバック経路を試すことで NullReferenceException を防止します。

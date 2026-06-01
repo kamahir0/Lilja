@@ -15,11 +15,10 @@ namespace Lilja.ScreenManagement
             vh.Clear();
         }
 
-        /// <summary>
-        /// 新しい <see cref="InvisibleGraphic"/> インスタンスを初期化します。
-        /// </summary>
-        public InvisibleGraphic()
+        /// <inheritdoc />
+        protected override void Awake()
         {
+            base.Awake();
             useLegacyMeshGeneration = false;
         }
     }

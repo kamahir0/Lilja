@@ -88,7 +88,7 @@ namespace Lilja.ScreenManagement
                     initialScreen.Group = calleeGroup;
 
                     insertIndex = list.Count;
-                    calleeGroup.SetCurrent(initialScreenKey, initialScreenArgs);
+                    calleeGroup.SetCurrent(initialScreenKey, initialScreenArgs, typeof(TArgs));
 
                     // 初期表示時はグループ全体の OverrideTransition を使用
                     ITransition customTransition = calleeGroup.OverrideTransition;
@@ -158,7 +158,7 @@ namespace Lilja.ScreenManagement
                             previousScreenType,
                             transition,
                             false,
-                            cancellationToken
+                            CancellationToken.None
                         );
                     }
                 }

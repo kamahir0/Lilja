@@ -23,28 +23,28 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            var canvases = new List<Canvas>();
+            _canvasBuffer.Clear();
             foreach (var root in rootObjects)
             {
                 if (root == null)
                 {
                     continue;
                 }
-                root.GetComponentsInChildren(true, canvases);
+                root.GetComponentsInChildren(true, _canvasBuffer);
             }
 
-            if (canvases.Count == 0)
+            if (_canvasBuffer.Count == 0)
             {
                 return;
             }
 
             var baseOrder = layerIndex * LayerOrderRange;
 
-            canvases.Sort((a, b) => a.sortingOrder.CompareTo(b.sortingOrder));
+            _canvasBuffer.Sort((a, b) => a.sortingOrder.CompareTo(b.sortingOrder));
 
-            for (var i = 0; i < canvases.Count; i++)
+            for (var i = 0; i < _canvasBuffer.Count; i++)
             {
-                var canvas = canvases[i];
+                var canvas = _canvasBuffer[i];
                 if (canvas.renderMode == RenderMode.WorldSpace)
                 {
                     Debug.LogWarning(
@@ -55,6 +55,8 @@ namespace Lilja.ScreenManagement
                 canvas.overrideSorting = true;
                 canvas.sortingOrder = baseOrder + i;
             }
+
+            _canvasBuffer.Clear();
         }
 
         /// <summary>

@@ -152,7 +152,7 @@ namespace Lilja.ScreenManagement
         {
             if (_currentKey != null)
             {
-                _history.Push((_currentKey, _currentArgs));
+                _history.Push((_currentKey, _currentArgs, _currentArgsType));
             }
             return SwitchAsyncInternal(key, args, cancellationToken);
         }
@@ -189,10 +189,7 @@ namespace Lilja.ScreenManagement
                 return;
             }
 
-            var (prevKey, prevArgs) = _history.Pop();
-
-            // 引数の型を動的に解決（nullの場合はValueTupleとして扱う）
-            var argType = prevArgs != null ? prevArgs.GetType() : typeof(ValueTuple);
+            var (prevKey, prevArgs, prevArgsType) = _history.Pop();
 
             // 型パラメータ付きの SwitchAsyncInternal を動的に構築して実行
             var method = typeof(GameScreenGroup).GetMethod(
@@ -207,7 +204,7 @@ namespace Lilja.ScreenManagement
                 );
             }
 
-            var genericMethod = method.MakeGenericMethod(argType);
+            var genericMethod = method.MakeGenericMethod(prevArgsType);
             await (UniTask)
                 genericMethod.Invoke(this, new[] { prevKey, prevArgs, cancellationToken });
         }
@@ -257,7 +254,8 @@ namespace Lilja.ScreenManagement
         private bool _configured;
         private string _currentKey;
         private object _currentArgs;
-        private readonly Stack<(string Key, object Args)> _history = new();
+        private Type _currentArgsType;
+        private readonly Stack<(string Key, object Args, Type ArgsType)> _history = new();
         private readonly Dictionary<string, Func<object>> _factories = new();
         private readonly Dictionary<string, Type> _types = new();
 
@@ -336,10 +334,11 @@ namespace Lilja.ScreenManagement
         /// <summary>
         /// 現在のアクティブ画面情報を設定します（システム内部用）。
         /// </summary>
-        internal void SetCurrent(string key, object args)
+        internal void SetCurrent(string key, object args, Type argsType)
         {
             _currentKey = key;
             _currentArgs = args;
+            _currentArgsType = argsType;
         }
 
         private UniTask SwitchAsyncInternal<TArgs>(
@@ -351,6 +350,7 @@ namespace Lilja.ScreenManagement
             // 履歴プッシュを行わずに切り替えを行う内部メソッド。
             _currentKey = key;
             _currentArgs = args;
+            _currentArgsType = typeof(TArgs);
             return Procedures.Group.SwitchAsync(this, key, args, cancellationToken);
         }
 

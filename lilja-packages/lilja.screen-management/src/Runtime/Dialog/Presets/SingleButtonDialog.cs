@@ -30,8 +30,8 @@ namespace Lilja.ScreenManagement.Dialog
         /// <param name="body">ダイアログの本文。</param>
         /// <param name="buttonText">ボタンのテキスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>画面の結果を返す non-static な非同期タスク</returns>
-        public UniTask CallAsync(
+        /// <returns>画面の結果を返す非同期タスク</returns>
+        public static UniTask CallAsync(
             GameScreenContext callerContext,
             string title,
             string body,

@@ -24,9 +24,26 @@ namespace Lilja.ScreenManagement
         private static readonly Dictionary<Type, List<PropertyInfo>> _propertyCache =
             new Dictionary<Type, List<PropertyInfo>>();
 
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            lock (_fieldCache)
+            {
+                _fieldCache.Clear();
+            }
+            lock (_propertyCache)
+            {
+                _propertyCache.Clear();
+            }
+        }
+
         /// <summary>
         /// 指定されたターゲットオブジェクトの [View] 属性付きフィールドおよびプロパティに対して、ルートオブジェクト配下の適合するコンポーネント参照を自動注入（インジェクション）します。
         /// </summary>
+        /// <remarks>
+        /// 複数のルートオブジェクトが存在する場合、配列の先頭から順に検索し、最初に見つかった適合コンポーネントが注入されます。
+        /// 同一型のコンポーネントが複数存在する場合、注入されるインスタンスは検索順に依存します。
+        /// </remarks>
         /// <param name="target">注入対象の画面オブジェクト</param>
         /// <param name="rootObjects">検索範囲となるビューのルート GameObject 群</param>
         public static void Inject(object target, GameObject[] rootObjects)
