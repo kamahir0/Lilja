@@ -314,7 +314,7 @@ namespace Lilja.DevKit.PackageManagement
         {
             string templatePath = GetTemplatePath("Analyzer");
 
-            string targetDir = Path.Combine(packageRoot, "Analyzer");
+            string targetDir = Path.Combine(packageRoot, "Analyzer~");
 
             // ディレクトリコピー & 置換
             if (Directory.Exists(templatePath))
