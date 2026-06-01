@@ -72,11 +72,37 @@ graph TD
 
 ### UPM (Unity Package Manager) からの導入
 
-Unity プロジェクトの `Packages/manifest.json` の `dependencies` ブロックに以下を追加します。
+本パッケージは `UniTask` に依存しています。Unity の仕様制限（パッケージ自身の `package.json` に Git URL が直接記載できない）により、Git 経由でインポートする際は以下のいずれかの方法で依存関係を解決する必要があります。
+
+#### 方法 A. OpenUPM (Scoped Registry) を利用する場合 (推奨・自動解決)
+インポート先の Unity プロジェクトに **OpenUPM** の Scoped Registry が登録されている場合、以下のマニフェスト行を追加するだけで依存関係が自動解決されインポートされます。
+
+`Packages/manifest.json` に `scopedRegistries` と `dependencies` をそれぞれ追加します：
+
+```json
+{
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.cysharp"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.kamahiro.lilja.screen-management": "https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.screen-management"
+  }
+}
+```
+
+#### 方法 B. Git URL を直接並記する場合
+Scoped Registry を登録しない環境の場合は、`Packages/manifest.json` の `dependencies` に `UniTask` と本パッケージの Git URL を**両方並記**して追加します：
 
 ```json
 {
   "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.kamahiro.lilja.screen-management": "https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.screen-management"
   }
 }
@@ -85,8 +111,8 @@ Unity プロジェクトの `Packages/manifest.json` の `dependencies` ブロ�
 ※ 必要に応じて Git URL の末尾に `#vX.Y.Z` のようにタグを指定してください。
 
 ### 前提依存パッケージ
-- **UniTask** (`com.cysharp.unitask`)
-- **R3** (`com.cysharp.r3`) ※ オプショナル統合に対応
+- **UniTask** (`com.cysharp.unitask`) : 必須
+- **R3** (`com.cysharp.r3`) : オプショナル（導入されていれば自動で機能が有効化されます）
 
 ---
 
