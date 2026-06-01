@@ -45,7 +45,8 @@ namespace Lilja.ScreenManagement
                 {
                     if (callerScreen != null)
                     {
-                        var transition = calleeScreen.OverrideTransition ?? callerContext.Transition;
+                        var transition =
+                            calleeScreen.OverrideTransition ?? callerContext.Transition;
                         await Screen.ExecuteExitWithTransitionAsync(
                             callerScreen,
                             ExitType.OnPause,
@@ -99,7 +100,8 @@ namespace Lilja.ScreenManagement
 
                         if (callerScreen != null)
                         {
-                            var transition = calleeScreen.OverrideTransition ?? callerContext.Transition;
+                            var transition =
+                                calleeScreen.OverrideTransition ?? callerContext.Transition;
                             await Screen.ExecuteEnterWithTransitionAsync(
                                 callerScreen,
                                 EnterType.OnResume,

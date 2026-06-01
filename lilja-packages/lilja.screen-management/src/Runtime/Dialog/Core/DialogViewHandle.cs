@@ -321,7 +321,8 @@ namespace Lilja.ScreenManagement.Dialog
         }
 
         private bool IsDefaultFallbackKey =>
-            _frameKey == "DialogFrame/DefaultDialogFrame" && _contentKey == "DialogContent/DefaultDialogContent";
+            _frameKey == "DialogFrame/DefaultDialogFrame"
+            && _contentKey == "DialogContent/DefaultDialogContent";
 
         private readonly string _frameKey;
         private readonly string _contentKey;

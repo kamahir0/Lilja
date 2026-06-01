@@ -24,7 +24,9 @@ namespace Lilja.ScreenManagement
         private static readonly Dictionary<Type, List<PropertyInfo>> _propertyCache =
             new Dictionary<Type, List<PropertyInfo>>();
 
-        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        [UnityEngine.RuntimeInitializeOnLoadMethod(
+            UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration
+        )]
         private static void ResetStaticState()
         {
             lock (_fieldCache)

@@ -15,7 +15,9 @@ namespace Lilja.ScreenManagement
         private static Scene? _cachedScene;
         private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
-        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        [UnityEngine.RuntimeInitializeOnLoadMethod(
+            UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration
+        )]
         private static void ResetStaticState()
         {
             _cachedScene = null;

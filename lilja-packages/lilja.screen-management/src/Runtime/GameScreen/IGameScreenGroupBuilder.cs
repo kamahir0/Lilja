@@ -74,7 +74,10 @@ namespace Lilja.ScreenManagement
         /// <param name="transition">一時差し替え用のトランジション演出</param>
         /// <param name="bidirectional">双方向に（逆方向の遷移にも同じトランジションを）適用するかどうか</param>
         /// <returns>メソッドチェーン用のビルダーインターフェース</returns>
-        IGameScreenGroupBuilder OverrideTransition<TFrom, TTo>(ITransition transition, bool bidirectional = false)
+        IGameScreenGroupBuilder OverrideTransition<TFrom, TTo>(
+            ITransition transition,
+            bool bidirectional = false
+        )
             where TFrom : IGameScreen
             where TTo : IGameScreen;
 
