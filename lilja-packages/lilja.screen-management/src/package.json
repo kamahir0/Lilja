@@ -7,10 +7,13 @@
     "keywords": [
         "lilja"
     ],
-  "author": {
+    "author": {
     "name": "kamahir0",
     "url": "https://github.com/kamahir0",
     "email": "hrtk1330@gmail.com"
+  },
+  "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
   },
     "documentationUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.screen-management/README.md",
     "changelogUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.screen-management/CHANGELOG.md",
