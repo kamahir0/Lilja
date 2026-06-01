@@ -168,7 +168,7 @@ namespace Lilja.DevKit.PackageManagement
             string packageName,
             PackageCreatorParameters parameters)
         {
-            string packageJsonPath = Path.Combine(packageRoot, "src", "package.json");
+            string packageJsonPath = Path.Combine(packageRoot, "package.json");
             if (!File.Exists(packageJsonPath)) return;
 
             string content = File.ReadAllText(packageJsonPath);

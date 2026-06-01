@@ -340,8 +340,8 @@ namespace Lilja.DevKit.PackageManagement
                 // インポート設定が有効な場合はmanifest.jsonに追加
                 if (_settings.withImport)
                 {
-                    // srcフォルダ内にpackage.jsonがあるため、srcフォルダをインポート対象とする
-                    PackageImporter.Import(Path.Combine(createdPath, "src"));
+                    // パッケージルート直下にpackage.jsonがあるため、パッケージルートをインポート対象とする
+                    PackageImporter.Import(createdPath);
                 }
 
                 EditorDialog.DisplayAlertDialog(
