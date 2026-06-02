@@ -198,4 +198,57 @@ namespace Lilja.ScreenManagement
             CancellationToken cancellationToken
         ) => UniTask.CompletedTask;
     }
+
+    /// <summary>
+    /// GameFlowの作成・構築を行うヘルパークラス。
+    /// </summary>
+    public static class GameFlow
+    {
+        /// <summary>
+        /// 継承せずにラムダ式からGameFlowを作成します。
+        /// </summary>
+        public static GameFlow<TArgs, TResult> Create<TArgs, TResult>(
+            Func<GameScreenContext, TArgs, CancellationToken, UniTask<TResult>> runAsync
+        )
+        {
+            return new LambdaGameFlow<TArgs, TResult>(runAsync);
+        }
+
+        /// <summary>
+        /// GameFlowBuilderを初期化します。
+        /// </summary>
+        public static GameFlowBuilder<TStart, TStart> CreateBuilder<TStart>()
+        {
+            return new GameFlowBuilder<TStart, TStart>((ctx, arg, ct) => UniTask.FromResult(arg));
+        }
+
+        /// <summary>
+        /// 最初のステップを指定してGameFlowBuilderを初期化します。
+        /// </summary>
+        public static GameFlowBuilder<TStart, TNext> CreateBuilder<TStart, TNext>(
+            Func<GameScreenContext, TStart, CancellationToken, UniTask<TNext>> firstStep
+        )
+        {
+            return new GameFlowBuilder<TStart, TNext>(firstStep);
+        }
+    }
+
+    internal sealed class LambdaGameFlow<TArgs, TResult> : GameFlow<TArgs, TResult>
+    {
+        private readonly Func<GameScreenContext, TArgs, CancellationToken, UniTask<TResult>> _runAsync;
+
+        public LambdaGameFlow(Func<GameScreenContext, TArgs, CancellationToken, UniTask<TResult>> runAsync)
+        {
+            _runAsync = runAsync ?? throw new ArgumentNullException(nameof(runAsync));
+        }
+
+        protected override UniTask<TResult> RunAsync(
+            GameScreenContext context,
+            TArgs args,
+            CancellationToken cancellationToken
+        )
+        {
+            return _runAsync(context, args, cancellationToken);
+        }
+    }
 }
