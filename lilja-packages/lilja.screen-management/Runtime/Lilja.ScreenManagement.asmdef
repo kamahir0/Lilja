@@ -6,6 +6,7 @@
         "UniTask.Addressables",
         "Unity.Addressables",
         "Unity.ResourceManager",
+        "UnityEngine.UI",
         "R3"
     ],
     "includePlatforms": [],

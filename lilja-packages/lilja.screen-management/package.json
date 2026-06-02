@@ -14,5 +14,8 @@
   },
     "documentationUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.screen-management/README.md",
     "changelogUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.screen-management/CHANGELOG.md",
-    "licensesUrl": "https://github.com/kamahir0/Lilja/blob/main/LICENSE"
+    "licensesUrl": "https://github.com/kamahir0/Lilja/blob/main/LICENSE",
+    "dependencies": {
+        "com.unity.ugui": "2.0.0"
+    }
 }

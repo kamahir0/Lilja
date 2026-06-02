@@ -3,7 +3,8 @@
     "rootNamespace": "Lilja.ScreenManagement.Dialog",
     "references": [
         "Lilja.ScreenManagement",
-        "UniTask"
+        "UniTask",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
