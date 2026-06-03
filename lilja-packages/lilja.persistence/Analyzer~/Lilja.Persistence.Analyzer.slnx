@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Lilja.Persistence.Analyzer/Lilja.Persistence.Analyzer.csproj" />
+  <Project Path="Lilja.Persistence.Analyzer.Test/Lilja.Persistence.Analyzer.Test.csproj" />
+</Solution>
