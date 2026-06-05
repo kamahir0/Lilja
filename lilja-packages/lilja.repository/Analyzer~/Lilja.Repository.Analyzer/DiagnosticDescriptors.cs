@@ -2,96 +2,35 @@ using Microsoft.CodeAnalysis;
 
 namespace Lilja.Repository.Analyzer;
 
-/// <summary>
-/// リポジトリソースジェネレーターが出力する診断ディスクリプターを一元管理します。
-/// </summary>
 internal static class DiagnosticDescriptors
 {
-    /// <summary>
-    /// エンティティ宣言に <c>partial</c> 修飾子がない場合に出力される診断です。
-    /// </summary>
     public static readonly DiagnosticDescriptor EntityMustBePartial = new DiagnosticDescriptor(
-        "LILJAREPO001",
-        "Entity must be partial",
-        "Entity must be partial",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+        "LILJAREPO001", "Entity must be partial", "Entity must be partial", "Lilja.Repository", DiagnosticSeverity.Error, true);
 
-    /// <summary>
-    /// エンティティ宣言がジェネリック型引数を使用している場合に出力される診断です。
-    /// </summary>
     public static readonly DiagnosticDescriptor GenericEntityNotSupported = new DiagnosticDescriptor(
-        "LILJAREPO002",
-        "Generic entity is not supported",
-        "Generic entity is not supported",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+        "LILJAREPO002", "Generic entity is not supported", "Generic entity is not supported", "Lilja.Repository", DiagnosticSeverity.Error, true);
 
-    /// <summary>
-    /// 静的メンバーにリポジトリ参加用の注釈が付いている場合に出力される診断です。
-    /// </summary>
-    public static readonly DiagnosticDescriptor StaticMemberNotSupported = new DiagnosticDescriptor(
-        "LILJAREPO003",
-        "Static member is not supported",
-        "Static member is not supported",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+    public static readonly DiagnosticDescriptor UnsupportedMember = new DiagnosticDescriptor(
+        "LILJAREPO003", "Unsupported member", "Member '{0}' is not supported: {1}", "Lilja.Repository", DiagnosticSeverity.Error, true);
 
-    /// <summary>
-    /// 未対応のメンバー種別に永続化注釈が付いている場合に出力される診断です。
-    /// </summary>
-    public static readonly DiagnosticDescriptor OnlyAutoPropertiesSupported = new DiagnosticDescriptor(
-        "LILJAREPO004",
-        "Only auto-properties are supported",
-        "Only auto-properties are supported",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
-
-    /// <summary>
-    /// 複数の永続化対象メンバーが同じインデックスを再利用している場合に出力される診断です。
-    /// </summary>
     public static readonly DiagnosticDescriptor PersistIndexMustBeUnique = new DiagnosticDescriptor(
-        "LILJAREPO005",
-        "Persist index must be unique",
-        "Persist index must be unique",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+        "LILJAREPO004", "Persist index must be unique", "Persist index '{0}' is used more than once", "Lilja.Repository", DiagnosticSeverity.Error, true);
 
-    /// <summary>
-    /// キーメンバーが永続化対象としてもマークされていない場合に出力される診断です。
-    /// </summary>
-    public static readonly DiagnosticDescriptor PersistedKeysMustAlsoBePersisted = new DiagnosticDescriptor(
-        "LILJAREPO006",
-        "Persisted keys must also be persisted",
-        "Persisted keys must also be persisted",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+    public static readonly DiagnosticDescriptor PersistIndexMustBeNonNegative = new DiagnosticDescriptor(
+        "LILJAREPO005", "Persist index must be non-negative", "Persist index must be non-negative", "Lilja.Repository", DiagnosticSeverity.Error, true);
 
-    /// <summary>
-    /// 値オブジェクトの <c>[ToPrimitive]</c> メソッドが無効な場合に出力される診断です。
-    /// </summary>
+    public static readonly DiagnosticDescriptor KeyMustBePersisted = new DiagnosticDescriptor(
+        "LILJAREPO006", "Key must be persisted", "Key member '{0}' must also have [Persist]", "Lilja.Repository", DiagnosticSeverity.Error, true);
+
     public static readonly DiagnosticDescriptor InvalidToPrimitiveDefinition = new DiagnosticDescriptor(
-        "LILJAREPO007",
-        "Invalid [ToPrimitive] definition",
-        "Invalid [ToPrimitive] definition",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+        "LILJAREPO007", "Invalid [ToPrimitive] definition", "Invalid [ToPrimitive] definition on '{0}'", "Lilja.Repository", DiagnosticSeverity.Error, true);
 
-    /// <summary>
-    /// 値オブジェクトの <c>[FromPrimitive]</c> エントリーポイントが無効な場合に出力される診断です。
-    /// </summary>
     public static readonly DiagnosticDescriptor InvalidFromPrimitiveDefinition = new DiagnosticDescriptor(
-        "LILJAREPO008",
-        "Invalid [FromPrimitive] definition",
-        "Invalid [FromPrimitive] definition",
-        "Lilja.Repository",
-        DiagnosticSeverity.Error,
-        true);
+        "LILJAREPO008", "Invalid [FromPrimitive] definition", "Invalid [FromPrimitive] definition on '{0}'", "Lilja.Repository", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor EntityCycleNotSupported = new DiagnosticDescriptor(
+        "LILJAREPO009", "Entity cycle is not supported", "Persisted entity graph contains a cycle involving '{0}'", "Lilja.Repository", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor MessagePackNotAvailable = new DiagnosticDescriptor(
+        "LILJAREPO010", "MessagePack is not available", "MessagePack repository requested for '{0}', but compatible MessagePack types were not found", "Lilja.Repository", DiagnosticSeverity.Warning, true);
 }

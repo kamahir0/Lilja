@@ -3,7 +3,7 @@
   "displayName": "Lilja.Repository",
   "version": "0.2.0",
   "unity": "6000.3",
-  "description": "Unity repository source generator with staged transactions, JSON persistence, and optional MessagePack support.",
+  "description": "Unity repository source generator with DTO snapshots, opt-in repositories, JSON persistence, and optional MessagePack support.",
   "keywords": [
     "lilja",
     "unity",
