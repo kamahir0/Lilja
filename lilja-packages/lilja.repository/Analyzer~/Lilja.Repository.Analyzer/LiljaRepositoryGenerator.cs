@@ -32,13 +32,14 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 static (ctx, _) => AnalyzeEntity((INamedTypeSymbol)ctx.TargetSymbol))
             .Collect();
 
-        var input = context.CompilationProvider.Combine(analyses);
+        var hasMessagePack = context.CompilationProvider.Select(static (compilation, _) => MessagePackContract.HasCompatibleContract(compilation));
+        var input = analyses.Combine(hasMessagePack);
+
         context.RegisterSourceOutput(input, static (context, pair) =>
         {
-            var compilation = pair.Left;
-            var analyses = pair.Right;
+            var analyses = pair.Left;
+            var hasMessagePack = pair.Right;
             var models = analyses.Where(static item => item.Model is not null).Select(static item => item.Model!).ToArray();
-            var modelBySymbol = models.ToDictionary(static item => item.Symbol, SymbolEqualityComparer.Default);
 
             foreach (var analysis in analyses)
             {
@@ -56,7 +57,6 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 return;
             }
 
-            var hasMessagePack = MessagePackContract.HasCompatibleContract(compilation);
             var needsMessagePack = models.Any(static item => (item.RepositoryOptions & OptionMsgPack) != 0);
 
             foreach (var model in models)
@@ -68,7 +68,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 {
                     if ((model.RepositoryOptions & OptionMsgPack) != 0 && !hasMessagePack)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MessagePackNotAvailable, GetPrimaryLocation(model.Symbol), model.Name));
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MessagePackNotAvailable, model.Location.ToLocation(), model.Name));
                     }
 
                     AddSource(context, model, $"I{model.Name}Repository.g.cs", GenerateRepositoryInterface(model));
@@ -179,10 +179,32 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             var indexComparison = left.Index.CompareTo(right.Index);
             return indexComparison != 0 ? indexComparison : left.DeclarationOrder.CompareTo(right.DeclarationOrder);
         });
+
+        var persistedMembers = members.ToImmutableArray();
+        var keyMembersArray = keyMembers.ToImmutableArray();
+
+        var typeByMemberName = symbol.GetMembers()
+            .Where(m => m is IFieldSymbol || m is IPropertySymbol)
+            .ToDictionary(m => m.Name, GetMemberType, StringComparer.Ordinal);
+        
+        var orderedTypes = persistedMembers
+            .Select(m => typeByMemberName[m.Name])
+            .ToArray();
+
+        var hasMatchingConstructor = HasMatchingConstructor(symbol, orderedTypes);
         var repositoryOptions = GetRepositoryOptions(symbol);
         var model = diagnostics.Any(static item => item.Severity == DiagnosticSeverity.Error)
             ? null
-            : new EntityModel(symbol, repositoryOptions, members.ToImmutableArray(), keyMembers.ToImmutableArray());
+            : new EntityModel(
+                symbol.Name,
+                GetTypeName(symbol),
+                symbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : symbol.ContainingNamespace.ToDisplayString(),
+                repositoryOptions,
+                persistedMembers,
+                keyMembersArray,
+                hasMatchingConstructor,
+                GetLocationInfo(symbol)
+            );
 
         return new EntityAnalysis(model, diagnostics.ToImmutable());
     }
@@ -220,7 +242,9 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             return false;
         }
 
-        model = new MemberModel(member.Name, EscapeIdentifier(member.Name), type, GetTypeName(type), dtoTypeName, index, declarationOrder, isKey, kind, relatedEntity, valueObject);
+        var relatedEntityTypeName = relatedEntity is null ? null : GetTypeName(relatedEntity);
+        var relatedEntityDtoTypeName = relatedEntity is null ? null : GetDtoTypeName(relatedEntity);
+        model = new MemberModel(member.Name, EscapeIdentifier(member.Name), GetTypeName(type), dtoTypeName, index, declarationOrder, isKey, kind, relatedEntityTypeName, relatedEntityDtoTypeName, valueObject);
         return true;
     }
 
@@ -244,7 +268,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
     private static string GenerateEntitySupport(EntityModel model)
     {
-        var hasMatchingConstructor = HasMatchingConstructor(model.Symbol, model.PersistedMembers.Select(static item => item.Type).ToArray());
+        var hasMatchingConstructor = model.HasMatchingConstructor;
         var sb = CreateSourceBuilder();
         using (AppendNamespace(sb, model.NamespaceName))
         {
@@ -310,7 +334,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 sb.Append("        dto.").Append(fieldName).Append(" = ").Append(member.AccessName).Append(" is null ? null! : ").Append(member.AccessName).Append(".ToDto();\n");
                 return;
             case MemberKind.EntityList:
-                sb.Append("        dto.").Append(fieldName).Append(" = new global::System.Collections.Generic.List<").Append(GetDtoTypeName(member.RelatedEntity!)).Append(">();\n");
+                sb.Append("        dto.").Append(fieldName).Append(" = new global::System.Collections.Generic.List<").Append(member.RelatedEntityDtoTypeName!).Append(">();\n");
                 sb.Append("        if (").Append(member.AccessName).Append(" is not null)\n        {\n");
                 sb.Append("            foreach (var item in ").Append(member.AccessName).Append(")\n            {\n");
                 sb.Append("                dto.").Append(fieldName).Append(".Add(item.ToDto());\n");
@@ -365,13 +389,13 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         switch (member.Kind)
         {
             case MemberKind.Entity:
-                sb.Append("        var ").Append(localName).Append(" = dto.").Append(fieldName).Append(" is null ? null! : ").Append(GetTypeName(member.RelatedEntity!)).Append(".FromDto(dto.").Append(fieldName).Append(");\n");
+                sb.Append("        var ").Append(localName).Append(" = dto.").Append(fieldName).Append(" is null ? null! : ").Append(member.RelatedEntityTypeName!).Append(".FromDto(dto.").Append(fieldName).Append(");\n");
                 return;
             case MemberKind.EntityList:
                 sb.Append("        var ").Append(localName).Append(" = new ").Append(member.TypeName).Append("();\n");
                 sb.Append("        if (dto.").Append(fieldName).Append(" is not null)\n        {\n");
                 sb.Append("            foreach (var item in dto.").Append(fieldName).Append(")\n            {\n");
-                sb.Append("                ").Append(localName).Append(".Add(").Append(GetTypeName(member.RelatedEntity!)).Append(".FromDto(item));\n");
+                sb.Append("                ").Append(localName).Append(".Add(").Append(member.RelatedEntityTypeName!).Append(".FromDto(item));\n");
                 sb.Append("            }\n        }\n");
                 return;
             case MemberKind.ValueObject:
@@ -774,51 +798,41 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
     private static void ReportCycles(SourceProductionContext context, IReadOnlyList<EntityModel> models)
     {
-        var bySymbol = CreateModelMap(models);
+        var byTypeName = models.ToDictionary(static item => item.TypeName, StringComparer.Ordinal);
         foreach (var model in models)
         {
-            if (HasCycle(model, bySymbol, new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default), out var cycleSymbol))
+            if (HasCycle(model, byTypeName, new HashSet<string>(StringComparer.Ordinal), out var cycleTypeName))
             {
-                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.EntityCycleNotSupported, GetPrimaryLocation(model.Symbol), cycleSymbol.Name));
+                var cycleModel = byTypeName[cycleTypeName];
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.EntityCycleNotSupported, model.Location.ToLocation(), cycleModel.Name));
             }
         }
     }
 
     private static bool HasEntityCycle(IReadOnlyList<EntityModel> models)
     {
-        var bySymbol = CreateModelMap(models);
-        return models.Any(model => HasCycle(model, bySymbol, new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default), out _));
+        var byTypeName = models.ToDictionary(static item => item.TypeName, StringComparer.Ordinal);
+        return models.Any(model => HasCycle(model, byTypeName, new HashSet<string>(StringComparer.Ordinal), out _));
     }
 
-    private static Dictionary<INamedTypeSymbol, EntityModel> CreateModelMap(IReadOnlyList<EntityModel> models)
+    private static bool HasCycle(EntityModel model, Dictionary<string, EntityModel> byTypeName, HashSet<string> stack, out string cycleTypeName)
     {
-        var map = new Dictionary<INamedTypeSymbol, EntityModel>(SymbolEqualityComparer.Default);
-        foreach (var model in models)
+        if (!stack.Add(model.TypeName))
         {
-            map[model.Symbol] = model;
-        }
-
-        return map;
-    }
-
-    private static bool HasCycle(EntityModel model, Dictionary<INamedTypeSymbol, EntityModel> bySymbol, HashSet<INamedTypeSymbol> stack, out INamedTypeSymbol cycleSymbol)
-    {
-        if (!stack.Add(model.Symbol))
-        {
-            cycleSymbol = model.Symbol;
+            cycleTypeName = model.TypeName;
             return true;
         }
 
         foreach (var member in model.PersistedMembers)
         {
-            if (member.RelatedEntity is INamedTypeSymbol related && bySymbol.TryGetValue(related, out var child) && HasCycle(child, bySymbol, stack, out cycleSymbol))
+            if (member.RelatedEntityTypeName is string related && byTypeName.TryGetValue(related, out var child) && HasCycle(child, byTypeName, stack, out cycleTypeName))
             {
                 return true;
             }
         }
 
-        stack.Remove(model.Symbol);
-        cycleSymbol = default!;
+        stack.Remove(model.TypeName);
+        cycleTypeName = default!;
         return false;
     }
 
@@ -1114,6 +1128,31 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         }
     }
 
+    private static LocationInfo GetLocationInfo(ISymbol symbol)
+    {
+        var loc = symbol.Locations.FirstOrDefault();
+        if (loc is null || !loc.IsInSource)
+        {
+            return new LocationInfo(string.Empty, 0, 0);
+        }
+        return new LocationInfo(loc.SourceTree!.FilePath, loc.SourceSpan.Start, loc.SourceSpan.Length);
+    }
+
+    private static string GetDtoNamespace(string namespaceName)
+    {
+        return string.IsNullOrEmpty(namespaceName) ? "Lilja.Repository.Generated.Dtos" : "Lilja.Repository.Generated.Dtos." + namespaceName;
+    }
+
+    private static string GetFormatterNamespace(string namespaceName)
+    {
+        return string.IsNullOrEmpty(namespaceName) ? "Lilja.Repository.Generated.Formatters" : "Lilja.Repository.Generated.Formatters." + namespaceName;
+    }
+
+    private static string CreateStorageIdentifier(string name, string namespaceName)
+    {
+        return string.IsNullOrEmpty(namespaceName) ? name : namespaceName + "." + name;
+    }
+
     private sealed class EntityAnalysis
     {
         public EntityAnalysis(EntityModel? model, ImmutableArray<Diagnostic> diagnostics)
@@ -1127,22 +1166,75 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         public ImmutableArray<Diagnostic> Diagnostics { get; }
     }
 
-    private sealed class EntityModel
+    private sealed class LocationInfo : IEquatable<LocationInfo>
     {
-        public EntityModel(INamedTypeSymbol symbol, int repositoryOptions, ImmutableArray<MemberModel> persistedMembers, ImmutableArray<MemberModel> keyMembers)
+        public LocationInfo(string filePath, int startPosition, int length)
         {
-            Symbol = symbol;
+            FilePath = filePath;
+            StartPosition = startPosition;
+            Length = length;
+        }
+
+        public string FilePath { get; }
+        public int StartPosition { get; }
+        public int Length { get; }
+
+        public Location ToLocation()
+        {
+            if (string.IsNullOrEmpty(FilePath))
+            {
+                return Location.None;
+            }
+            return Location.Create(FilePath, new Microsoft.CodeAnalysis.Text.TextSpan(StartPosition, Length), default);
+        }
+
+        public bool Equals(LocationInfo? other)
+        {
+            if (other is null) return false;
+            return FilePath == other.FilePath && StartPosition == other.StartPosition && Length == other.Length;
+        }
+
+        public override bool Equals(object? obj) => Equals(obj as LocationInfo);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 23 + FilePath.GetHashCode();
+                hash = hash * 23 + StartPosition;
+                hash = hash * 23 + Length;
+                return hash;
+            }
+        }
+    }
+
+    private sealed class EntityModel : IEquatable<EntityModel>
+    {
+        public EntityModel(
+            string name,
+            string typeName,
+            string namespaceName,
+            int repositoryOptions,
+            ImmutableArray<MemberModel> persistedMembers,
+            ImmutableArray<MemberModel> keyMembers,
+            bool hasMatchingConstructor,
+            LocationInfo location)
+        {
+            Name = name;
+            TypeName = typeName;
+            NamespaceName = namespaceName;
             RepositoryOptions = repositoryOptions;
             PersistedMembers = persistedMembers;
             KeyMembers = keyMembers;
-            Name = symbol.Name;
-            TypeName = GetTypeName(symbol);
-            NamespaceName = symbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : symbol.ContainingNamespace.ToDisplayString();
-            StorageIdentifier = CreateStorageIdentifier(symbol);
-            DtoNamespace = GetDtoNamespace(symbol);
+            HasMatchingConstructor = hasMatchingConstructor;
+            Location = location;
+
+            StorageIdentifier = CreateStorageIdentifier(name, namespaceName);
+            DtoNamespace = GetDtoNamespace(namespaceName);
             DtoName = Name + "Dto";
             DtoTypeName = "global::" + DtoNamespace + "." + DtoName;
-            FormatterNamespace = GetFormatterNamespace(symbol);
+            FormatterNamespace = GetFormatterNamespace(namespaceName);
             RepositoryNamespace = string.IsNullOrEmpty(NamespaceName) ? "Repositories" : NamespaceName + ".Repositories";
             RepositoryInterfaceName = "I" + Name + "Repository";
             KeyTypeName = keyMembers.Length == 1
@@ -1150,13 +1242,15 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 : "(" + string.Join(", ", keyMembers.Select(static item => item.TypeName)) + ")";
         }
 
-        public INamedTypeSymbol Symbol { get; }
-        public int RepositoryOptions { get; }
-        public ImmutableArray<MemberModel> PersistedMembers { get; }
-        public ImmutableArray<MemberModel> KeyMembers { get; }
         public string Name { get; }
         public string TypeName { get; }
         public string NamespaceName { get; }
+        public int RepositoryOptions { get; }
+        public ImmutableArray<MemberModel> PersistedMembers { get; }
+        public ImmutableArray<MemberModel> KeyMembers { get; }
+        public bool HasMatchingConstructor { get; }
+        public LocationInfo Location { get; }
+
         public string StorageIdentifier { get; }
         public string DtoNamespace { get; }
         public string DtoName { get; }
@@ -1166,39 +1260,132 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         public string RepositoryInterfaceName { get; }
         public string KeyTypeName { get; }
         public bool IsKeyed => KeyMembers.Length > 0;
+
+        public bool Equals(EntityModel? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Name == other.Name &&
+                   TypeName == other.TypeName &&
+                   NamespaceName == other.NamespaceName &&
+                   RepositoryOptions == other.RepositoryOptions &&
+                   HasMatchingConstructor == other.HasMatchingConstructor &&
+                   SequenceEqual(PersistedMembers, other.PersistedMembers) &&
+                   SequenceEqual(KeyMembers, other.KeyMembers);
+        }
+
+        private static bool SequenceEqual<T>(ImmutableArray<T> first, ImmutableArray<T> second) where T : IEquatable<T>
+        {
+            if (first.Length != second.Length) return false;
+            for (var i = 0; i < first.Length; i++)
+            {
+                if (!first[i].Equals(second[i])) return false;
+            }
+            return true;
+        }
+
+        public override bool Equals(object? obj) => Equals(obj as EntityModel);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 23 + Name.GetHashCode();
+                hash = hash * 23 + TypeName.GetHashCode();
+                hash = hash * 23 + NamespaceName.GetHashCode();
+                hash = hash * 23 + RepositoryOptions;
+                hash = hash * 23 + (HasMatchingConstructor ? 1 : 0);
+                foreach (var member in PersistedMembers)
+                {
+                    hash = hash * 23 + member.GetHashCode();
+                }
+                return hash;
+            }
+        }
     }
 
-    private sealed class MemberModel
+    private sealed class MemberModel : IEquatable<MemberModel>
     {
-        public MemberModel(string name, string accessName, ITypeSymbol type, string typeName, string dtoTypeName, int index, int declarationOrder, bool isKey, MemberKind kind, ITypeSymbol? relatedEntity, ValueObjectShape? valueObject)
+        public MemberModel(
+            string name,
+            string accessName,
+            string typeName,
+            string dtoTypeName,
+            int index,
+            int declarationOrder,
+            bool isKey,
+            MemberKind kind,
+            string? relatedEntityTypeName,
+            string? relatedEntityDtoTypeName,
+            ValueObjectShape? valueObject)
         {
             Name = name;
             AccessName = accessName;
-            Type = type;
             TypeName = typeName;
             DtoTypeName = dtoTypeName;
             Index = index;
             DeclarationOrder = declarationOrder;
             IsKey = isKey;
             Kind = kind;
-            RelatedEntity = relatedEntity;
+            RelatedEntityTypeName = relatedEntityTypeName;
+            RelatedEntityDtoTypeName = relatedEntityDtoTypeName;
             ValueObject = valueObject;
         }
 
         public string Name { get; }
         public string AccessName { get; }
-        public ITypeSymbol Type { get; }
         public string TypeName { get; }
         public string DtoTypeName { get; }
         public int Index { get; }
         public int DeclarationOrder { get; }
         public bool IsKey { get; }
         public MemberKind Kind { get; }
-        public ITypeSymbol? RelatedEntity { get; }
+        public string? RelatedEntityTypeName { get; }
+        public string? RelatedEntityDtoTypeName { get; }
         public ValueObjectShape? ValueObject { get; }
+
+        public bool Equals(MemberModel? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Name == other.Name &&
+                   AccessName == other.AccessName &&
+                   TypeName == other.TypeName &&
+                   DtoTypeName == other.DtoTypeName &&
+                   Index == other.Index &&
+                   DeclarationOrder == other.DeclarationOrder &&
+                   IsKey == other.IsKey &&
+                   Kind == other.Kind &&
+                   RelatedEntityTypeName == other.RelatedEntityTypeName &&
+                   RelatedEntityDtoTypeName == other.RelatedEntityDtoTypeName &&
+                   Equals(ValueObject, other.ValueObject);
+        }
+
+        public override bool Equals(object? obj) => Equals(obj as MemberModel);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 23 + Name.GetHashCode();
+                hash = hash * 23 + AccessName.GetHashCode();
+                hash = hash * 23 + TypeName.GetHashCode();
+                hash = hash * 23 + DtoTypeName.GetHashCode();
+                hash = hash * 23 + Index;
+                hash = hash * 23 + DeclarationOrder;
+                hash = hash * 23 + (IsKey ? 1 : 0);
+                hash = hash * 23 + Kind.GetHashCode();
+                hash = hash * 23 + (RelatedEntityTypeName?.GetHashCode() ?? 0);
+                hash = hash * 23 + (RelatedEntityDtoTypeName?.GetHashCode() ?? 0);
+                hash = hash * 23 + (ValueObject?.GetHashCode() ?? 0);
+                return hash;
+            }
+        }
     }
 
-    private sealed class ValueObjectShape
+    private sealed class ValueObjectShape : IEquatable<ValueObjectShape>
     {
         public ValueObjectShape(string toPrimitiveName, string primitiveTypeName, string fromPrimitiveName, FromPrimitiveKind fromPrimitiveKind)
         {
@@ -1212,6 +1399,31 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         public string PrimitiveTypeName { get; }
         public string FromPrimitiveName { get; }
         public FromPrimitiveKind FromPrimitiveKind { get; }
+
+        public bool Equals(ValueObjectShape? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return ToPrimitiveName == other.ToPrimitiveName &&
+                   PrimitiveTypeName == other.PrimitiveTypeName &&
+                   FromPrimitiveName == other.FromPrimitiveName &&
+                   FromPrimitiveKind == other.FromPrimitiveKind;
+        }
+
+        public override bool Equals(object? obj) => Equals(obj as ValueObjectShape);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 23 + ToPrimitiveName.GetHashCode();
+                hash = hash * 23 + PrimitiveTypeName.GetHashCode();
+                hash = hash * 23 + FromPrimitiveName.GetHashCode();
+                hash = hash * 23 + FromPrimitiveKind.GetHashCode();
+                return hash;
+            }
+        }
     }
 
     private enum MemberKind

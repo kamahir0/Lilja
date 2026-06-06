@@ -50,19 +50,16 @@ namespace Lilja.Repository
 
         protected string DirectoryPath { get; }
 
-        public UniTask LoadAsync(CancellationToken ct = default)
+        public async UniTask LoadAsync(CancellationToken ct = default)
         {
             var directory = DirectoryPath;
-            return UniTask.RunOnThreadPool(() =>
+            var tempValues = await UniTask.RunOnThreadPool(() =>
             {
                 ct.ThrowIfCancellationRequested();
-                _values.Clear();
-#if UNITY_EDITOR
-                _repositoryState.Clear();
-#endif
+                var tempDict = new Dictionary<TKey, TDto>();
                 if (!Directory.Exists(directory))
                 {
-                    return;
+                    return tempDict;
                 }
 
                 var files = Directory.GetFiles(directory, "*.json");
@@ -79,13 +76,23 @@ namespace Lilja.Repository
                     if (dto is not null)
                     {
                         var key = _getKeyFromDto(dto);
-                        _values[key] = dto;
-#if UNITY_EDITOR
-                        _repositoryState.SetRecord(key, dto);
-#endif
+                        tempDict[key] = dto;
                     }
                 }
+                return tempDict;
             }, cancellationToken: ct);
+
+            _values.Clear();
+#if UNITY_EDITOR
+            _repositoryState.Clear();
+#endif
+            foreach (var kvp in tempValues)
+            {
+                _values[kvp.Key] = kvp.Value;
+#if UNITY_EDITOR
+                _repositoryState.SetRecord(kvp.Key, kvp.Value);
+#endif
+            }
         }
 
         public UniTask SaveAsync(CancellationToken ct = default)
