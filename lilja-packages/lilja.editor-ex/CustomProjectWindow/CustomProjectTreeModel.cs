@@ -539,6 +539,14 @@ namespace Lilja.CustomProjectWindow
                 }
                 else
                 {
+                    if (node.Kind == ProjectNodeKind.Asset)
+                    {
+                        node.AssetPath = CustomProjectNode.NormalizeAssetPath(node.ResolveAssetPath());
+                        if (string.IsNullOrEmpty(node.AssetGuid) && !string.IsNullOrEmpty(node.AssetPath))
+                        {
+                            node.AssetGuid = AssetDatabase.AssetPathToGUID(node.AssetPath);
+                        }
+                    }
                     SanitizeTree(node.Children);
                 }
             }
