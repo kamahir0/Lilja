@@ -345,13 +345,57 @@ namespace Lilja.Repository
 
 namespace Cysharp.Threading.Tasks
 {
+    [System.Runtime.CompilerServices.AsyncMethodBuilder(typeof(CompilerServices.AsyncUniTaskMethodBuilder))]
     public readonly struct UniTask
     {
         public static UniTask CompletedTask => default;
         public static UniTask RunOnThreadPool(Action action, CancellationToken cancellationToken = default) => default;
         public static UniTask<T> RunOnThreadPool<T>(Func<T> func, CancellationToken cancellationToken = default) => default;
+        public UniTaskAwaiter GetAwaiter() => default;
     }
-    public readonly struct UniTask<T> {}
+
+    [System.Runtime.CompilerServices.AsyncMethodBuilder(typeof(CompilerServices.AsyncUniTaskMethodBuilder<>))]
+    public readonly struct UniTask<T>
+    {
+        public UniTaskAwaiter<T> GetAwaiter() => default;
+    }
+
+    public readonly struct UniTaskAwaiter : System.Runtime.CompilerServices.INotifyCompletion
+    {
+        public bool IsCompleted => true;
+        public void OnCompleted(Action continuation) {}
+        public void GetResult() {}
+    }
+
+    public readonly struct UniTaskAwaiter<T> : System.Runtime.CompilerServices.INotifyCompletion
+    {
+        public bool IsCompleted => true;
+        public void OnCompleted(Action continuation) {}
+        public T GetResult() => default!;
+    }
+}
+
+namespace Cysharp.Threading.Tasks.CompilerServices
+{
+    public struct AsyncUniTaskMethodBuilder
+    {
+        public static AsyncUniTaskMethodBuilder Create() => default;
+        public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : System.Runtime.CompilerServices.IAsyncStateMachine { stateMachine.MoveNext(); }
+        public void SetStateMachine(System.Runtime.CompilerServices.IAsyncStateMachine stateMachine) {}
+        public void SetResult() {}
+        public void SetException(Exception exception) {}
+        public UniTask Task => default;
+    }
+
+    public struct AsyncUniTaskMethodBuilder<T>
+    {
+        public static AsyncUniTaskMethodBuilder<T> Create() => default;
+        public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : System.Runtime.CompilerServices.IAsyncStateMachine { stateMachine.MoveNext(); }
+        public void SetStateMachine(System.Runtime.CompilerServices.IAsyncStateMachine stateMachine) {}
+        public void SetResult(T result) {}
+        public void SetException(Exception exception) {}
+        public UniTask<T> Task => default;
+    }
 }
 
 namespace UnityEngine

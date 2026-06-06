@@ -605,21 +605,19 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
     private static void AppendMessagePackSingleMethods(StringBuilder sb, EntityModel model)
     {
-        sb.Append("            public global::Cysharp.Threading.Tasks.UniTask LoadAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
+        sb.Append("            public async global::Cysharp.Threading.Tasks.UniTask LoadAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
         sb.Append("                var path = global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append(".msgpack\");\n");
-        sb.Append("                return global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");
+        sb.Append("                var dto = await global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");
         sb.Append("                    ct.ThrowIfCancellationRequested();\n");
-        sb.Append("                    if (!global::System.IO.File.Exists(path))\n                    {\n                        _hasValue = false;\n                        _value = null;\n");
+        sb.Append("                    if (!global::System.IO.File.Exists(path))\n                    {\n                        return null;\n                    }\n");
+        sb.Append("                    return global::MessagePack.MessagePackSerializer.Deserialize<").Append(model.DtoTypeName).Append(">(global::System.IO.File.ReadAllBytes(path), _options);\n");
+        sb.Append("                }, cancellationToken: ct);\n\n");
+        sb.Append("                _hasValue = dto is not null;\n");
+        sb.Append("                _value = dto;\n");
         sb.Append("#if UNITY_EDITOR\n");
-        sb.Append("                        _repositoryState.Clear();\n");
+        sb.Append("                if (_hasValue) _repositoryState.SetValue(_value); else _repositoryState.Clear();\n");
         sb.Append("#endif\n");
-        sb.Append("                        return;\n                    }\n");
-        sb.Append("                    var dto = global::MessagePack.MessagePackSerializer.Deserialize<").Append(model.DtoTypeName).Append(">(global::System.IO.File.ReadAllBytes(path), _options);\n");
-        sb.Append("                    _hasValue = dto is not null;\n                    _value = dto;\n");
-        sb.Append("#if UNITY_EDITOR\n");
-        sb.Append("                    if (_hasValue) _repositoryState.SetValue(_value); else _repositoryState.Clear();\n");
-        sb.Append("#endif\n");
-        sb.Append("                }, cancellationToken: ct);\n            }\n\n");
+        sb.Append("            }\n\n");
         sb.Append("            public global::Cysharp.Threading.Tasks.UniTask SaveAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
         sb.Append("                var path = global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append(".msgpack\");\n");
         sb.Append("                var hasValue = _hasValue;\n");
@@ -652,26 +650,32 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
     private static void AppendMessagePackKeyedMethods(StringBuilder sb, EntityModel model)
     {
-        sb.Append("            public global::Cysharp.Threading.Tasks.UniTask LoadAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
+        sb.Append("            public async global::Cysharp.Threading.Tasks.UniTask LoadAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
         sb.Append("                var directory = GetDirectoryPath();\n");
-        sb.Append("                return global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");
+        sb.Append("                var tempValues = await global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");
         sb.Append("                    ct.ThrowIfCancellationRequested();\n");
-        sb.Append("                    _values.Clear();\n");
-        sb.Append("#if UNITY_EDITOR\n");
-        sb.Append("                    _repositoryState.Clear();\n");
-        sb.Append("#endif\n");
-        sb.Append("                    if (!global::System.IO.Directory.Exists(directory)) return;\n");
+        sb.Append("                    var tempDict = new global::System.Collections.Generic.Dictionary<").Append(model.KeyTypeName).Append(", ").Append(model.DtoTypeName).Append(">();\n");
+        sb.Append("                    if (!global::System.IO.Directory.Exists(directory)) return tempDict;\n");
         sb.Append("                    var files = global::System.IO.Directory.GetFiles(directory, \"*.msgpack\");\n");
         sb.Append("                    foreach (var file in files)\n                    {\n");
         sb.Append("                        ct.ThrowIfCancellationRequested();\n");
         sb.Append("                        var dto = global::MessagePack.MessagePackSerializer.Deserialize<").Append(model.DtoTypeName).Append(">(global::System.IO.File.ReadAllBytes(file), _options);\n");
-        sb.Append("                        if (dto is not null)\n                        {\n                            var key = ").Append(model.TypeName).Append(".__RepositoryGetKeyFromDto(dto);\n                            _values[key] = dto;\n");
-        sb.Append("#if UNITY_EDITOR\n");
-        sb.Append("                            _repositoryState.SetRecord(key, dto);\n");
-        sb.Append("#endif\n");
+        sb.Append("                        if (dto is not null)\n                        {\n                            var key = ").Append(model.TypeName).Append(".__RepositoryGetKeyFromDto(dto);\n                            tempDict[key] = dto;\n");
         sb.Append("                        }\n");
         sb.Append("                    }\n");
-        sb.Append("                }, cancellationToken: ct);\n            }\n\n");
+        sb.Append("                    return tempDict;\n");
+        sb.Append("                }, cancellationToken: ct);\n\n");
+        sb.Append("                _values.Clear();\n");
+        sb.Append("#if UNITY_EDITOR\n");
+        sb.Append("                _repositoryState.Clear();\n");
+        sb.Append("#endif\n");
+        sb.Append("                foreach (var kvp in tempValues)\n                {\n");
+        sb.Append("                    _values[kvp.Key] = kvp.Value;\n");
+        sb.Append("#if UNITY_EDITOR\n");
+        sb.Append("                    _repositoryState.SetRecord(kvp.Key, kvp.Value);\n");
+        sb.Append("#endif\n");
+        sb.Append("                }\n");
+        sb.Append("            }\n\n");
         sb.Append("            public global::Cysharp.Threading.Tasks.UniTask SaveAsync(global::System.Threading.CancellationToken ct = default)\n            {\n                var directory = GetDirectoryPath();\n                var snapshot = new global::System.Collections.Generic.Dictionary<").Append(model.KeyTypeName).Append(", ").Append(model.DtoTypeName).Append(">(_values);\n");
         sb.Append("                return global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");
         sb.Append("                    ct.ThrowIfCancellationRequested();\n");

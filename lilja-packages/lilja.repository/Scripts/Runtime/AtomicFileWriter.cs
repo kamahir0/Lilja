@@ -56,8 +56,17 @@ namespace Lilja.Repository
 
             var backupPath = filePath + ".bak";
             DeleteIfExists(backupPath);
-            File.Replace(tempPath, filePath, backupPath, true);
-            DeleteIfExists(backupPath);
+            try
+            {
+                File.Replace(tempPath, filePath, backupPath, true);
+                DeleteIfExists(backupPath);
+            }
+            catch
+            {
+                // Fallback for WebGL or platforms with restricted file replacement permissions
+                File.Delete(filePath);
+                File.Move(tempPath, filePath);
+            }
         }
 
         private static void EnsureDirectory(string filePath)

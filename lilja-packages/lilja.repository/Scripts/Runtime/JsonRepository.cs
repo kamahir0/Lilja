@@ -39,47 +39,38 @@ namespace Lilja.Repository
 
         protected string FilePath { get; }
 
-        public UniTask LoadAsync(CancellationToken ct = default)
+        public async UniTask LoadAsync(CancellationToken ct = default)
         {
             var path = FilePath;
-            return UniTask.RunOnThreadPool(() =>
+            var dto = await UniTask.RunOnThreadPool(() =>
             {
                 ct.ThrowIfCancellationRequested();
                 if (!File.Exists(path))
                 {
-                    _hasValue = false;
-                    _value = null;
-#if UNITY_EDITOR
-                    _repositoryState.Clear();
-#endif
-                    return;
+                    return null;
                 }
 
                 var raw = File.ReadAllText(path);
                 if (string.IsNullOrWhiteSpace(raw))
                 {
-                    _hasValue = false;
-                    _value = null;
-#if UNITY_EDITOR
-                    _repositoryState.Clear();
-#endif
-                    return;
+                    return null;
                 }
 
-                var dto = JsonUtility.FromJson<TDto>(raw);
-                _hasValue = dto is not null;
-                _value = dto;
-#if UNITY_EDITOR
-                if (_hasValue)
-                {
-                    _repositoryState.SetValue(_value);
-                }
-                else
-                {
-                    _repositoryState.Clear();
-                }
-#endif
+                return JsonUtility.FromJson<TDto>(raw);
             }, cancellationToken: ct);
+
+            _hasValue = dto is not null;
+            _value = dto;
+#if UNITY_EDITOR
+            if (_hasValue)
+            {
+                _repositoryState.SetValue(_value);
+            }
+            else
+            {
+                _repositoryState.Clear();
+            }
+#endif
         }
 
         public UniTask SaveAsync(CancellationToken ct = default)
