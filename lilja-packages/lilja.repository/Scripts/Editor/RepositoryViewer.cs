@@ -266,9 +266,19 @@ namespace Lilja.Repository.Editor
             _previewField.style.flexGrow = 1f;
             _previewField.style.marginLeft = 0f;
             _previewField.style.marginRight = 0f;
+            _previewField.style.marginTop = 0f;
             _previewField.style.marginBottom = 0f;
+            _previewField.style.paddingLeft = 4f;
+            _previewField.style.paddingRight = 4f;
+            _previewField.style.paddingTop = 4f;
+            _previewField.style.paddingBottom = 4f;
+            _previewField.style.borderLeftWidth = 0f;
+            _previewField.style.borderRightWidth = 0f;
+            _previewField.style.borderTopWidth = 0f;
+            _previewField.style.borderBottomWidth = 0f;
             _previewField.style.unityTextAlign = TextAnchor.UpperLeft;
             _previewField.style.height = StyleKeyword.Auto;
+            _previewField.style.minHeight = Length.Percent(100);
             
             scrollView.Add(_previewField);
             previewFrame.Add(scrollView);
