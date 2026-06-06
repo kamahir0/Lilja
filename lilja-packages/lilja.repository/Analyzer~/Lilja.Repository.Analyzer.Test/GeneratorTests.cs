@@ -63,6 +63,7 @@ public partial class Skill
         Id = id;
         Level = level;
     }
+
 }
 
 [Entity(RepositoryOptions.InMemory | RepositoryOptions.Json)]
@@ -95,6 +96,38 @@ public partial class SaveData
         Assert.Contains("global::System.Collections.Generic.List<global::Lilja.Repository.Generated.Dtos.Demo.SkillDto> Skills", generated["Demo.SaveData.SaveDataDto.g.cs"]);
         Assert.DoesNotContain(result.Diagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
         AssertCompiles(source, result.Results.Single().GeneratedSources);
+    }
+
+    [Fact]
+    public void Persist_without_index_uses_declaration_order_and_mixes_with_explicit_indexes()
+    {
+        const string source = """
+using Lilja.Repository;
+
+namespace Demo;
+
+[Entity]
+public partial class Config
+{
+    [Persist] public string Name { get; }
+    [Persist(3)] public int Level { get; }
+    [Persist] public bool Enabled { get; }
+
+    public Config(string name, bool enabled, int level)
+    {
+        Name = name;
+        Enabled = enabled;
+        Level = level;
+    }
+}
+""";
+
+        var result = RunGenerator(source);
+        var generated = ToGeneratedMap(result);
+        var support = generated["Demo.Config.Config.RepositorySupport.g.cs"];
+
+        Assert.Contains("new global::Demo.Config(local0Name, local1Enabled, local3Level)", support);
+        Assert.DoesNotContain(result.Diagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
     }
 
     [Fact]
@@ -231,7 +264,7 @@ namespace Lilja.Repository
 {
     [Flags] public enum RepositoryOptions { None = 0, InMemory = 1, Json = 2, MessagePack = 4 }
     public sealed class EntityAttribute : Attribute { public EntityAttribute(RepositoryOptions repositoryOptions = RepositoryOptions.None) {} }
-    public sealed class PersistAttribute : Attribute { public PersistAttribute(int index) {} }
+    public sealed class PersistAttribute : Attribute { public PersistAttribute() {} public PersistAttribute(int index) {} }
     public sealed class KeyAttribute : Attribute {}
     public sealed class ToPrimitiveAttribute : Attribute {}
     public sealed class FromPrimitiveAttribute : Attribute {}
@@ -278,8 +311,8 @@ namespace MessagePack
 {
     public interface IFormatterResolver { MessagePack.Formatters.IMessagePackFormatter<T>? GetFormatter<T>(); }
     public sealed class MessagePackSerializerOptions { public static MessagePackSerializerOptions Standard { get; } = new(); public IFormatterResolver Resolver { get; } = default!; public MessagePackSerializerOptions WithResolver(IFormatterResolver resolver) => this; }
-    public ref struct MessagePackWriter { public void WriteNil() {} public void WriteArrayHeader(int count) {} }
-    public ref struct MessagePackReader { public bool TryReadNil() => false; public int ReadArrayHeader() => 0; public void Skip() {} }
+    public ref struct MessagePackWriter { public void WriteNil() {} public void WriteMapHeader(int count) {} public void Write(string value) {} }
+    public ref struct MessagePackReader { public bool TryReadNil() => false; public int ReadMapHeader() => 0; public string ReadString() => ""; public void Skip() {} }
     public sealed class MessagePackSerializationException : System.Exception { public MessagePackSerializationException(string message) : base(message) {} }
     public static class MessagePackSerializer { public static byte[] Serialize<T>(T value, MessagePackSerializerOptions options) => []; public static T Deserialize<T>(byte[] bytes, MessagePackSerializerOptions options) => default!; }
 }

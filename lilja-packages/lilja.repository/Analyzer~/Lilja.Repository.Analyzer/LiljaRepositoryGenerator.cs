@@ -100,7 +100,9 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
         var members = new List<MemberModel>();
         var keyMembers = new List<MemberModel>();
-        var seenIndexes = new HashSet<int>();
+        var usedIndexes = new HashSet<int>();
+        var nextImplicitIndex = 0;
+        var declarationOrder = 0;
 
         foreach (var member in symbol.GetMembers())
         {
@@ -109,7 +111,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 continue;
             }
 
-            var hasPersist = TryGetPersistIndex(member, out var index);
+            var hasPersist = TryGetPersistIndex(member, out var explicitIndex);
             var hasKey = HasAttribute(member, KeyAttributeName);
             if (!hasPersist && !hasKey)
             {
@@ -128,15 +130,16 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 continue;
             }
 
-            if (hasPersist && index < 0)
+            if (hasPersist && explicitIndex < -1)
             {
                 diagnostics.Add(Diagnostic.Create(DiagnosticDescriptors.PersistIndexMustBeNonNegative, GetPrimaryLocation(member)));
                 continue;
             }
 
-            if (hasPersist && !seenIndexes.Add(index))
+            var index = explicitIndex;
+            if (hasPersist && explicitIndex >= 0 && !usedIndexes.Add(explicitIndex))
             {
-                diagnostics.Add(Diagnostic.Create(DiagnosticDescriptors.PersistIndexMustBeUnique, GetPrimaryLocation(member), index));
+                diagnostics.Add(Diagnostic.Create(DiagnosticDescriptors.PersistIndexMustBeUnique, GetPrimaryLocation(member), explicitIndex));
                 continue;
             }
 
@@ -145,7 +148,19 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 continue;
             }
 
-            if (!TryCreateMemberModel(member, index, hasKey, diagnostics, out var memberModel))
+            if (explicitIndex < 0)
+            {
+                while (usedIndexes.Contains(nextImplicitIndex))
+                {
+                    nextImplicitIndex++;
+                }
+
+                index = nextImplicitIndex;
+                usedIndexes.Add(index);
+                nextImplicitIndex++;
+            }
+
+            if (!TryCreateMemberModel(member, index, declarationOrder, hasKey, diagnostics, out var memberModel))
             {
                 continue;
             }
@@ -155,9 +170,15 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             {
                 keyMembers.Add(memberModel);
             }
+
+            declarationOrder++;
         }
 
-        members.Sort(static (left, right) => left.Index.CompareTo(right.Index));
+        members.Sort(static (left, right) =>
+        {
+            var indexComparison = left.Index.CompareTo(right.Index);
+            return indexComparison != 0 ? indexComparison : left.DeclarationOrder.CompareTo(right.DeclarationOrder);
+        });
         var repositoryOptions = GetRepositoryOptions(symbol);
         var model = diagnostics.Any(static item => item.Severity == DiagnosticSeverity.Error)
             ? null
@@ -166,7 +187,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         return new EntityAnalysis(model, diagnostics.ToImmutable());
     }
 
-    private static bool TryCreateMemberModel(ISymbol member, int index, bool isKey, ImmutableArray<Diagnostic>.Builder diagnostics, out MemberModel model)
+    private static bool TryCreateMemberModel(ISymbol member, int index, int declarationOrder, bool isKey, ImmutableArray<Diagnostic>.Builder diagnostics, out MemberModel model)
     {
         model = default!;
         var type = GetMemberType(member);
@@ -199,7 +220,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             return false;
         }
 
-        model = new MemberModel(member.Name, EscapeIdentifier(member.Name), type, GetTypeName(type), dtoTypeName, index, isKey, kind, relatedEntity, valueObject);
+        model = new MemberModel(member.Name, EscapeIdentifier(member.Name), type, GetTypeName(type), dtoTypeName, index, declarationOrder, isKey, kind, relatedEntity, valueObject);
         return true;
     }
 
@@ -607,9 +628,10 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             sb.Append("        return options.Resolver.GetFormatter<T>() ?? throw new global::MessagePack.MessagePackSerializationException($\"Formatter not found for {typeof(T).FullName}.\");\n    }\n\n");
             sb.Append("    public void Serialize(ref global::MessagePack.MessagePackWriter writer, ").Append(model.DtoTypeName).Append(" value, global::MessagePack.MessagePackSerializerOptions options)\n    {\n");
             sb.Append("        if (value is null)\n        {\n            writer.WriteNil();\n            return;\n        }\n");
-            sb.Append("        writer.WriteArrayHeader(").Append(model.PersistedMembers.Length).Append(");\n");
+            sb.Append("        writer.WriteMapHeader(").Append(model.PersistedMembers.Length).Append(");\n");
             foreach (var member in model.PersistedMembers)
             {
+                sb.Append("        writer.Write(\"").Append(ToDtoFieldName(member)).Append("\");\n");
                 sb.Append("        ResolveFormatter<").Append(member.DtoTypeName).Append(">(options).Serialize(ref writer, value.").Append(ToDtoFieldName(member)).Append(", options);\n");
             }
 
@@ -617,14 +639,21 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             sb.Append("    public ").Append(model.DtoTypeName).Append(" Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)\n    {\n");
             sb.Append("        if (reader.TryReadNil()) return null!;\n");
             sb.Append("        var value = new ").Append(model.DtoTypeName).Append("();\n");
-            sb.Append("        var length = reader.ReadArrayHeader();\n");
-            for (var i = 0; i < model.PersistedMembers.Length; i++)
+            sb.Append("        var length = reader.ReadMapHeader();\n");
+            sb.Append("        for (var i = 0; i < length; i++)\n        {\n");
+            sb.Append("            var key = reader.ReadString();\n");
+            sb.Append("            switch (key)\n            {\n");
+            foreach (var member in model.PersistedMembers)
             {
-                var member = model.PersistedMembers[i];
-                sb.Append("        if (length > ").Append(i).Append(") value.").Append(ToDtoFieldName(member)).Append(" = ResolveFormatter<").Append(member.DtoTypeName).Append(">(options).Deserialize(ref reader, options);\n");
+                sb.Append("                case \"").Append(ToDtoFieldName(member)).Append("\":\n");
+                sb.Append("                    value.").Append(ToDtoFieldName(member)).Append(" = ResolveFormatter<").Append(member.DtoTypeName).Append(">(options).Deserialize(ref reader, options);\n");
+                sb.Append("                    break;\n");
             }
 
-            sb.Append("        for (var i = ").Append(model.PersistedMembers.Length).Append("; i < length; i++) reader.Skip();\n");
+            sb.Append("                default:\n");
+            sb.Append("                    reader.Skip();\n");
+            sb.Append("                    break;\n");
+            sb.Append("            }\n        }\n");
             sb.Append("        return value;\n    }\n");
             sb.Append("}\n");
         }
@@ -1079,7 +1108,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
     private sealed class MemberModel
     {
-        public MemberModel(string name, string accessName, ITypeSymbol type, string typeName, string dtoTypeName, int index, bool isKey, MemberKind kind, ITypeSymbol? relatedEntity, ValueObjectShape? valueObject)
+        public MemberModel(string name, string accessName, ITypeSymbol type, string typeName, string dtoTypeName, int index, int declarationOrder, bool isKey, MemberKind kind, ITypeSymbol? relatedEntity, ValueObjectShape? valueObject)
         {
             Name = name;
             AccessName = accessName;
@@ -1087,6 +1116,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             TypeName = typeName;
             DtoTypeName = dtoTypeName;
             Index = index;
+            DeclarationOrder = declarationOrder;
             IsKey = isKey;
             Kind = kind;
             RelatedEntity = relatedEntity;
@@ -1099,6 +1129,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         public string TypeName { get; }
         public string DtoTypeName { get; }
         public int Index { get; }
+        public int DeclarationOrder { get; }
         public bool IsKey { get; }
         public MemberKind Kind { get; }
         public ITypeSymbol? RelatedEntity { get; }
