@@ -549,7 +549,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         else
         {
             sb.Append("        private sealed class Impl : global::Lilja.Repository.JsonRepository<").Append(model.TypeName).Append(", ").Append(model.DtoTypeName).Append(">, ").Append(model.RepositoryInterfaceName).Append("\n        {\n");
-            sb.Append("            public Impl()\n                : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append(".json\"), entity => entity.ToDto(), dto => ").Append(model.TypeName).Append(".FromDto(dto), ").Append(model.TypeName).Append(".__RepositoryCreateDefaultDto)\n            {\n            }\n        }\n");
+            sb.Append("            public Impl()\n                : base(global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append("\", \"data.json\"), entity => entity.ToDto(), dto => ").Append(model.TypeName).Append(".FromDto(dto), ").Append(model.TypeName).Append(".__RepositoryCreateDefaultDto)\n            {\n            }\n        }\n");
         }
 
         sb.Append("    }\n\n");
@@ -606,7 +606,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
     private static void AppendMessagePackSingleMethods(StringBuilder sb, EntityModel model)
     {
         sb.Append("            public async global::Cysharp.Threading.Tasks.UniTask LoadAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
-        sb.Append("                var path = global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append(".msgpack\");\n");
+        sb.Append("                var path = global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append("\", \"data.msgpack\");\n");
         sb.Append("                var dto = await global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");
         sb.Append("                    ct.ThrowIfCancellationRequested();\n");
         sb.Append("                    if (!global::System.IO.File.Exists(path))\n                    {\n                        return null;\n                    }\n");
@@ -619,7 +619,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
         sb.Append("#endif\n");
         sb.Append("            }\n\n");
         sb.Append("            public global::Cysharp.Threading.Tasks.UniTask SaveAsync(global::System.Threading.CancellationToken ct = default)\n            {\n");
-        sb.Append("                var path = global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append(".msgpack\");\n");
+        sb.Append("                var path = global::System.IO.Path.Combine(global::UnityEngine.Application.persistentDataPath, \"").Append(model.StorageIdentifier).Append("\", \"data.msgpack\");\n");
         sb.Append("                var hasValue = _hasValue;\n");
         sb.Append("                var value = _value;\n");
         sb.Append("                return global::Cysharp.Threading.Tasks.UniTask.RunOnThreadPool(() =>\n                {\n");

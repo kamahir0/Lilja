@@ -151,16 +151,21 @@ namespace Lilja.Repository.Editor
             var extension = repositoryType == RepositoryTracker.RepositoryType.Json ? ".json" : ".msgpack";
             var repositories = new List<RepositorySnapshot>();
 
-            foreach (var file in Directory.GetFiles(Application.persistentDataPath, "*" + extension, SearchOption.TopDirectoryOnly)
-                         .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase))
-            {
-                repositories.Add(LoadSingletonRepository(file, repositoryType));
-            }
-
             foreach (var directory in Directory.GetDirectories(Application.persistentDataPath)
                          .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase))
             {
-                if (Directory.EnumerateFiles(directory, "*" + extension, SearchOption.TopDirectoryOnly).Any())
+                var files = Directory.GetFiles(directory, "*" + extension, SearchOption.TopDirectoryOnly);
+                if (files.Length == 0)
+                {
+                    continue;
+                }
+
+                var singletonPath = Path.Combine(directory, "data" + extension);
+                if (File.Exists(singletonPath))
+                {
+                    repositories.Add(LoadSingletonRepository(singletonPath, repositoryType));
+                }
+                else
                 {
                     repositories.Add(LoadKeyedRepository(directory, repositoryType));
                 }
@@ -171,8 +176,9 @@ namespace Lilja.Repository.Editor
 
         private static RepositorySnapshot LoadSingletonRepository(string filePath, RepositoryTracker.RepositoryType repositoryType)
         {
-            var storageIdentifier = Path.GetFileNameWithoutExtension(filePath);
-            var stableId = NormalizePath(filePath);
+            var directoryPath = Path.GetDirectoryName(filePath)!;
+            var storageIdentifier = Path.GetFileName(directoryPath);
+            var stableId = NormalizePath(directoryPath);
             var metadata = RepositoryMetadata.Resolve(storageIdentifier);
             var title = storageIdentifier;
             var kind = Path.GetFileName(filePath);
@@ -234,7 +240,7 @@ namespace Lilja.Repository.Editor
                         repositoryType,
                         storageIdentifier,
                         $"file:{NormalizePath(file)}",
-                        Path.GetFileNameWithoutExtension(file),
+                        RepositoryFileName.Decode(Path.GetFileNameWithoutExtension(file)),
                         metadata.EntityType.FullName ?? metadata.EntityType.Name))
                     .ToList();
                 return new RepositorySnapshot(
@@ -260,11 +266,12 @@ namespace Lilja.Repository.Editor
 
         private static RecordSnapshot CreateFileRecord(string filePath, RepositoryTracker.RepositoryType repositoryType)
         {
-            var title = Path.GetFileNameWithoutExtension(filePath);
+            var rawTitle = Path.GetFileNameWithoutExtension(filePath);
+            var title = RepositoryFileName.Decode(rawTitle);
             return CreatePersistedRecord(
                 filePath,
                 repositoryType,
-                Path.GetFileNameWithoutExtension(filePath),
+                rawTitle,
                 $"file:{NormalizePath(filePath)}",
                 title,
                 Path.GetFileName(filePath));
