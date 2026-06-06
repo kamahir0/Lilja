@@ -8,6 +8,6 @@ namespace Lilja.Repository
         None = 0,
         InMemory = 1,
         Json = 2,
-        MessagePack = 4,
+        MsgPack = 4,
     }
 }

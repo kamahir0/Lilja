@@ -20,7 +20,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
     private const int OptionInMemory = 1;
     private const int OptionJson = 2;
-    private const int OptionMessagePack = 4;
+    private const int OptionMsgPack = 4;
 
     private static readonly SymbolDisplayFormat TypeFormat = SymbolDisplayFormat.FullyQualifiedFormat;
 
@@ -57,7 +57,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
             }
 
             var hasMessagePack = MessagePackContract.HasCompatibleContract(compilation);
-            var needsMessagePack = models.Any(static item => (item.RepositoryOptions & OptionMessagePack) != 0);
+            var needsMessagePack = models.Any(static item => (item.RepositoryOptions & OptionMsgPack) != 0);
 
             foreach (var model in models)
             {
@@ -66,7 +66,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
 
                 if (model.RepositoryOptions != 0)
                 {
-                    if ((model.RepositoryOptions & OptionMessagePack) != 0 && !hasMessagePack)
+                    if ((model.RepositoryOptions & OptionMsgPack) != 0 && !hasMessagePack)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MessagePackNotAvailable, GetPrimaryLocation(model.Symbol), model.Name));
                     }
@@ -471,7 +471,7 @@ public sealed class LiljaRepositoryGenerator : IIncrementalGenerator
                 AppendJsonFactory(sb, model);
             }
 
-            if ((model.RepositoryOptions & OptionMessagePack) != 0 && hasMessagePack)
+            if ((model.RepositoryOptions & OptionMsgPack) != 0 && hasMessagePack)
             {
                 AppendMessagePackFactory(sb, model, allModels);
             }

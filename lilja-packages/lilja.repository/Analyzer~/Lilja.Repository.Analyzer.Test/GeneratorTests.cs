@@ -165,7 +165,7 @@ using Lilja.Repository;
 
 namespace Demo;
 
-[Entity(RepositoryOptions.MessagePack)]
+[Entity(RepositoryOptions.MsgPack)]
 public partial class Config
 {
     [Persist(0)] public int Volume { get; }
@@ -262,7 +262,7 @@ using System.Threading;
 
 namespace Lilja.Repository
 {
-    [Flags] public enum RepositoryOptions { None = 0, InMemory = 1, Json = 2, MessagePack = 4 }
+    [Flags] public enum RepositoryOptions { None = 0, InMemory = 1, Json = 2, MsgPack = 4 }
     public sealed class EntityAttribute : Attribute { public EntityAttribute(RepositoryOptions repositoryOptions = RepositoryOptions.None) {} }
     public sealed class PersistAttribute : Attribute { public PersistAttribute() {} public PersistAttribute(int index) {} }
     public sealed class KeyAttribute : Attribute {}
