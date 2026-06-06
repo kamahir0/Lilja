@@ -177,8 +177,7 @@ namespace Lilja.CustomProjectWindow
     {
         private const string MissingAssetIconName = "console.erroricon.sml";
         private const string FolderFavoriteIconName = "FolderFavorite Icon";
-        private const string FolderClosedIconName = "Folder Icon";
-        private const string FolderOpenedIconName = "FolderOpened Icon";
+        private const string FolderIconName = "Folder Icon";
         private const string AddGroupIconName = "CreateAddNew";
         private const string DropdownIconName = "d_icon dropdown@2x";
         private const string ExpandIconName = "CollabCreate Icon";
@@ -192,8 +191,7 @@ namespace Lilja.CustomProjectWindow
         public static Texture2D MissingAsset => GetTexture(MissingAssetIconName);
         public static Texture2D FolderRefRoot => GetTexture(FolderFavoriteIconName);
         public static Texture2D FolderPointer => GetTexture(FolderPointerIconName);
-        public static Texture2D FolderClosed => GetTexture(FolderClosedIconName);
-        public static Texture2D FolderOpened => GetTexture(FolderOpenedIconName);
+        public static Texture2D Folder => GetTexture(FolderIconName);
         public static Texture2D AddGroup => GetTexture(AddGroupIconName);
         public static Texture2D Dropdown => GetTexture(DropdownIconName);
         public static Texture2D Expand => GetTexture(ExpandIconName);

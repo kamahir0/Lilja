@@ -63,12 +63,10 @@ namespace Lilja.CustomProjectWindow
             if (node.Kind == ProjectNodeKind.Folder)
             {
                 isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
-                return node.IsExpanded
-                    ? CustomProjectViewIcons.FolderOpened
-                    : CustomProjectViewIcons.FolderClosed;
+                return CustomProjectViewIcons.Folder;
             }
 
-            return CustomProjectViewIcons.FolderClosed;
+            return CustomProjectViewIcons.Folder;
         }
 
         private static bool IsMissingAsset(string assetPath)
