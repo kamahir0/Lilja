@@ -306,14 +306,14 @@ namespace Lilja.CustomProjectWindow
             _autoSyncSelection = GUILayout.Toggle(_autoSyncSelection,
                 new GUIContent(" Sync", CustomProjectViewIcons.Sync, "選択時に Project ビューと同期"),
                 EditorStyles.toolbarButton,
-                GUILayout.Width(70));
+                GUILayout.Width(58));
 
             if (GUILayout.Button(new GUIContent(
                 " Expand",
                 CustomProjectViewIcons.Expand,
                 "すべて展開"),
                 EditorStyles.toolbarButton,
-                GUILayout.Width(84)))
+                GUILayout.Width(72)))
             {
                 _treeView?.ExpandAll(true);
             }
@@ -323,7 +323,7 @@ namespace Lilja.CustomProjectWindow
                 CustomProjectViewIcons.Collapse,
                 "すべて折りたたむ"),
                 EditorStyles.toolbarButton,
-                GUILayout.Width(90)))
+                GUILayout.Width(78)))
             {
                 _treeView?.ExpandAll(false);
             }
