@@ -18,6 +18,25 @@ namespace Lilja.Repository.Editor
     {
         private const int PreviewLimit = 120;
         private static readonly string[] FallbackKeyMemberNames = { "Id", "Key", "Name", "id", "key", "name" };
+        private static readonly string[] SystemAssemblyPrefixes =
+        {
+            "System",
+            "mscorlib",
+            "Unity",
+            "UnityEngine",
+            "UnityEditor",
+            "Mono.",
+            "Newtonsoft",
+            "Microsoft",
+            "nunit",
+            "Gradle",
+            "ExCSS",
+            "JetBrains",
+            "log4net",
+            "Bee.",
+            "ReportGenerator",
+            "roslyn",
+        };
         private static Type[]? cachedDtoFormatterTypes;
 
         public IReadOnlyList<RepositoryTracker.RepositoryType> GetAvailableRepositoryTypes()
@@ -333,6 +352,22 @@ namespace Lilja.Repository.Editor
             }
 
             cachedDtoFormatterTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(static assembly =>
+                {
+                    var name = assembly.GetName().Name;
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        return false;
+                    }
+                    foreach (var prefix in SystemAssemblyPrefixes)
+                    {
+                        if (name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
                 .SelectMany(GetTypesSafe)
                 .Where(static type =>
                     type.FullName is not null &&

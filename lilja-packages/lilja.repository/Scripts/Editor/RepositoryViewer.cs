@@ -463,7 +463,7 @@ namespace Lilja.Repository.Editor
             }
         }
 
-        private void RefreshPreview()
+        private async void RefreshPreview()
         {
             if (_previewStatusLabel is null || _previewField is null)
             {
@@ -478,8 +478,29 @@ namespace Lilja.Repository.Editor
             }
 
             var record = _records[_selectedRecordIndex];
-            _previewStatusLabel.text = record.Title;
-            _previewField.SetValueWithoutNotify(_dataSource.LoadRecordDetail(record));
+            var currentRecordStableId = _selectedRecordStableId;
+
+            _previewStatusLabel.text = $"{record.Title} (Loading...)";
+            _previewField.SetValueWithoutNotify("Loading...");
+
+            try
+            {
+                var detail = await System.Threading.Tasks.Task.Run(() => _dataSource.LoadRecordDetail(record));
+                
+                if (_selectedRecordStableId == currentRecordStableId)
+                {
+                    _previewStatusLabel.text = record.Title;
+                    _previewField.SetValueWithoutNotify(detail);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (_selectedRecordStableId == currentRecordStableId)
+                {
+                    _previewStatusLabel.text = $"{record.Title} (Error)";
+                    _previewField.SetValueWithoutNotify(ex.ToString());
+                }
+            }
         }
 
         private void RefreshEmptyStates()
