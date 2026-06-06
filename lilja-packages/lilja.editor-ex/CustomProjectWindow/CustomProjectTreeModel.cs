@@ -17,6 +17,9 @@ namespace Lilja.CustomProjectWindow
         private readonly Dictionary<string, CustomProjectNode> _manualAssetRefByGuid = new(StringComparer.Ordinal);
         private bool _lookupCacheDirty = true;
         private bool _saveDeferredQueued;
+        private SaveMode _saveMode = SaveMode.UserSettingsFile;
+        private ISettingsStorage _storage;
+        private DateTime _lastLoadedFileTimeUtc = DateTime.MinValue;
 
         internal event Action OnSaved;
 
@@ -24,21 +27,101 @@ namespace Lilja.CustomProjectWindow
         public bool IsEmpty => _roots.Count == 0;
 
         private string PrefKey => PrefKeyPrefix + Application.dataPath.GetHashCode();
+        private string SaveModePrefKey => "CustomProjectView_SaveMode_" + Application.dataPath.GetHashCode();
+        private string SettingsFilePath => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "UserSettings", "CustomProjectWindowSettings.json");
+
+        public SaveMode CurrentSaveMode
+        {
+            get => _saveMode;
+            set => SwitchSaveMode(value);
+        }
+
+        private void InitializeStorage()
+        {
+            _saveMode = (SaveMode)EditorPrefs.GetInt(SaveModePrefKey, (int)SaveMode.UserSettingsFile);
+            _storage = CreateStorage(_saveMode);
+        }
+
+        private ISettingsStorage CreateStorage(SaveMode mode)
+        {
+            switch (mode)
+            {
+                case SaveMode.UserSettingsFile:
+                    return new UserSettingsFileStorage(SettingsFilePath);
+                case SaveMode.EditorPrefs:
+                    return new EditorPrefsStorage(PrefKey);
+                default:
+                    return new UserSettingsFileStorage(SettingsFilePath);
+            }
+        }
+
+        public void SwitchSaveMode(SaveMode newMode)
+        {
+            if (_storage == null)
+            {
+                InitializeStorage();
+            }
+
+            if (_saveMode == newMode)
+            {
+                return;
+            }
+
+            // 現在の状態を保存
+            Save();
+
+            var newStorage = CreateStorage(newMode);
+
+            // 移行先に設定データが存在しない場合は、現在のデータを移行する
+            if (!newStorage.Exists())
+            {
+                SortNodes(_roots);
+                var persistentNodes = ClonePersistentNodes(_roots);
+                var flatNodes = new List<SerializableNode>();
+                foreach (var root in persistentNodes)
+                {
+                    FlattenNode(root, null, flatNodes);
+                }
+                var tempModel = new SerializableModel
+                {
+                    Version = 2,
+                    Nodes = flatNodes,
+                };
+                var json = JsonUtility.ToJson(tempModel, newMode == SaveMode.UserSettingsFile);
+                newStorage.Save(json);
+            }
+
+            _saveMode = newMode;
+            _storage = newStorage;
+            EditorPrefs.SetInt(SaveModePrefKey, (int)_saveMode);
+
+            // 新しいストレージからロードし直す
+            Load();
+        }
 
         public void Load()
         {
+            if (_storage == null)
+            {
+                InitializeStorage();
+            }
+
             _roots.Clear();
             _model = new SerializableModel();
             MarkLookupCacheDirty();
 
-            var json = EditorPrefs.GetString(PrefKey, string.Empty);
             var loadedRoots = new List<CustomProjectNode>();
-            if (!string.IsNullOrEmpty(json))
+            if (_storage.Exists())
             {
                 try
                 {
-                    _model = JsonUtility.FromJson<SerializableModel>(json) ?? new SerializableModel();
-                    loadedRoots = ReconstructTree(_model.Nodes);
+                    var json = _storage.Load();
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        _model = JsonUtility.FromJson<SerializableModel>(json) ?? new SerializableModel();
+                        loadedRoots = ReconstructTree(_model.Nodes);
+                    }
+                    _lastLoadedFileTimeUtc = _storage.GetLastWriteTimeUtc();
                 }
                 catch
                 {
@@ -55,6 +138,11 @@ namespace Lilja.CustomProjectWindow
 
         public void Save()
         {
+            if (_storage == null)
+            {
+                InitializeStorage();
+            }
+
             CancelDeferredSave();
             SortNodes(_roots);
 
@@ -71,10 +159,38 @@ namespace Lilja.CustomProjectWindow
                 Nodes = flatNodes,
             };
 
-            var json = JsonUtility.ToJson(_model);
-            EditorPrefs.SetString(PrefKey, json);
+            var json = JsonUtility.ToJson(_model, _saveMode == SaveMode.UserSettingsFile);
+            _storage.Save(json);
+            _lastLoadedFileTimeUtc = _storage.GetLastWriteTimeUtc();
             RebuildLookupCache();
             OnSaved?.Invoke();
+        }
+
+        public bool CheckExternalUpdate()
+        {
+            if (_storage == null)
+            {
+                InitializeStorage();
+            }
+
+            if (_saveMode != SaveMode.UserSettingsFile)
+            {
+                return false;
+            }
+
+            if (!_storage.Exists())
+            {
+                return false;
+            }
+
+            var currentWriteTime = _storage.GetLastWriteTimeUtc();
+            if (currentWriteTime > _lastLoadedFileTimeUtc)
+            {
+                Load();
+                return true;
+            }
+
+            return false;
         }
 
         public void SaveDeferred()

@@ -26,12 +26,67 @@ namespace Lilja.CustomProjectWindow
         internal CustomProjectTreeModel Model { get; private set; }
         internal bool AutoSyncSelection => _autoSyncSelection;
 
-        [MenuItem("Lilja/EditorEx/Custom Project Window")]
+        private const string UserSettingsFileMenuPath = "Lilja/EditorEx/Custom Project Window/Save Mode/UserSettings";
+        private const string EditorPrefsMenuPath = "Lilja/EditorEx/Custom Project Window/Save Mode/EditorPrefs";
+
+        [MenuItem("Lilja/EditorEx/Custom Project Window/Open Window")]
         public static void Open()
         {
             var window = GetWindow<CustomProjectWindow>();
             window.titleContent = new GUIContent("Project (Custom)", CustomProjectViewIcons.Project);
             window.Show();
+        }
+
+        [MenuItem(UserSettingsFileMenuPath, false)]
+        private static void SetSaveModeToFile()
+        {
+            SetSaveMode(SaveMode.UserSettingsFile);
+        }
+
+        [MenuItem(UserSettingsFileMenuPath, true)]
+        private static bool SetSaveModeToFileValidate()
+        {
+            Menu.SetChecked(UserSettingsFileMenuPath, GetCurrentSaveMode() == SaveMode.UserSettingsFile);
+            return true;
+        }
+
+        [MenuItem(EditorPrefsMenuPath, false)]
+        private static void SetSaveModeToPrefs()
+        {
+            SetSaveMode(SaveMode.EditorPrefs);
+        }
+
+        [MenuItem(EditorPrefsMenuPath, true)]
+        private static bool SetSaveModeToPrefsValidate()
+        {
+            Menu.SetChecked(EditorPrefsMenuPath, GetCurrentSaveMode() == SaveMode.EditorPrefs);
+            return true;
+        }
+
+        private static SaveMode GetCurrentSaveMode()
+        {
+            var window = HasOpenInstances<CustomProjectWindow>() ? GetWindow<CustomProjectWindow>(false, null, false) : null;
+            if (window != null && window.Model != null)
+            {
+                return window.Model.CurrentSaveMode;
+            }
+
+            var saveModePrefKey = "CustomProjectView_SaveMode_" + Application.dataPath.GetHashCode();
+            return (SaveMode)EditorPrefs.GetInt(saveModePrefKey, (int)SaveMode.UserSettingsFile);
+        }
+
+        private static void SetSaveMode(SaveMode mode)
+        {
+            var window = HasOpenInstances<CustomProjectWindow>() ? GetWindow<CustomProjectWindow>(false, null, false) : null;
+            if (window != null && window.Model != null)
+            {
+                window.SwitchSaveMode(mode);
+            }
+            else
+            {
+                var model = new CustomProjectTreeModel();
+                model.SwitchSaveMode(mode);
+            }
         }
 
         internal static void FocusAsset(string guid)
@@ -64,6 +119,21 @@ namespace Lilja.CustomProjectWindow
         public void AddItemsToMenu(GenericMenu menu)
         {
             menu.AddItem(new GUIContent("クイック追加 キー設定..."), false, CustomProjectKeyConfigWindow.Open);
+            if (Model != null)
+            {
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent("保存先/UserSettings ファイル"), Model.CurrentSaveMode == SaveMode.UserSettingsFile, () => SwitchSaveMode(SaveMode.UserSettingsFile));
+                menu.AddItem(new GUIContent("保存先/EditorPrefs (レジストリ)"), Model.CurrentSaveMode == SaveMode.EditorPrefs, () => SwitchSaveMode(SaveMode.EditorPrefs));
+            }
+        }
+
+        private void SwitchSaveMode(SaveMode mode)
+        {
+            if (Model != null)
+            {
+                Model.SwitchSaveMode(mode);
+                RequestRefresh();
+            }
         }
 
         internal void ReloadAndRevealNode(CustomProjectNode node)
@@ -96,6 +166,9 @@ namespace Lilja.CustomProjectWindow
 
             Selection.selectionChanged -= OnSelectionChanged;
             Selection.selectionChanged += OnSelectionChanged;
+
+            EditorApplication.focusChanged -= OnEditorFocusChanged;
+            EditorApplication.focusChanged += OnEditorFocusChanged;
         }
 
         private void OnDisable()
@@ -108,6 +181,18 @@ namespace Lilja.CustomProjectWindow
 
             CustomProjectWindowDecorator.Clear();
             Selection.selectionChanged -= OnSelectionChanged;
+            EditorApplication.focusChanged -= OnEditorFocusChanged;
+        }
+
+        private void OnEditorFocusChanged(bool isFocused)
+        {
+            if (isFocused && Model != null)
+            {
+                if (Model.CheckExternalUpdate())
+                {
+                    RequestRefresh();
+                }
+            }
         }
 
         private void OnModelSaved()
