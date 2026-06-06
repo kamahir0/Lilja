@@ -17,6 +17,9 @@ namespace Lilja.Repository
         private readonly Func<TDto, TKey> _getKeyFromDto;
         private readonly Func<TKey, TDto> _createDefaultDto;
         private readonly Dictionary<TKey, TDto> _values = new Dictionary<TKey, TDto>();
+#if UNITY_EDITOR
+        private readonly global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryState _repositoryState;
+#endif
 
         protected InMemoryKeyedRepository(
             Func<TEntity, TDto> toDto,
@@ -31,6 +34,14 @@ namespace Lilja.Repository
             _getKeyFromEntity = getKeyFromEntity ?? throw new ArgumentNullException(nameof(getKeyFromEntity));
             _getKeyFromDto = getKeyFromDto ?? throw new ArgumentNullException(nameof(getKeyFromDto));
             _createDefaultDto = createDefaultDto ?? throw new ArgumentNullException(nameof(createDefaultDto));
+#if UNITY_EDITOR
+            _repositoryState = global::Lilja.Repository.Diagnostics.RepositoryTracker.Track(
+                this,
+                global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.InMemory,
+                typeof(TEntity).FullName ?? typeof(TEntity).Name,
+                typeof(TEntity).Name + "Repository",
+                true);
+#endif
 
             if (initialValues is null)
             {
@@ -44,49 +55,98 @@ namespace Lilja.Repository
                     continue;
                 }
 
-                _values[_getKeyFromEntity(entity)] = _toDto(entity);
+                var key = _getKeyFromEntity(entity);
+                var dto = _toDto(entity);
+                _values[key] = dto;
+#if UNITY_EDITOR
+                _repositoryState.SetRecord(key, dto);
+#endif
             }
         }
 
-        public UniTask<TEntity> LoadAsync(TKey key, CancellationToken ct = default)
+        public UniTask LoadAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            return UniTask.FromResult(_fromDto(_values.TryGetValue(key, out var dto) ? dto : _createDefaultDto(key)));
+            return UniTask.CompletedTask;
         }
 
-        public UniTask<IReadOnlyList<TEntity>> LoadAllAsync(CancellationToken ct = default)
+        public UniTask SaveAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
+            return UniTask.CompletedTask;
+        }
+
+        public TEntity Get(TKey key)
+        {
+            if (!_values.TryGetValue(key, out var dto))
+            {
+                throw new KeyNotFoundException($"Repository record was not found. Key: {key}");
+            }
+
+            return _fromDto(dto);
+        }
+
+        public bool TryGet(TKey key, out TEntity entity)
+        {
+            if (!_values.TryGetValue(key, out var dto))
+            {
+                entity = null!;
+                return false;
+            }
+
+            entity = _fromDto(dto);
+            return true;
+        }
+
+        public IReadOnlyList<TEntity> All()
+        {
             var values = new List<TEntity>(_values.Count);
             foreach (var dto in _values.Values)
             {
                 values.Add(_fromDto(dto));
             }
 
-            return UniTask.FromResult((IReadOnlyList<TEntity>)values);
+            return values;
         }
 
-        public UniTask SaveAsync(TEntity entity, CancellationToken ct = default)
+        public void Update(TEntity entity)
         {
             if (entity is null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            ct.ThrowIfCancellationRequested();
-            _values[_getKeyFromEntity(entity)] = _toDto(entity);
-            return UniTask.CompletedTask;
+            var key = _getKeyFromEntity(entity);
+            var dto = _toDto(entity);
+            _values[key] = dto;
+#if UNITY_EDITOR
+            _repositoryState.SetRecord(key, dto);
+#endif
         }
 
-        public UniTask<bool> DeleteAsync(TKey key, CancellationToken ct = default)
+        public bool Delete(TKey key)
         {
-            ct.ThrowIfCancellationRequested();
-            return UniTask.FromResult(_values.Remove(key));
+            var removed = _values.Remove(key);
+#if UNITY_EDITOR
+            if (removed)
+            {
+                _repositoryState.RemoveRecord(key);
+            }
+#endif
+            return removed;
         }
 
         public bool Exists(TKey key)
         {
             return _values.ContainsKey(key);
+        }
+
+        public void Clear()
+        {
+            _values.Clear();
+#if UNITY_EDITOR
+            _repositoryState.Clear();
+#endif
         }
     }
 }

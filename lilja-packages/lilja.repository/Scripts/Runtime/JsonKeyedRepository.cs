@@ -16,59 +16,56 @@ namespace Lilja.Repository
         private readonly Func<TEntity, TDto> _toDto;
         private readonly Func<TDto, TEntity> _fromDto;
         private readonly Func<TEntity, TKey> _getKeyFromEntity;
+        private readonly Func<TDto, TKey> _getKeyFromDto;
         private readonly Func<TKey, TDto> _createDefaultDto;
+        private readonly Dictionary<TKey, TDto> _values = new Dictionary<TKey, TDto>();
+#if UNITY_EDITOR
+        private readonly global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryState _repositoryState;
+#endif
 
         protected JsonKeyedRepository(
             string directoryPath,
             Func<TEntity, TDto> toDto,
             Func<TDto, TEntity> fromDto,
             Func<TEntity, TKey> getKeyFromEntity,
+            Func<TDto, TKey> getKeyFromDto,
             Func<TKey, TDto> createDefaultDto)
         {
             DirectoryPath = string.IsNullOrWhiteSpace(directoryPath) ? throw new ArgumentException("Directory path must not be empty.", nameof(directoryPath)) : directoryPath;
             _toDto = toDto ?? throw new ArgumentNullException(nameof(toDto));
             _fromDto = fromDto ?? throw new ArgumentNullException(nameof(fromDto));
             _getKeyFromEntity = getKeyFromEntity ?? throw new ArgumentNullException(nameof(getKeyFromEntity));
+            _getKeyFromDto = getKeyFromDto ?? throw new ArgumentNullException(nameof(getKeyFromDto));
             _createDefaultDto = createDefaultDto ?? throw new ArgumentNullException(nameof(createDefaultDto));
+#if UNITY_EDITOR
+            var storageIdentifier = Path.GetFileName(DirectoryPath);
+            _repositoryState = global::Lilja.Repository.Diagnostics.RepositoryTracker.Track(
+                this,
+                global::Lilja.Repository.Diagnostics.RepositoryTracker.RepositoryType.Json,
+                storageIdentifier,
+                storageIdentifier + "Repository",
+                true);
+#endif
         }
 
         protected string DirectoryPath { get; }
 
-        public UniTask<TEntity> LoadAsync(TKey key, CancellationToken ct = default)
+        public UniTask LoadAsync(CancellationToken ct = default)
         {
-            var path = GetFilePath(key);
+            var directory = DirectoryPath;
             return UniTask.RunOnThreadPool(() =>
             {
                 ct.ThrowIfCancellationRequested();
-                if (!File.Exists(path))
-                {
-                    return _fromDto(_createDefaultDto(key));
-                }
-
-                var raw = File.ReadAllText(path);
-                if (string.IsNullOrWhiteSpace(raw))
-                {
-                    return _fromDto(_createDefaultDto(key));
-                }
-
-                var dto = JsonUtility.FromJson<TDto>(raw);
-                return _fromDto(dto ?? _createDefaultDto(key));
-            }, cancellationToken: ct);
-        }
-
-        public UniTask<IReadOnlyList<TEntity>> LoadAllAsync(CancellationToken ct = default)
-        {
-            var directory = DirectoryPath;
-            return UniTask.RunOnThreadPool<IReadOnlyList<TEntity>>(() =>
-            {
-                ct.ThrowIfCancellationRequested();
+                _values.Clear();
+#if UNITY_EDITOR
+                _repositoryState.Clear();
+#endif
                 if (!Directory.Exists(directory))
                 {
-                    return Array.Empty<TEntity>();
+                    return;
                 }
 
                 var files = Directory.GetFiles(directory, "*.json");
-                var values = new List<TEntity>(files.Length);
                 foreach (var file in files)
                 {
                     ct.ThrowIfCancellationRequested();
@@ -81,43 +78,113 @@ namespace Lilja.Repository
                     var dto = JsonUtility.FromJson<TDto>(raw);
                     if (dto is not null)
                     {
-                        values.Add(_fromDto(dto));
+                        var key = _getKeyFromDto(dto);
+                        _values[key] = dto;
+#if UNITY_EDITOR
+                        _repositoryState.SetRecord(key, dto);
+#endif
                     }
                 }
-
-                return values;
             }, cancellationToken: ct);
         }
 
-        public UniTask SaveAsync(TEntity entity, CancellationToken ct = default)
+        public UniTask SaveAsync(CancellationToken ct = default)
+        {
+            var directory = DirectoryPath;
+            var snapshot = new Dictionary<TKey, TDto>(_values);
+            return UniTask.RunOnThreadPool(() =>
+            {
+                ct.ThrowIfCancellationRequested();
+                Directory.CreateDirectory(directory);
+                var expectedFiles = new HashSet<string>();
+                foreach (var item in snapshot)
+                {
+                    var path = GetFilePath(item.Key);
+                    expectedFiles.Add(Path.GetFullPath(path));
+                    AtomicFileWriter.WriteAllText(path, JsonUtility.ToJson(item.Value, false));
+                }
+
+                foreach (var file in Directory.GetFiles(directory, "*.json"))
+                {
+                    if (!expectedFiles.Contains(Path.GetFullPath(file)))
+                    {
+                        AtomicFileWriter.DeleteIfExists(file);
+                    }
+                }
+            }, cancellationToken: ct);
+        }
+
+        public TEntity Get(TKey key)
+        {
+            if (!_values.TryGetValue(key, out var dto))
+            {
+                throw new KeyNotFoundException($"Repository record was not found. Key: {key}");
+            }
+
+            return _fromDto(dto);
+        }
+
+        public bool TryGet(TKey key, out TEntity entity)
+        {
+            if (!_values.TryGetValue(key, out var dto))
+            {
+                entity = null!;
+                return false;
+            }
+
+            entity = _fromDto(dto);
+            return true;
+        }
+
+        public IReadOnlyList<TEntity> All()
+        {
+            var values = new List<TEntity>(_values.Count);
+            foreach (var dto in _values.Values)
+            {
+                values.Add(_fromDto(dto));
+            }
+
+            return values;
+        }
+
+        public void Update(TEntity entity)
         {
             if (entity is null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            var path = GetFilePath(_getKeyFromEntity(entity));
+            var key = _getKeyFromEntity(entity);
             var dto = _toDto(entity);
-            return UniTask.RunOnThreadPool(() =>
-            {
-                ct.ThrowIfCancellationRequested();
-                AtomicFileWriter.WriteAllText(path, JsonUtility.ToJson(dto, false));
-            }, cancellationToken: ct);
+            _values[key] = dto;
+#if UNITY_EDITOR
+            _repositoryState.SetRecord(key, dto);
+#endif
         }
 
-        public UniTask<bool> DeleteAsync(TKey key, CancellationToken ct = default)
+        public bool Delete(TKey key)
         {
-            var path = GetFilePath(key);
-            return UniTask.RunOnThreadPool(() =>
+            var removed = _values.Remove(key);
+#if UNITY_EDITOR
+            if (removed)
             {
-                ct.ThrowIfCancellationRequested();
-                return AtomicFileWriter.DeleteIfExists(path);
-            }, cancellationToken: ct);
+                _repositoryState.RemoveRecord(key);
+            }
+#endif
+            return removed;
         }
 
         public bool Exists(TKey key)
         {
-            return File.Exists(GetFilePath(key));
+            return _values.ContainsKey(key);
+        }
+
+        public void Clear()
+        {
+            _values.Clear();
+#if UNITY_EDITOR
+            _repositoryState.Clear();
+#endif
         }
 
         protected string GetFilePath(TKey key)

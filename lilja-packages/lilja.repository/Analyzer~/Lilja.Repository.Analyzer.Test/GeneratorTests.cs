@@ -90,7 +90,9 @@ public partial class SaveData
         Assert.Contains("Demo.SaveData.ISaveDataRepository.g.cs", generated.Keys);
         Assert.Contains("Demo.SaveData.SaveDataRepository.g.cs", generated.Keys);
         Assert.Contains("public interface ISaveDataRepository", generated["Demo.SaveData.ISaveDataRepository.g.cs"]);
-        Assert.Contains("UniTask<global::Demo.SaveData> LoadAsync(string key", generated["Demo.SaveData.ISaveDataRepository.g.cs"]);
+        Assert.Contains("UniTask LoadAsync(global::System.Threading.CancellationToken ct = default)", generated["Demo.SaveData.ISaveDataRepository.g.cs"]);
+        Assert.Contains("global::Demo.SaveData Get(string key)", generated["Demo.SaveData.ISaveDataRepository.g.cs"]);
+        Assert.Contains("void Update(global::Demo.SaveData entity)", generated["Demo.SaveData.ISaveDataRepository.g.cs"]);
         Assert.Contains("public static class InMemory", generated["Demo.SaveData.SaveDataRepository.g.cs"]);
         Assert.Contains("public static class Json", generated["Demo.SaveData.SaveDataRepository.g.cs"]);
         Assert.Contains("global::System.Collections.Generic.List<global::Lilja.Repository.Generated.Dtos.Demo.SkillDto> Skills", generated["Demo.SaveData.SaveDataDto.g.cs"]);
@@ -186,6 +188,42 @@ public partial class Config
     }
 
     [Fact]
+    public void MessagePack_repository_generates_cache_api_and_compiles()
+    {
+        const string source = """
+using Lilja.Repository;
+
+namespace Demo;
+
+[Entity(RepositoryOptions.MsgPack)]
+public partial class Config
+{
+    [Key]
+    [Persist(0)]
+    public string Id { get; }
+
+    [Persist(1)]
+    public int Volume { get; }
+
+    public Config(string id, int volume)
+    {
+        Id = id;
+        Volume = volume;
+    }
+}
+""";
+
+        var result = RunGenerator(source, includeMessagePack: true);
+        var generated = ToGeneratedMap(result);
+
+        Assert.Contains("public static class MessagePack", generated["Demo.Config.ConfigRepository.g.cs"]);
+        Assert.Contains("UniTask LoadAsync", generated["Demo.Config.IConfigRepository.g.cs"]);
+        Assert.Contains("void Update(global::Demo.Config entity)", generated["Demo.Config.IConfigRepository.g.cs"]);
+        Assert.DoesNotContain(result.Diagnostics, diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+        AssertCompiles(source, result.Results.Single().GeneratedSources, includeMessagePack: true);
+    }
+
+    [Fact]
     public void Key_without_persist_reports_error()
     {
         const string source = """
@@ -227,13 +265,18 @@ public partial class SaveData
         return result.Results.Single().GeneratedSources.ToDictionary(item => item.HintName, item => item.SourceText.ToString());
     }
 
-    private static void AssertCompiles(string source, ImmutableArray<GeneratedSourceResult> generatedSources)
+    private static void AssertCompiles(string source, ImmutableArray<GeneratedSourceResult> generatedSources, bool includeMessagePack = false)
     {
         var trees = new List<SyntaxTree>
         {
             CSharpSyntaxTree.ParseText(RuntimeStubs),
             CSharpSyntaxTree.ParseText(source),
         };
+        if (includeMessagePack)
+        {
+            trees.Add(CSharpSyntaxTree.ParseText(MessagePackStubs));
+        }
+
         trees.AddRange(generatedSources.Select(item => CSharpSyntaxTree.ParseText(item.SourceText.ToString())));
 
         var compilation = CSharpCompilation.Create(
@@ -274,27 +317,40 @@ namespace Lilja.Repository
     public abstract class InMemoryRepository<TEntity, TDto> where TEntity : class where TDto : class
     {
         protected InMemoryRepository(Func<TEntity, TDto> toDto, Func<TDto, TEntity> fromDto, Func<TDto> createDefaultDto, TEntity? initialValue = null) {}
-        public Cysharp.Threading.Tasks.UniTask<TEntity> LoadAsync(CancellationToken ct = default) => throw new NotImplementedException();
-        public Cysharp.Threading.Tasks.UniTask SaveAsync(TEntity entity, CancellationToken ct = default) => throw new NotImplementedException();
-        public Cysharp.Threading.Tasks.UniTask<bool> DeleteAsync(CancellationToken ct = default) => throw new NotImplementedException();
+        public Cysharp.Threading.Tasks.UniTask LoadAsync(CancellationToken ct = default) => throw new NotImplementedException();
+        public Cysharp.Threading.Tasks.UniTask SaveAsync(CancellationToken ct = default) => throw new NotImplementedException();
+        public TEntity Get() => throw new NotImplementedException();
+        public bool TryGet(out TEntity entity) => throw new NotImplementedException();
+        public void Update(TEntity entity) => throw new NotImplementedException();
+        public bool Delete() => throw new NotImplementedException();
         public bool Exists() => throw new NotImplementedException();
+        public void Clear() => throw new NotImplementedException();
     }
     public abstract class InMemoryKeyedRepository<TKey, TEntity, TDto> where TKey : notnull where TEntity : class where TDto : class
     {
         protected InMemoryKeyedRepository(Func<TEntity, TDto> toDto, Func<TDto, TEntity> fromDto, Func<TEntity, TKey> getKeyFromEntity, Func<TDto, TKey> getKeyFromDto, Func<TKey, TDto> createDefaultDto, IReadOnlyList<TEntity>? initialValues = null) {}
-        public Cysharp.Threading.Tasks.UniTask<TEntity> LoadAsync(TKey key, CancellationToken ct = default) => throw new NotImplementedException();
-        public Cysharp.Threading.Tasks.UniTask<IReadOnlyList<TEntity>> LoadAllAsync(CancellationToken ct = default) => throw new NotImplementedException();
-        public Cysharp.Threading.Tasks.UniTask SaveAsync(TEntity entity, CancellationToken ct = default) => throw new NotImplementedException();
-        public Cysharp.Threading.Tasks.UniTask<bool> DeleteAsync(TKey key, CancellationToken ct = default) => throw new NotImplementedException();
+        public Cysharp.Threading.Tasks.UniTask LoadAsync(CancellationToken ct = default) => throw new NotImplementedException();
+        public Cysharp.Threading.Tasks.UniTask SaveAsync(CancellationToken ct = default) => throw new NotImplementedException();
+        public TEntity Get(TKey key) => throw new NotImplementedException();
+        public bool TryGet(TKey key, out TEntity entity) => throw new NotImplementedException();
+        public IReadOnlyList<TEntity> All() => throw new NotImplementedException();
+        public void Update(TEntity entity) => throw new NotImplementedException();
+        public bool Delete(TKey key) => throw new NotImplementedException();
         public bool Exists(TKey key) => throw new NotImplementedException();
+        public void Clear() => throw new NotImplementedException();
     }
     public abstract class JsonRepository<TEntity, TDto> : InMemoryRepository<TEntity, TDto> where TEntity : class where TDto : class { protected JsonRepository(string filePath, Func<TEntity, TDto> toDto, Func<TDto, TEntity> fromDto, Func<TDto> createDefaultDto) : base(toDto, fromDto, createDefaultDto) {} }
-    public abstract class JsonKeyedRepository<TKey, TEntity, TDto> : InMemoryKeyedRepository<TKey, TEntity, TDto> where TKey : notnull where TEntity : class where TDto : class { protected JsonKeyedRepository(string directoryPath, Func<TEntity, TDto> toDto, Func<TDto, TEntity> fromDto, Func<TEntity, TKey> getKeyFromEntity, Func<TKey, TDto> createDefaultDto) : base(toDto, fromDto, getKeyFromEntity, _ => default!, createDefaultDto) {} }
+    public abstract class JsonKeyedRepository<TKey, TEntity, TDto> : InMemoryKeyedRepository<TKey, TEntity, TDto> where TKey : notnull where TEntity : class where TDto : class { protected JsonKeyedRepository(string directoryPath, Func<TEntity, TDto> toDto, Func<TDto, TEntity> fromDto, Func<TEntity, TKey> getKeyFromEntity, Func<TDto, TKey> getKeyFromDto, Func<TKey, TDto> createDefaultDto) : base(toDto, fromDto, getKeyFromEntity, getKeyFromDto, createDefaultDto) {} }
 }
 
 namespace Cysharp.Threading.Tasks
 {
-    public readonly struct UniTask {}
+    public readonly struct UniTask
+    {
+        public static UniTask CompletedTask => default;
+        public static UniTask RunOnThreadPool(Action action, CancellationToken cancellationToken = default) => default;
+        public static UniTask<T> RunOnThreadPool<T>(Func<T> func, CancellationToken cancellationToken = default) => default;
+    }
     public readonly struct UniTask<T> {}
 }
 
@@ -314,7 +370,7 @@ namespace MessagePack
     public ref struct MessagePackWriter { public void WriteNil() {} public void WriteMapHeader(int count) {} public void Write(string value) {} }
     public ref struct MessagePackReader { public bool TryReadNil() => false; public int ReadMapHeader() => 0; public string ReadString() => ""; public void Skip() {} }
     public sealed class MessagePackSerializationException : System.Exception { public MessagePackSerializationException(string message) : base(message) {} }
-    public static class MessagePackSerializer { public static byte[] Serialize<T>(T value, MessagePackSerializerOptions options) => []; public static T Deserialize<T>(byte[] bytes, MessagePackSerializerOptions options) => default!; }
+    public static class MessagePackSerializer { public static byte[] Serialize<T>(T value, MessagePackSerializerOptions options) => System.Array.Empty<byte>(); public static T Deserialize<T>(byte[] bytes, MessagePackSerializerOptions options) => default!; }
 }
 namespace MessagePack.Formatters { public interface IMessagePackFormatter {} public interface IMessagePackFormatter<T> : IMessagePackFormatter { void Serialize(ref MessagePack.MessagePackWriter writer, T value, MessagePack.MessagePackSerializerOptions options); T Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options); } }
 namespace MessagePack.Resolvers { public sealed class StandardResolver : MessagePack.IFormatterResolver { public static StandardResolver Instance { get; } = new(); public MessagePack.Formatters.IMessagePackFormatter<T>? GetFormatter<T>() => default; } public static class CompositeResolver { public static MessagePack.IFormatterResolver Create(MessagePack.Formatters.IMessagePackFormatter[] formatters, MessagePack.IFormatterResolver[] resolvers) => StandardResolver.Instance; } }
