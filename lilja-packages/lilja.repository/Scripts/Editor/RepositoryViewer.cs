@@ -255,6 +255,9 @@ namespace Lilja.Repository.Editor
             previewFrame.style.paddingTop = 0f;
             previewFrame.style.paddingBottom = 0f;
 
+            var scrollView = new ScrollView(ScrollViewMode.VerticalAndHorizontal);
+            scrollView.style.flexGrow = 1f;
+
             _previewField = new TextField
             {
                 multiline = true,
@@ -265,7 +268,10 @@ namespace Lilja.Repository.Editor
             _previewField.style.marginRight = 0f;
             _previewField.style.marginBottom = 0f;
             _previewField.style.unityTextAlign = TextAnchor.UpperLeft;
-            previewFrame.Add(_previewField);
+            _previewField.style.height = StyleKeyword.Auto;
+            
+            scrollView.Add(_previewField);
+            previewFrame.Add(scrollView);
             pane.Add(previewFrame);
 
             return pane;
