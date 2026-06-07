@@ -7,6 +7,8 @@ namespace Lilja.CustomProjectWindow
 {
     public sealed class CustomProjectWindow : EditorWindow, IHasCustomMenu
     {
+        private const string WindowTitle = "Project (Custom)";
+
         private static readonly Type SceneHierarchyWindowType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SceneHierarchyWindow");
         private static readonly GUIContent RootCreateButtonContent = new(string.Empty, "ルートに項目を追加");
         private const float RootCreateButtonWidth = 38f;
@@ -33,7 +35,7 @@ namespace Lilja.CustomProjectWindow
         public static void Open()
         {
             var window = GetWindow<CustomProjectWindow>();
-            window.titleContent = new GUIContent("Project (Custom)", CustomProjectViewIcons.Project);
+            window.titleContent = new GUIContent(WindowTitle, CustomProjectViewIcons.Project);
             window.Show();
         }
 
@@ -92,7 +94,7 @@ namespace Lilja.CustomProjectWindow
         internal static void FocusAsset(string guid)
         {
             var window = GetWindow<CustomProjectWindow>();
-            window.titleContent = new GUIContent("Project (Custom)", CustomProjectViewIcons.Project);
+            window.titleContent = new GUIContent(WindowTitle, CustomProjectViewIcons.Project);
             window.Show();
             window.Focus();
 
@@ -150,6 +152,7 @@ namespace Lilja.CustomProjectWindow
         private void OnEnable()
         {
             wantsMouseMove = true;
+            titleContent = new GUIContent(WindowTitle, CustomProjectViewIcons.Project);
 
             _treeViewState ??= new TreeViewState<int>();
 
