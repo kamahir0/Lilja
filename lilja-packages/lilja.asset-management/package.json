@@ -16,6 +16,6 @@
   "changelogUrl": "https://github.com/kamahir0/Lilja/blob/main/lilja-packages/lilja.asset-management/CHANGELOG.md",
   "licensesUrl": "https://github.com/kamahir0/Lilja/blob/main/LICENSE",
   "dependencies": {
-    "com.cysharp.unitask": "2.5.10"
+    "com.unity.addressables": "2.9.0"
   }
 }
