@@ -37,6 +37,18 @@ namespace Lilja.DebugUI.Editor
         private ScrollView _pageListScrollView;
         private VisualElement _rightPane;
 
+        private static Color SecondaryTextColor => EditorGUIUtility.isProSkin
+            ? new Color(0.72f, 0.72f, 0.72f, 1f)
+            : new Color(0.32f, 0.32f, 0.32f, 1f);
+
+        private static Color AccentColor => EditorGUIUtility.isProSkin
+            ? new Color(0.85f, 0.90f, 0.98f, 1f)
+            : new Color(0.90f, 0.93f, 0.98f, 1f);
+
+        private static Color SelectedRowBackgroundColor => EditorGUIUtility.isProSkin
+            ? new Color(0.24f, 0.49f, 0.90f, 0.20f)
+            : new Color(0.15f, 0.41f, 0.83f, 0.12f);
+
         // ── パス定数 ──────────────────────────────────────────────────────────
 
         private const string PackageName = "com.kamahir0.lilja.debug-ui";
@@ -183,6 +195,7 @@ namespace Lilja.DebugUI.Editor
             {
                 if (_headerTitle != null) _headerTitle.text = name;
                 UpdateHeader();
+                RefreshPageList();
             };
             _navigator.OnBackVisibilityChanged = UpdateHeaderButtons;
             _navigator.OnOwnershipLost = () =>
@@ -190,6 +203,7 @@ namespace Lilja.DebugUI.Editor
                 // ランタイムが所有権を奪ったとき: ヘッダーをリセット
                 if (_headerTitle != null) _headerTitle.text = "ページを選択してください";
                 UpdateHeader();
+                RefreshPageList();
             };
 
             DebugMenu.RegisterEditorHost(_navigator);
@@ -398,12 +412,7 @@ namespace Lilja.DebugUI.Editor
             leftContainer.style.borderRightWidth = 1;
             leftContainer.style.borderRightColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f, 0.5f));
 
-            var leftHeader = new Label("Pages");
-            leftHeader.style.paddingLeft = 4;
-            leftHeader.style.paddingTop = 2;
-            leftHeader.style.paddingBottom = 2;
-            leftHeader.style.borderBottomWidth = 1;
-            leftHeader.style.borderBottomColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f, 0.5f));
+            var leftHeader = BuildPaneHeader("Pages");
             leftContainer.Add(leftHeader);
 
             _pageListScrollView = new ScrollView();
@@ -445,15 +454,110 @@ namespace Lilja.DebugUI.Editor
                 orderedNames.Insert(0, rootPageName);
             }
 
+            var currentPageName = _navigator?.CurrentPageName;
+
             foreach (var name in orderedNames)
             {
                 var pageName = name;
-                var btn = new Button(() => EditorPresentPage(pageName)) { text = pageName };
-                btn.style.marginLeft = 0;
-                btn.style.marginRight = 0;
-                btn.style.marginTop = 1;
-                btn.style.marginBottom = 0;
-                _pageListScrollView.Add(btn);
+                var isSelected = pageName == currentPageName;
+                var item = new PageListItem(pageName, isSelected, () => EditorPresentPage(pageName));
+                _pageListScrollView.Add(item);
+            }
+        }
+
+        private static VisualElement BuildPaneHeader(string title)
+        {
+            var header = new UnityEditor.UIElements.Toolbar();
+            header.style.flexShrink = 0f;
+            header.style.alignItems = Align.Center;
+            header.style.minHeight = 22f;
+            header.style.paddingLeft = 2f;
+
+            var titleLabel = new Label(title);
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
+            titleLabel.style.marginLeft = 4f;
+            titleLabel.style.marginTop = 0f;
+            titleLabel.style.marginBottom = 0f;
+            titleLabel.style.paddingTop = 0f;
+            titleLabel.style.paddingBottom = 0f;
+            header.Add(titleLabel);
+
+            return header;
+        }
+
+        private sealed class PageListItem : VisualElement
+        {
+            private readonly Action _onClick;
+            private readonly Button _button;
+            private readonly VisualElement _accent;
+            private readonly Label _titleLabel;
+
+            public PageListItem(string title, bool selected, Action onClick)
+            {
+                _onClick = onClick;
+                style.paddingLeft = 4f;
+                style.paddingRight = 4f;
+                style.paddingTop = 1f;
+                style.paddingBottom = 1f;
+
+                _button = new Button(HandleClick);
+                _button.Clear();
+                _button.style.flexGrow = 1f;
+                _button.style.minHeight = 22f;
+                _button.style.paddingLeft = 0f;
+                _button.style.paddingRight = 0f;
+                _button.style.paddingTop = 0f;
+                _button.style.paddingBottom = 0f;
+                _button.style.borderLeftWidth = 0f;
+                _button.style.borderRightWidth = 0f;
+                _button.style.borderTopWidth = 0f;
+                _button.style.borderBottomWidth = 0f;
+                _button.style.borderTopLeftRadius = 0f;
+                _button.style.borderTopRightRadius = 0f;
+                _button.style.borderBottomLeftRadius = 0f;
+                _button.style.borderBottomRightRadius = 0f;
+                _button.style.unityTextAlign = TextAnchor.MiddleLeft;
+                _button.style.backgroundColor = selected ? SelectedRowBackgroundColor : Color.clear;
+                Add(_button);
+
+                var content = new VisualElement();
+                content.style.flexDirection = FlexDirection.Row;
+                content.style.flexGrow = 1f;
+                content.pickingMode = PickingMode.Ignore;
+                _button.Add(content);
+
+                _accent = new VisualElement();
+                _accent.style.width = 3f;
+                _accent.style.marginLeft = 6f;
+                _accent.style.marginRight = 8f;
+                _accent.style.marginTop = 5f;
+                _accent.style.marginBottom = 5f;
+                _accent.style.backgroundColor = AccentColor;
+                _accent.style.visibility = selected ? Visibility.Visible : Visibility.Hidden;
+                content.Add(_accent);
+
+                var textColumn = new VisualElement();
+                textColumn.style.flexGrow = 1f;
+                textColumn.style.justifyContent = Justify.Center;
+                textColumn.style.paddingTop = 0f;
+                textColumn.style.paddingBottom = 0f;
+                textColumn.style.paddingRight = 10f;
+                textColumn.pickingMode = PickingMode.Ignore;
+                content.Add(textColumn);
+
+                _titleLabel = new Label(title);
+                _titleLabel.style.unityFontStyleAndWeight = selected ? FontStyle.Bold : FontStyle.Normal;
+                _titleLabel.style.whiteSpace = WhiteSpace.NoWrap;
+                _titleLabel.style.overflow = Overflow.Hidden;
+                _titleLabel.style.flexShrink = 0f;
+                _titleLabel.pickingMode = PickingMode.Ignore;
+                textColumn.Add(_titleLabel);
+            }
+
+            private void HandleClick()
+            {
+                _onClick();
             }
         }
     }
