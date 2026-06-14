@@ -133,7 +133,7 @@ namespace Lilja.CustomProjectWindow
         private bool _didShowContextMenu;
         private bool _restoringExpandedState;
 
-        private const float ButtonW = 18f;
+        private const float ButtonW = 16f;
         private const float ButtonSpacing = 1f;
         private const float ToggleDragThreshold = 4f;
         private const float IconWidth = 16f;
