@@ -131,6 +131,7 @@ namespace Lilja.CustomProjectWindow
 
             _roots.AddRange(loadedRoots);
 
+            CustomProjectAssetCache.InvalidateAll();
             SanitizeTree(_roots);
             SyncAllFolderRefs();
             RebuildLookupCache();
@@ -772,6 +773,7 @@ namespace Lilja.CustomProjectWindow
                     continue;
                 }
 
+                InvalidateSyncedFolderSubtree(folderRefRoot);
                 SyncFolderRef(folderRefRoot);
                 syncedAny = true;
             }
@@ -790,15 +792,69 @@ namespace Lilja.CustomProjectWindow
             folderPath = CustomProjectNode.NormalizeAssetPath(folderPath);
             folderRefRoot.AssetPath = folderPath;
 
-            if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
+            if (string.IsNullOrEmpty(folderPath) || !CustomProjectAssetCache.IsValidFolder(folderPath))
             {
                 folderRefRoot.Children = new List<CustomProjectNode>();
+                folderRefRoot.SyncedChildrenLoaded = true;
                 return;
             }
 
             folderRefRoot.AssetGuid = AssetDatabase.AssetPathToGUID(folderPath);
             folderRefRoot.Label = Path.GetFileName(folderPath.TrimEnd('/', '\\'));
-            folderRefRoot.Children = BuildSyncedChildren(folderPath);
+            folderRefRoot.SyncedChildrenLoaded = false;
+            EnsureSyncedFolderChildrenLoaded(folderRefRoot);
+        }
+
+        /// <summary>
+        /// FolderRef 同期フォルダの直下1階層だけを読み込む。
+        /// 深い階層は展開時に遅延ロードする。
+        /// </summary>
+        public void EnsureSyncedFolderChildrenLoaded(CustomProjectNode folderNode)
+        {
+            if (folderNode == null)
+            {
+                return;
+            }
+            if (!folderNode.IsFolderRefRoot && !folderNode.IsLazySyncedFolder)
+            {
+                return;
+            }
+            if (folderNode.SyncedChildrenLoaded)
+            {
+                return;
+            }
+            var folderPath = CustomProjectNode.NormalizeAssetPath(folderNode.ResolveAssetPath());
+            folderNode.AssetPath = folderPath;
+            if (string.IsNullOrEmpty(folderPath) || !CustomProjectAssetCache.IsValidFolder(folderPath))
+            {
+                folderNode.Children = new List<CustomProjectNode>();
+                folderNode.SyncedChildrenLoaded = true;
+                return;
+            }
+            folderNode.Children = BuildSyncedChildrenImmediate(folderPath);
+            folderNode.SyncedChildrenLoaded = true;
+        }
+
+        private void InvalidateSyncedFolderSubtree(CustomProjectNode folderNode)
+        {
+            if (folderNode == null)
+            {
+                return;
+            }
+            if (folderNode.IsFolderRefRoot || folderNode.IsLazySyncedFolder)
+            {
+                folderNode.SyncedChildrenLoaded = false;
+                folderNode.Children = new List<CustomProjectNode>();
+            }
+            if (folderNode.Children == null || folderNode.Children.Count == 0)
+            {
+                return;
+            }
+            var children = folderNode.Children.ToArray();
+            foreach (var child in children)
+            {
+                InvalidateSyncedFolderSubtree(child);
+            }
         }
 
         private void RefreshFolderPointer(CustomProjectNode folderPointer)
@@ -813,7 +869,7 @@ namespace Lilja.CustomProjectWindow
             folderPointer.AssetPath = folderPath;
             folderPointer.Children = new List<CustomProjectNode>();
 
-            if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
+            if (string.IsNullOrEmpty(folderPath) || !CustomProjectAssetCache.IsValidFolder(folderPath))
             {
                 folderPointer.AssetGuid = string.Empty;
                 return;
@@ -823,7 +879,7 @@ namespace Lilja.CustomProjectWindow
             folderPointer.Label = Path.GetFileName(folderPath.TrimEnd('/', '\\'));
         }
 
-        private List<CustomProjectNode> BuildSyncedChildren(string folderPath)
+        private List<CustomProjectNode> BuildSyncedChildrenImmediate(string folderPath)
         {
             var absPath = ToAbsolutePath(folderPath);
             var result = new List<CustomProjectNode>();
@@ -833,7 +889,7 @@ namespace Lilja.CustomProjectWindow
                 return result;
             }
 
-            foreach (var dir in Directory.GetDirectories(absPath).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
+            foreach (var dir in Directory.EnumerateDirectories(absPath).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
             {
                 var name = Path.GetFileName(dir);
                 if (ShouldExclude(name))
@@ -843,11 +899,12 @@ namespace Lilja.CustomProjectWindow
 
                 var childPath = CustomProjectNode.NormalizeAssetPath(Path.Combine(folderPath, name));
                 var folderNode = CustomProjectNode.CreateSyncedFolder(childPath);
-                folderNode.Children = BuildSyncedChildren(childPath);
+                folderNode.SyncedChildrenLoaded = false;
+                folderNode.Children = new List<CustomProjectNode>();
                 result.Add(folderNode);
             }
 
-            foreach (var file in Directory.GetFiles(absPath).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+            foreach (var file in Directory.EnumerateFiles(absPath).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
             {
                 var name = Path.GetFileName(file);
                 if (ShouldExclude(name))

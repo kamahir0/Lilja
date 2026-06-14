@@ -39,39 +39,34 @@ namespace Lilja.CustomProjectWindow
 
             if (node.Kind == ProjectNodeKind.Asset)
             {
-                if (IsMissingAsset(assetPath))
+                if (CustomProjectAssetCache.IsMissingAsset(assetPath, node.AssetGuid))
                 {
                     isMissing = true;
                     return CustomProjectViewIcons.MissingAsset;
                 }
 
-                return AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
+                return CustomProjectAssetCache.GetCachedIcon(assetPath);
             }
 
             if (node.IsFolderRefRoot)
             {
-                isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
+                isMissing = string.IsNullOrEmpty(assetPath) || !CustomProjectAssetCache.IsValidFolder(assetPath);
                 return CustomProjectViewIcons.FolderRefRoot;
             }
 
             if (node.IsFolderPointer)
             {
-                isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
+                isMissing = string.IsNullOrEmpty(assetPath) || !CustomProjectAssetCache.IsValidFolder(assetPath);
                 return CustomProjectViewIcons.FolderPointer;
             }
 
             if (node.Kind == ProjectNodeKind.Folder)
             {
-                isMissing = string.IsNullOrEmpty(assetPath) || !AssetDatabase.IsValidFolder(assetPath);
+                isMissing = string.IsNullOrEmpty(assetPath) || !CustomProjectAssetCache.IsValidFolder(assetPath);
                 return CustomProjectViewIcons.Folder;
             }
 
             return CustomProjectViewIcons.Folder;
-        }
-
-        private static bool IsMissingAsset(string assetPath)
-        {
-            return string.IsNullOrEmpty(assetPath) || AssetDatabase.LoadMainAssetAtPath(assetPath) == null;
         }
 
         private static string ResolvePathSuffix(CustomProjectNode node, string assetPath)
@@ -565,7 +560,22 @@ namespace Lilja.CustomProjectWindow
             }
 
             SyncExpandedState(_model.Roots);
+            var needsReload = false;
+            foreach (var itemId in GetExpanded())
+            {
+                var node = GetNodeForId(itemId);
+                if (node == null || (!node.IsLazySyncedFolder && !node.IsFolderRefRoot) || node.SyncedChildrenLoaded)
+                {
+                    continue;
+                }
+                _model.EnsureSyncedFolderChildrenLoaded(node);
+                needsReload = true;
+            }
             _model.SaveDeferred();
+            if (needsReload)
+            {
+                _window.RequestRefresh();
+            }
         }
 
         protected override bool CanMultiSelect(TreeViewItem<int> item) => true;
@@ -708,14 +718,14 @@ namespace Lilja.CustomProjectWindow
 
         public void ExpandAll(bool expand)
         {
-            if (rootItem?.children == null)
+            if (_model.Roots == null || _model.Roots.Count == 0)
             {
                 return;
             }
 
-            foreach (var child in rootItem.children)
+            foreach (var root in _model.Roots)
             {
-                SetExpandedRecursive(child, expand);
+                SetExpandedRecursiveOnModel(root, expand);
             }
 
             _model.SaveDeferred();
@@ -773,6 +783,10 @@ namespace Lilja.CustomProjectWindow
         {
             foreach (var node in nodes)
             {
+                if ((node.IsLazySyncedFolder || node.IsFolderRefRoot) && node.IsExpanded && !node.SyncedChildrenLoaded)
+                {
+                    _model.EnsureSyncedFolderChildrenLoaded(node);
+                }
                 var item = CreateItem(node, parent.depth + 1);
                 parent.AddChild(item);
                 if (node.IsContainer && node.Children != null && node.Children.Count > 0)
@@ -819,9 +833,9 @@ namespace Lilja.CustomProjectWindow
                 if (node.IsContainer)
                 {
                     var id = GetIdForNode(node);
-                    if (id >= 0 && node.IsExpanded)
+                    if (id >= 0)
                     {
-                        SetExpanded(id, true);
+                        SetExpanded(id, node.IsExpanded);
                     }
                 }
 
@@ -1138,6 +1152,12 @@ namespace Lilja.CustomProjectWindow
                 _restoringExpandedState = false;
             }
 
+            if (expanded && node != null && (node.IsLazySyncedFolder || node.IsFolderRefRoot) && !node.SyncedChildrenLoaded)
+            {
+                _model.EnsureSyncedFolderChildrenLoaded(node);
+                _window.RequestRefresh();
+            }
+
             _model.SaveDeferred();
         }
 
@@ -1349,34 +1369,40 @@ namespace Lilja.CustomProjectWindow
 
         private void ExpandRecursive(int rootItemId, bool expand)
         {
-            var item = FindItem(rootItemId, rootItem);
-            if (item == null)
+            var node = GetNodeForId(rootItemId);
+            if (node == null)
             {
                 return;
             }
 
-            SetExpandedRecursive(item, expand);
+            SetExpandedRecursiveOnModel(node, expand);
             _model.SaveDeferred();
             _window.RequestRefresh();
         }
 
-        private void SetExpandedRecursive(TreeViewItem<int> item, bool expand)
+        private void SetExpandedRecursiveOnModel(CustomProjectNode node, bool expand)
         {
-            SetExpanded(item.id, expand);
-            var node = GetNodeForId(item.id);
-            if (node != null && node.IsContainer)
+            if (node == null)
+            {
+                return;
+            }
+            if (node.IsContainer)
             {
                 node.IsExpanded = expand;
+                if (expand && (node.IsFolderRefRoot || node.IsLazySyncedFolder))
+                {
+                    _model.EnsureSyncedFolderChildrenLoaded(node);
+                }
             }
 
-            if (item.children == null)
+            if (node.Children == null || node.Children.Count == 0)
             {
                 return;
             }
 
-            foreach (var child in item.children)
+            foreach (var child in node.Children)
             {
-                SetExpandedRecursive(child, expand);
+                SetExpandedRecursiveOnModel(child, expand);
             }
         }
 

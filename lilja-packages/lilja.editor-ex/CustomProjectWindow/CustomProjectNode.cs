@@ -33,7 +33,12 @@ namespace Lilja.CustomProjectWindow
         public bool IsExpanded = true;
         public List<CustomProjectNode> Children = new();
 
+        /// <summary>FolderRef 同期フォルダの子階層が読み込み済みかどうか（永続化しない）</summary>
+        [System.NonSerialized]
+        public bool SyncedChildrenLoaded;
+
         public bool IsContainer => Kind != ProjectNodeKind.Asset && !IsFolderPointer;
+        public bool IsLazySyncedFolder => Source == ProjectNodeSource.FolderRefSynced && Kind == ProjectNodeKind.Folder;
         public bool IsManualGroup => Kind == ProjectNodeKind.Group && Source == ProjectNodeSource.Manual;
         public bool IsFolderRefRoot => Kind == ProjectNodeKind.Folder && Source == ProjectNodeSource.FolderRefRoot;
         public bool IsFolderPointer => Kind == ProjectNodeKind.Folder && Source == ProjectNodeSource.FolderPointer;

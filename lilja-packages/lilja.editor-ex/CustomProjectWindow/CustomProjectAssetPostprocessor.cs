@@ -15,6 +15,13 @@ namespace Lilja.CustomProjectWindow
                 ? EditorWindow.GetWindow<CustomProjectWindow>(false, null, false)
                 : null;
 
+            var changedPaths = new System.Collections.Generic.List<string>();
+            changedPaths.AddRange(importedAssets);
+            changedPaths.AddRange(deletedAssets);
+            changedPaths.AddRange(movedAssets);
+            changedPaths.AddRange(movedFromAssetPaths);
+            CustomProjectAssetCache.InvalidatePaths(changedPaths);
+
             if (window == null || window.Model == null)
             {
                 return;
@@ -44,7 +51,7 @@ namespace Lilja.CustomProjectWindow
 
             if (changed)
             {
-                window.RequestRefresh();
+                window.RequestRefreshDebounced();
             }
         }
 #pragma warning restore IDE0051, IDE0040

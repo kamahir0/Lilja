@@ -25,6 +25,9 @@ namespace Lilja.CustomProjectWindow
         private bool _needsRefresh;
         private Rect _treeViewRect;
 
+        private static readonly System.Collections.Generic.HashSet<CustomProjectWindow> PendingRefreshWindows = new();
+        private static bool _refreshDebounced;
+
         internal CustomProjectTreeModel Model { get; private set; }
         internal bool AutoSyncSelection => _autoSyncSelection;
 
@@ -227,6 +230,34 @@ namespace Lilja.CustomProjectWindow
         {
             _needsRefresh = true;
             Repaint();
+        }
+
+        internal void RequestRefreshDebounced()
+        {
+            PendingRefreshWindows.Add(this);
+            if (_refreshDebounced)
+            {
+                return;
+            }
+            _refreshDebounced = true;
+            EditorApplication.delayCall += FlushDebouncedRefresh;
+        }
+
+        private static void FlushDebouncedRefresh()
+        {
+            EditorApplication.delayCall -= FlushDebouncedRefresh;
+            _refreshDebounced = false;
+            var windows = new CustomProjectWindow[PendingRefreshWindows.Count];
+            PendingRefreshWindows.CopyTo(windows);
+            PendingRefreshWindows.Clear();
+            foreach (var window in windows)
+            {
+                if (window == null)
+                {
+                    continue;
+                }
+                window.RequestRefresh();
+            }
         }
 
         private static bool IsHierarchyWindow(EditorWindow window)
