@@ -1,7 +1,7 @@
+using UnityEditor;
+
 namespace Lilja.HierarchyDecorator
 {
-    using UnityEditor;
-
     public static class HierarchyDecoratorMenu
     {
         private const string ActiveToggleMenuPath = "Lilja/Hierarchy Decorator/Show Active Toggle";

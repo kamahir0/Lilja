@@ -1,7 +1,7 @@
+using UnityEngine;
+
 namespace Lilja.HierarchyDecorator
 {
-    using UnityEngine;
-
     public interface IHierarchyItemDrawer
     {
         /// <summary>

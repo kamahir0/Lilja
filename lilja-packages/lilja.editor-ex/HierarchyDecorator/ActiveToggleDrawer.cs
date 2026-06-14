@@ -1,8 +1,8 @@
+using UnityEditor;
+using UnityEngine;
+
 namespace Lilja.HierarchyDecorator
 {
-    using UnityEditor;
-    using UnityEngine;
-
     public class ActiveToggleDrawer : IHierarchyItemDrawer
     {
         public const string PrefKey = "Lilja.HierarchyDecorator.ActiveToggle.Enabled";

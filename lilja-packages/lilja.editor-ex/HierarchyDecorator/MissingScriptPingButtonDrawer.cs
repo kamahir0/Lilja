@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+
 namespace Lilja.HierarchyDecorator
 {
-    using System.Collections.Generic;
-    using UnityEditor;
-    using UnityEngine;
-
     public class MissingScriptPingButtonDrawer : IHierarchyItemDrawer
     {
         public const string PrefKey = "Lilja.HierarchyDecorator.MissingScript.Enabled";
