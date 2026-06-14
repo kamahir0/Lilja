@@ -63,6 +63,12 @@ namespace Lilja.FancyScrollView
 
         FancyCell<TItemData[], TContext> cellGroupTemplate;
 
+#if UNITY_EDITOR
+        GameObject editorPreviewSceneCellTemplate;
+        bool editorPreviewSceneCellTemplateActiveSelf;
+        bool editorPreviewSceneCellTemplateStateStored;
+#endif
+
         /// <inheritdoc/>
         protected override void Initialize()
         {
@@ -106,9 +112,14 @@ namespace Lilja.FancyScrollView
         /// </summary>
         /// <param name="cellTemplate">セルのテンプレート.</param>
         /// <typeparam name="TGroup">セルグループの型.</typeparam>
+        /// <remarks>
+        /// <paramref name="cellTemplate"/> は Prefab asset または Hierarchy 上のセルオブジェクトを指定できます.
+        /// Hierarchy 上のオブジェクトを指定した場合, テンプレート自身は実行時とプレビュー時に自動で非表示になります.
+        /// </remarks>
         protected virtual void Setup<TGroup>(FancyCell<TItemData, TContext> cellTemplate)
             where TGroup : FancyCell<TItemData[], TContext>
         {
+            HideCellTemplateIfNeeded(cellTemplate);
             Context.CellTemplate = cellTemplate.gameObject;
 
             cellGroupTemplate = new GameObject("Group").AddComponent<TGroup>();
@@ -121,6 +132,24 @@ namespace Lilja.FancyScrollView
                 MarkEditorPreviewObject(cellGroupTemplate.gameObject);
             }
 #endif
+        }
+
+        void HideCellTemplateIfNeeded(FancyCell<TItemData, TContext> cellTemplate)
+        {
+            if (cellTemplate == null)
+            {
+                return;
+            }
+
+#if UNITY_EDITOR
+            if (IsEditorPreviewing)
+            {
+                StoreAndHideEditorPreviewCellTemplate(cellTemplate.gameObject);
+                return;
+            }
+#endif
+
+            FancyScrollTemplateUtility.HideSceneObjectTemplate(cellTemplate.gameObject);
         }
 
         /// <summary>
@@ -228,7 +257,42 @@ namespace Lilja.FancyScrollView
             }
 
             cellGroupTemplate = null;
+            RestoreEditorPreviewCellTemplate();
             base.OnEditorPreviewEnd();
+        }
+
+        void StoreAndHideEditorPreviewCellTemplate(GameObject cellTemplate)
+        {
+            if (!FancyScrollTemplateUtility.IsSceneObjectTemplate(cellTemplate))
+            {
+                return;
+            }
+
+            if (!editorPreviewSceneCellTemplateStateStored || editorPreviewSceneCellTemplate != cellTemplate)
+            {
+                editorPreviewSceneCellTemplate = cellTemplate;
+                editorPreviewSceneCellTemplateActiveSelf = cellTemplate.activeSelf;
+                editorPreviewSceneCellTemplateStateStored = true;
+            }
+
+            cellTemplate.SetActive(false);
+        }
+
+        void RestoreEditorPreviewCellTemplate()
+        {
+            if (!editorPreviewSceneCellTemplateStateStored)
+            {
+                return;
+            }
+
+            if (editorPreviewSceneCellTemplate != null)
+            {
+                editorPreviewSceneCellTemplate.SetActive(editorPreviewSceneCellTemplateActiveSelf);
+            }
+
+            editorPreviewSceneCellTemplate = null;
+            editorPreviewSceneCellTemplateActiveSelf = false;
+            editorPreviewSceneCellTemplateStateStored = false;
         }
 #endif
     }

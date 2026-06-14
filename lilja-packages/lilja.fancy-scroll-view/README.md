@@ -10,9 +10,16 @@ The runtime API is intentionally kept close to the original FancyScrollView desi
 
 - Namespace is `Lilja.FancyScrollView`.
 - `CellPrefab` is typed as `FancyCell<TItemData, TContext>` instead of `GameObject`.
+- `CellPrefab` can reference either a prefab asset or a cell component placed directly in the scene hierarchy.
 - Edit Mode Preview is available in the inspector when a scroll view opts in.
 - The previous Lilja-only public APIs `SetItems`, `RefreshItems`, and `RefreshLayout` are not provided. Use the original-style protected APIs `UpdateContents`, `Refresh`, and `Relayout`.
 - `FancyScrollRect.JumpTo` and `FancyScrollRect.ScrollTo` follow the original design and are protected extension points.
+
+## Cell Template
+
+`CellPrefab` accepts a prefab asset or a hierarchy object. A hierarchy object can be placed under the same Content transform used as the cell container, which is useful when the cell is only used by that scroll view.
+
+When a hierarchy object is used as the template, the template itself is excluded from pooling and hidden automatically at runtime and during Edit Mode Preview. Preview restores the template's original active state when it ends, and only generated preview clones are cleaned up.
 
 ## Edit Mode Preview
 

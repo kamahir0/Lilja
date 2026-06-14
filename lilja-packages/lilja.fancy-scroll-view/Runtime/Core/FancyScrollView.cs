@@ -22,6 +22,22 @@ namespace Lilja.FancyScrollView
     }
 #endif
 
+    internal static class FancyScrollTemplateUtility
+    {
+        public static bool IsSceneObjectTemplate(GameObject template)
+        {
+            return template != null && template.scene.IsValid();
+        }
+
+        public static void HideSceneObjectTemplate(GameObject template)
+        {
+            if (IsSceneObjectTemplate(template))
+            {
+                template.SetActive(false);
+            }
+        }
+    }
+
     /// <summary>
     /// スクロールビューを実装するための抽象基底クラス.
     /// 無限スクロールおよびスナップに対応しています.
@@ -81,8 +97,12 @@ namespace Lilja.FancyScrollView
         protected float currentPosition;
 
         /// <summary>
-        /// セルの Prefab.
+        /// セルのテンプレート.
         /// </summary>
+        /// <remarks>
+        /// Prefab asset または Hierarchy 上のセルオブジェクトを指定できます.
+        /// Hierarchy 上のオブジェクトを指定した場合, テンプレート自身は実行時とプレビュー時に自動で非表示になります.
+        /// </remarks>
         protected abstract FancyCell<TItemData, TContext> CellPrefab { get; }
 
         /// <summary>
@@ -138,6 +158,8 @@ namespace Lilja.FancyScrollView
                 initialized = true;
             }
 
+            HideCellTemplateIfNeeded();
+
             currentPosition = position;
 
             var p = position - scrollOffset / cellInterval;
@@ -156,6 +178,8 @@ namespace Lilja.FancyScrollView
         {
             Debug.Assert(CellPrefab != null);
             Debug.Assert(cellContainer != null);
+
+            HideCellTemplateIfNeeded();
 
             var addCount = Mathf.CeilToInt((1f - firstPosition) / cellInterval) - pool.Count;
             for (var i = 0; i < addCount; i++)
@@ -206,6 +230,14 @@ namespace Lilja.FancyScrollView
             }
         }
 
+        void HideCellTemplateIfNeeded()
+        {
+            if (CellPrefab != null)
+            {
+                FancyScrollTemplateUtility.HideSceneObjectTemplate(CellPrefab.gameObject);
+            }
+        }
+
         int CircularIndex(int i, int size) => size < 1 ? 0 : i < 0 ? size - 1 + (i + 1) % size : i % size;
 
 #if UNITY_EDITOR
@@ -219,6 +251,9 @@ namespace Lilja.FancyScrollView
         float currentPositionBeforePreview;
         float scrollOffsetBeforePreview;
         int cachedEditorPreviewItemCount = -1;
+        GameObject editorPreviewSceneCellTemplate;
+        bool editorPreviewSceneCellTemplateActiveSelf;
+        bool editorPreviewSceneCellTemplateStateStored;
 
         bool IFancyScrollViewPreview.EditorPreviewing => editorPreviewing;
 
@@ -277,6 +312,7 @@ namespace Lilja.FancyScrollView
             cachedEditorPreviewItemCount = -1;
             editorPreviewing = true;
 
+            StoreAndHideEditorPreviewCellTemplate();
             OnEditorPreviewBegin();
 
             ClearCellPool(true);
@@ -326,6 +362,7 @@ namespace Lilja.FancyScrollView
             cachedEditorPreviewItemCount = -1;
             editorPreviewing = false;
 
+            RestoreEditorPreviewCellTemplate();
             OnEditorPreviewEnd();
         }
 
@@ -382,6 +419,36 @@ namespace Lilja.FancyScrollView
 
             pool.Clear();
             initialized = false;
+        }
+
+        void StoreAndHideEditorPreviewCellTemplate()
+        {
+            if (CellPrefab == null || !FancyScrollTemplateUtility.IsSceneObjectTemplate(CellPrefab.gameObject))
+            {
+                return;
+            }
+
+            editorPreviewSceneCellTemplate = CellPrefab.gameObject;
+            editorPreviewSceneCellTemplateActiveSelf = editorPreviewSceneCellTemplate.activeSelf;
+            editorPreviewSceneCellTemplateStateStored = true;
+            editorPreviewSceneCellTemplate.SetActive(false);
+        }
+
+        void RestoreEditorPreviewCellTemplate()
+        {
+            if (!editorPreviewSceneCellTemplateStateStored)
+            {
+                return;
+            }
+
+            if (editorPreviewSceneCellTemplate != null)
+            {
+                editorPreviewSceneCellTemplate.SetActive(editorPreviewSceneCellTemplateActiveSelf);
+            }
+
+            editorPreviewSceneCellTemplate = null;
+            editorPreviewSceneCellTemplateActiveSelf = false;
+            editorPreviewSceneCellTemplateStateStored = false;
         }
 
         static void DestroyGameObject(GameObject gameObject, bool destroyImmediately)
