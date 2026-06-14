@@ -59,7 +59,7 @@ namespace Lilja.Repository.Editor
         /// <summary>
         /// Repository Viewer ウィンドウを開きます。
         /// </summary>
-        [MenuItem("Lilja/Repository/Repository Viewer")]
+        [MenuItem("Lilja/Repository/Repository Viewer", false, 20)]
         public static void Open()
         {
             var window = GetWindow<RepositoryViewer>("Repository Viewer");

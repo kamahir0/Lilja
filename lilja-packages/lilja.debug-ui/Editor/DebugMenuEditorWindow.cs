@@ -16,7 +16,7 @@ namespace Lilja.DebugUI.Editor
     /// </summary>
     public sealed class DebugMenuEditorWindow : EditorWindow
     {
-        [MenuItem("Lilja/DebugUI/Debug Menu Inspector")]
+        [MenuItem("Lilja/DebugUI/Debug Menu Editor Window", false, 20)]
         private static void Open()
         {
             var window = GetWindow<DebugMenuEditorWindow>();

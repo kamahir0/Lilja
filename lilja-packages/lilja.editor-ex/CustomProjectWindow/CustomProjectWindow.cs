@@ -34,7 +34,7 @@ namespace Lilja.CustomProjectWindow
         private const string UserSettingsFileMenuPath = "Lilja/EditorEx/Custom Project Window/Save Mode/UserSettings";
         private const string EditorPrefsMenuPath = "Lilja/EditorEx/Custom Project Window/Save Mode/EditorPrefs";
 
-        [MenuItem("Lilja/EditorEx/Custom Project Window/Open Window")]
+        [MenuItem("Lilja/EditorEx/Custom Project Window/Open Window", false, 20)]
         public static void Open()
         {
             var window = GetWindow<CustomProjectWindow>();
@@ -42,26 +42,26 @@ namespace Lilja.CustomProjectWindow
             window.Show();
         }
 
-        [MenuItem(UserSettingsFileMenuPath, false)]
+        [MenuItem(UserSettingsFileMenuPath, false, 20)]
         private static void SetSaveModeToFile()
         {
             SetSaveMode(SaveMode.UserSettingsFile);
         }
 
-        [MenuItem(UserSettingsFileMenuPath, true)]
+        [MenuItem(UserSettingsFileMenuPath, true, 20)]
         private static bool SetSaveModeToFileValidate()
         {
             Menu.SetChecked(UserSettingsFileMenuPath, GetCurrentSaveMode() == SaveMode.UserSettingsFile);
             return true;
         }
 
-        [MenuItem(EditorPrefsMenuPath, false)]
+        [MenuItem(EditorPrefsMenuPath, false, 20)]
         private static void SetSaveModeToPrefs()
         {
             SetSaveMode(SaveMode.EditorPrefs);
         }
 
-        [MenuItem(EditorPrefsMenuPath, true)]
+        [MenuItem(EditorPrefsMenuPath, true, 20)]
         private static bool SetSaveModeToPrefsValidate()
         {
             Menu.SetChecked(EditorPrefsMenuPath, GetCurrentSaveMode() == SaveMode.EditorPrefs);

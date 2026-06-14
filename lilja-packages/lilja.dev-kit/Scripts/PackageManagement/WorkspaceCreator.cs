@@ -13,7 +13,7 @@ namespace Lilja.DevKit.PackageManagement
         // EditorPrefsのキー (PackageCreatorWindowに合わせています)
         private const string KeyLiljaPackagesDirectory = "Lilja.DevKit.PackageCreator.LiljaPackagesDirectory";
 
-        [MenuItem("Lilja/DevKit/Create Workspace")]
+        [MenuItem("Lilja/DevKit/Create Workspace", false, 1)]
         public static void CreateWorkspace()
         {
             // Unityプロジェクトのルートディレクトリ (Assetsの親)
