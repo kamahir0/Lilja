@@ -3,14 +3,14 @@ using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
 {
-    public static class VisualElementDebugExtensions
+    public static class DebugUIExtensions
     {
         /// <summary>
         /// アンカー要素の直後にUIを動的挿入する。
         /// 返り値を Dispose するとUIが削除される。
         /// </summary>
         public static IDisposable PlaceBehind<T>(this T anchor, Action<IDebugUIBuilder> configure)
-            where T : VisualElement, IDebugUI
+            where T : VisualElement, IDebugControl
         {
             return InsertRelative(anchor, configure, offset: 1);
         }
@@ -20,13 +20,13 @@ namespace Lilja.DebugUI
         /// 返り値を Dispose するとUIが削除される。
         /// </summary>
         public static IDisposable PlaceInFront<T>(this T anchor, Action<IDebugUIBuilder> configure)
-            where T : VisualElement, IDebugUI
+            where T : VisualElement, IDebugControl
         {
             return InsertRelative(anchor, configure, offset: 0);
         }
 
         private static IDisposable InsertRelative<T>(T anchor, Action<IDebugUIBuilder> configure, int offset)
-            where T : VisualElement, IDebugUI
+            where T : VisualElement, IDebugControl
         {
             var parent = anchor.parent;
             if (parent == null)

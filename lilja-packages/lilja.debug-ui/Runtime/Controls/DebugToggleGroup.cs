@@ -7,7 +7,7 @@ namespace Lilja.DebugUI
     /// ToggleButtonGroup と同様の構造で複数選択が可能なカスタムトグルグループ。
     /// </summary>
     [UxmlElement]
-    public partial class DebugToggleGroup : VisualElement, INotifyValueChanged<ToggleButtonGroupState>, IDebugUI
+    public partial class DebugToggleGroup : VisualElement, INotifyValueChanged<ToggleButtonGroupState>, IDebugControl
     {
         // UI
         private readonly Label _labelElement;

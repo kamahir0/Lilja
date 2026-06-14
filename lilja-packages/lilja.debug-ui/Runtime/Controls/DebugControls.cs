@@ -62,7 +62,7 @@ namespace Lilja.DebugUI
     /// テキストラベルと右端矢印アイコンを子要素として保持する。
     /// </summary>
     [UxmlElement]
-    public partial class DebugNavigationButton : Button, IDebugUI
+    public partial class DebugNavigationButton : Button, IDebugControl
     {
         public DebugNavigationButton() : this(string.Empty) { }
 
@@ -96,7 +96,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のプライマリボタン
     /// </summary>
     [UxmlElement]
-    public partial class DebugButton : Button, IDebugUI
+    public partial class DebugButton : Button, IDebugControl
     {
         public DebugButton() : this(string.Empty) { }
 
@@ -114,7 +114,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のセカンダリボタン
     /// </summary>
     [UxmlElement]
-    public partial class DebugSecondaryButton : Button, IDebugUI
+    public partial class DebugSecondaryButton : Button, IDebugControl
     {
         public DebugSecondaryButton() : this(string.Empty) { }
 
@@ -132,7 +132,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のデンジャーボタン（削除・リセットなど破壊的操作用）
     /// </summary>
     [UxmlElement]
-    public partial class DebugDangerButton : Button, IDebugUI
+    public partial class DebugDangerButton : Button, IDebugControl
     {
         public DebugDangerButton() : this(string.Empty) { }
 
@@ -150,7 +150,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のテキストフィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugTextField : TextField, IDebugUI
+    public partial class DebugTextField : TextField, IDebugControl
     {
         public DebugTextField() : this(string.Empty) { }
 
@@ -165,7 +165,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のラベル
     /// </summary>
     [UxmlElement]
-    public partial class DebugLabel : Label, IDebugUI
+    public partial class DebugLabel : Label, IDebugControl
     {
         public DebugLabel() : this(string.Empty) { }
 
@@ -180,7 +180,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のフォールドアウト
     /// </summary>
     [UxmlElement]
-    public partial class DebugFoldout : Foldout, IDebugUI
+    public partial class DebugFoldout : Foldout, IDebugControl
     {
         public DebugFoldout() : this(string.Empty) { }
 
@@ -218,7 +218,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のラジオボタングループ
     /// </summary>
     [UxmlElement]
-    public partial class DebugRadioButtonGroup : RadioButtonGroup, IDebugUI
+    public partial class DebugRadioButtonGroup : RadioButtonGroup, IDebugControl
     {
         public DebugRadioButtonGroup() : this(string.Empty) { }
 
@@ -233,7 +233,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の整数フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugIntegerField : IntegerField, IDebugUI
+    public partial class DebugIntegerField : IntegerField, IDebugControl
     {
         public DebugIntegerField() : this(string.Empty) { }
 
@@ -248,7 +248,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の浮動小数点フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugFloatField : FloatField, IDebugUI
+    public partial class DebugFloatField : FloatField, IDebugControl
     {
         public DebugFloatField() : this(string.Empty) { }
 
@@ -263,7 +263,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のスライダー
     /// </summary>
     [UxmlElement]
-    public partial class DebugSlider : Slider, IDebugUI
+    public partial class DebugSlider : Slider, IDebugControl
     {
         public DebugSlider() : this(string.Empty) { }
 
@@ -278,7 +278,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の整数スライダー
     /// </summary>
     [UxmlElement]
-    public partial class DebugSliderInt : SliderInt, IDebugUI
+    public partial class DebugSliderInt : SliderInt, IDebugControl
     {
         public DebugSliderInt() : this(string.Empty) { }
 
@@ -293,7 +293,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の最小最大スライダー
     /// </summary>
     [UxmlElement]
-    public partial class DebugMinMaxSlider : MinMaxSlider, IDebugUI
+    public partial class DebugMinMaxSlider : MinMaxSlider, IDebugControl
     {
         public DebugMinMaxSlider() : this(string.Empty) { }
 
@@ -308,7 +308,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のプログレスバー
     /// </summary>
     [UxmlElement]
-    public partial class DebugProgressBar : ProgressBar, IDebugUI
+    public partial class DebugProgressBar : ProgressBar, IDebugControl
     {
         public DebugProgressBar()
         {
@@ -321,7 +321,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の列挙型フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugEnumField : EnumField, IDebugUI
+    public partial class DebugEnumField : EnumField, IDebugControl
     {
         public DebugEnumField() : this(string.Empty) { }
 
@@ -336,7 +336,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用のロング整数フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugLongField : LongField, IDebugUI
+    public partial class DebugLongField : LongField, IDebugControl
     {
         public DebugLongField() : this(string.Empty) { }
 
@@ -351,7 +351,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の倍精度浮動小数点フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugDoubleField : DoubleField, IDebugUI
+    public partial class DebugDoubleField : DoubleField, IDebugControl
     {
         public DebugDoubleField() : this(string.Empty) { }
 
@@ -366,7 +366,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Vector2 フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugVector2Field : Vector2Field, IDebugUI
+    public partial class DebugVector2Field : Vector2Field, IDebugControl
     {
         public DebugVector2Field() : this(string.Empty) { }
 
@@ -381,7 +381,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Vector2Int フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugVector2IntField : Vector2IntField, IDebugUI
+    public partial class DebugVector2IntField : Vector2IntField, IDebugControl
     {
         public DebugVector2IntField() : this(string.Empty) { }
 
@@ -396,7 +396,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Vector3 フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugVector3Field : Vector3Field, IDebugUI
+    public partial class DebugVector3Field : Vector3Field, IDebugControl
     {
         public DebugVector3Field() : this(string.Empty) { }
 
@@ -411,7 +411,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Vector3Int フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugVector3IntField : Vector3IntField, IDebugUI
+    public partial class DebugVector3IntField : Vector3IntField, IDebugControl
     {
         public DebugVector3IntField() : this(string.Empty) { }
 
@@ -426,7 +426,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Vector4 フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugVector4Field : Vector4Field, IDebugUI
+    public partial class DebugVector4Field : Vector4Field, IDebugControl
     {
         public DebugVector4Field() : this(string.Empty) { }
 
@@ -441,7 +441,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Rect フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugRectField : RectField, IDebugUI
+    public partial class DebugRectField : RectField, IDebugControl
     {
         public DebugRectField() : this(string.Empty) { }
 
@@ -456,7 +456,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の RectInt フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugRectIntField : RectIntField, IDebugUI
+    public partial class DebugRectIntField : RectIntField, IDebugControl
     {
         public DebugRectIntField() : this(string.Empty) { }
 
@@ -471,7 +471,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の Bounds フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugBoundsField : BoundsField, IDebugUI
+    public partial class DebugBoundsField : BoundsField, IDebugControl
     {
         public DebugBoundsField() : this(string.Empty) { }
 
@@ -486,7 +486,7 @@ namespace Lilja.DebugUI
     /// デバッグメニュー用の BoundsInt フィールド
     /// </summary>
     [UxmlElement]
-    public partial class DebugBoundsIntField : BoundsIntField, IDebugUI
+    public partial class DebugBoundsIntField : BoundsIntField, IDebugControl
     {
         public DebugBoundsIntField() : this(string.Empty) { }
 

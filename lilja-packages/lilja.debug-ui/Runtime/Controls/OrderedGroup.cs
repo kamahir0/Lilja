@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace Lilja.DebugUI
 {
-    public sealed class OrderedGroup<TItem> : VisualElement, IDebugUI
+    public sealed class OrderedGroup<TItem> : VisualElement, IDebugControl
     {
         private readonly Action<TItem, IDebugUIBuilder> _configure;
         private readonly List<Entry> _entries = new();
