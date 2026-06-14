@@ -118,6 +118,20 @@ namespace Lilja.DebugUI
             return builder.VisualElement(new VirtualFoldout(text));
         }
 
+        public static OrderedGroup<TItem> OrderedGroup<TItem>(this IDebugUIBuilder builder, Action<TItem, IDebugUIBuilder> configure)
+        {
+            return builder.VisualElement(new OrderedGroup<TItem>(configure));
+        }
+
+        public static OrderedGroup<TItem> FoldoutWithOrder<TItem>(this IDebugUIBuilder builder, string text, Action<TItem, IDebugUIBuilder> configure)
+        {
+            var foldout = new DebugFoldout(text);
+            var group = new OrderedGroup<TItem>(configure);
+            foldout.Add(group);
+            builder.VisualElement(foldout);
+            return group;
+        }
+
         public static VisualElement HorizontalScope(this IDebugUIBuilder builder, Action<IDebugUIBuilder> configure)
         {
             var row = new VisualElement();
