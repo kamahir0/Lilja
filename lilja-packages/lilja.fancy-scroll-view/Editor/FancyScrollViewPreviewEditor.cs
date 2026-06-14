@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace Lilja.FancyScrollView.Editor
 {
-    [CustomEditor(typeof(FancyScrollViewBase), true)]
+    [CustomEditor(typeof(FancyScrollView<,>), true)]
     public sealed class FancyScrollViewPreviewEditor : UnityEditor.Editor
     {
         SerializedProperty previewItemCount;
@@ -25,7 +25,7 @@ namespace Lilja.FancyScrollView.Editor
         float previewSpeed = 1f;
         string previewException;
 
-        FancyScrollViewBase View => target as FancyScrollViewBase;
+        IFancyScrollViewPreview Preview => target as IFancyScrollViewPreview;
 
         void OnEnable()
         {
@@ -62,14 +62,20 @@ namespace Lilja.FancyScrollView.Editor
             var inspectorChanged = EditorGUI.EndChangeCheck();
             serializedObject.ApplyModifiedProperties();
 
+            if (Preview == null || !Preview.SupportsEditorPreview)
+            {
+                StopPreview(true);
+                return;
+            }
+
             EditorGUILayout.Space();
             DrawPreviewPanel(inspectorChanged);
         }
 
         void DrawPreviewPanel(bool inspectorChanged)
         {
-            var view = View;
-            if (view == null)
+            var preview = Preview;
+            if (preview == null)
             {
                 return;
             }
@@ -118,10 +124,10 @@ namespace Lilja.FancyScrollView.Editor
                     return;
                 }
 
-                var error = view.GetEditorPreviewError();
+                var error = preview.GetEditorPreviewError();
                 if (!string.IsNullOrEmpty(error))
                 {
-                    if (previewEnabled || view.EditorPreviewing)
+                    if (previewEnabled || preview.EditorPreviewing)
                     {
                         StopPreview(false);
                     }
@@ -137,7 +143,7 @@ namespace Lilja.FancyScrollView.Editor
 
                 using (new EditorGUI.DisabledScope(!previewEnabled))
                 {
-                    var maxPosition = view.GetEditorPreviewMaxPosition();
+                    var maxPosition = preview.GetEditorPreviewMaxPosition();
                     previewPosition = Mathf.Clamp(previewPosition, 0f, maxPosition);
 
                     EditorGUI.BeginChangeCheck();
@@ -215,8 +221,8 @@ namespace Lilja.FancyScrollView.Editor
                 return;
             }
 
-            var view = View;
-            if (view == null)
+            var preview = Preview;
+            if (preview == null)
             {
                 StopPreview(false);
                 return;
@@ -226,7 +232,7 @@ namespace Lilja.FancyScrollView.Editor
             var deltaTime = Mathf.Max(0f, (float)(time - previousTime));
             previousTime = time;
 
-            var maxPosition = view.GetEditorPreviewMaxPosition();
+            var maxPosition = preview.GetEditorPreviewMaxPosition();
             if (maxPosition > 0f)
             {
                 previewPosition += deltaTime * previewSpeed * (previewReverse ? -1f : 1f);
@@ -269,8 +275,8 @@ namespace Lilja.FancyScrollView.Editor
 
         void StartPreview(bool forceRefresh)
         {
-            var view = View;
-            if (view == null)
+            var preview = Preview;
+            if (preview == null)
             {
                 return;
             }
@@ -288,7 +294,7 @@ namespace Lilja.FancyScrollView.Editor
 
             try
             {
-                view.BeginEditorPreview();
+                preview.BeginEditorPreview();
                 TryUpdatePreview(forceRefresh);
             }
             catch (Exception exception)
@@ -296,14 +302,14 @@ namespace Lilja.FancyScrollView.Editor
                 previewException = FormatException(exception);
                 previewPlaying = false;
                 previewEnabled = false;
-                view.EndEditorPreview();
+                preview.EndEditorPreview();
             }
         }
 
         bool TryUpdatePreview(bool forceRefresh)
         {
-            var view = View;
-            if (!previewEnabled || view == null)
+            var preview = Preview;
+            if (!previewEnabled || preview == null)
             {
                 return false;
             }
@@ -313,27 +319,27 @@ namespace Lilja.FancyScrollView.Editor
                 previewException = "Preview is only available in Edit Mode.";
                 previewPlaying = false;
                 previewEnabled = false;
-                if (view.EditorPreviewing)
+                if (preview.EditorPreviewing)
                 {
-                    view.EndEditorPreview();
+                    preview.EndEditorPreview();
                 }
 
                 return false;
             }
 
-            var error = view.GetEditorPreviewError();
+            var error = preview.GetEditorPreviewError();
             if (!string.IsNullOrEmpty(error))
             {
                 previewException = error;
                 previewPlaying = false;
                 previewEnabled = false;
-                view.EndEditorPreview();
+                preview.EndEditorPreview();
                 return false;
             }
 
             try
             {
-                view.UpdateEditorPreview(previewPosition, forceRefresh);
+                preview.UpdateEditorPreview(previewPosition, forceRefresh);
                 previewException = null;
                 return true;
             }
@@ -342,17 +348,17 @@ namespace Lilja.FancyScrollView.Editor
                 previewException = FormatException(exception);
                 previewPlaying = false;
                 previewEnabled = false;
-                view.EndEditorPreview();
+                preview.EndEditorPreview();
                 return false;
             }
         }
 
         void StopPreview(bool resetPosition)
         {
-            var view = View;
-            if (view != null && view.EditorPreviewing)
+            var preview = Preview;
+            if (preview != null && preview.EditorPreviewing)
             {
-                view.EndEditorPreview();
+                preview.EndEditorPreview();
             }
 
             previewEnabled = false;

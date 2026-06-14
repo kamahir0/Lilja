@@ -3,10 +3,15 @@
     "displayName": "Lilja.FancyScrollView",
     "version": "0.1.0",
     "unity": "6000.4",
-    "description": "Lilja package created by DevKit.",
+    "description": "A Lilja namespaced FancyScrollView package based on setchi/FancyScrollView, with typed cell prefabs and optional edit-mode preview.",
     "keywords": [
-        "lilja"
+        "lilja",
+        "fancy-scroll-view",
+        "unity-ui"
     ],
+    "dependencies": {
+        "com.unity.ugui": "2.0.0"
+    },
   "author": {
     "name": "kamahir0",
     "url": "https://github.com/kamahir0",

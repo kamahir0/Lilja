@@ -1,7 +1,9 @@
 ﻿{
     "name": "Lilja.FancyScrollView",
     "rootNamespace": "Lilja.FancyScrollView",
-    "references": [],
+    "references": [
+        "UnityEngine.UI"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

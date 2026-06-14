@@ -1,4 +1,4 @@
-﻿/*
+/*
  * FancyScrollView (https://github.com/setchi/FancyScrollView)
  * Copyright (c) 2020 setchi
  * Licensed under MIT (https://github.com/setchi/FancyScrollView/blob/master/LICENSE)
@@ -11,65 +11,63 @@ using UnityEngine;
 namespace Lilja.FancyScrollView
 {
     /// <summary>
-    /// Core implementation for ScrollRect-style views.
+    /// ScrollRect スタイルのスクロールビューを実装するための抽象基底クラス.
+    /// 無限スクロールおよびスナップには対応していません.
+    /// <see cref="FancyScrollView{TItemData, TContext}.Context"/> が不要な場合は
+    /// 代わりに <see cref="FancyScrollRect{TItemData}"/> を使用します.
     /// </summary>
-    /// <typeparam name="TCellData">Data type consumed by each pooled cell.</typeparam>
-    /// <typeparam name="TContext"><see cref="FancyScrollViewCore{TCellData,TContext}.Context"/> 縺ｮ蝙・</typeparam>
+    /// <typeparam name="TItemData">アイテムのデータ型.</typeparam>
+    /// <typeparam name="TContext"><see cref="FancyScrollView{TItemData, TContext}.Context"/> の型.</typeparam>
     [RequireComponent(typeof(Scroller))]
-    public abstract class FancyScrollRectCore<TCellData, TContext> : FancyScrollViewCore<TCellData, TContext>
+    public abstract class FancyScrollRect<TItemData, TContext> : FancyScrollView<TItemData, TContext>
         where TContext : class, IFancyScrollRectContext, new()
     {
         /// <summary>
-        /// 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ荳ｭ縺ｫ繧ｻ繝ｫ縺悟・蛻ｩ逕ｨ縺輔ｌ繧九∪縺ｧ縺ｮ菴咏區縺ｮ繧ｻ繝ｫ謨ｰ.
+        /// スクロール中にセルが再利用されるまでの余白のセル数.
         /// </summary>
         /// <remarks>
-        /// <c>0</c> 繧呈欠螳壹☆繧九→繧ｻ繝ｫ縺悟ｮ悟・縺ｫ髫繧後◆逶ｴ蠕後↓蜀榊茜逕ｨ縺輔ｌ縺ｾ縺・
-        /// <c>1</c> 莉･荳翫ｒ謖・ｮ壹☆繧九→, 縺昴・繧ｻ繝ｫ謨ｰ縺縺台ｽ吝・縺ｫ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ縺励※縺九ｉ蜀榊茜逕ｨ縺輔ｌ縺ｾ縺・
+        /// <c>0</c> を指定するとセルが完全に隠れた直後に再利用されます.
+        /// <c>1</c> 以上を指定すると, そのセル数だけ余分にスクロールしてから再利用されます.
         /// </remarks>
         [SerializeField] protected float reuseCellMarginCount = 0f;
 
         /// <summary>
-        /// 繧ｳ繝ｳ繝・Φ繝・・鬆ｭ縺ｮ菴咏區.
+        /// コンテンツ先頭の余白.
         /// </summary>
         [SerializeField] protected float paddingHead = 0f;
 
         /// <summary>
-        /// 繧ｳ繝ｳ繝・Φ繝・忰蟆ｾ縺ｮ菴咏區.
+        /// コンテンツ末尾の余白.
         /// </summary>
         [SerializeField] protected float paddingTail = 0f;
 
         /// <summary>
-        /// 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ霆ｸ譁ｹ蜷代・繧ｻ繝ｫ蜷悟｣ｫ縺ｮ菴咏區.
+        /// スクロール軸方向のセル同士の余白.
         /// </summary>
         [SerializeField] protected float spacing = 0f;
 
         /// <summary>
-        /// 繧ｻ繝ｫ縺ｮ繧ｵ繧､繧ｺ.
+        /// セルのサイズ.
         /// </summary>
         protected abstract float CellSize { get; }
 
         /// <summary>
-        /// 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ蜿ｯ閭ｽ縺九←縺・°.
+        /// スクロール可能かどうか.
         /// </summary>
         /// <remarks>
-        /// 繧｢繧､繝・Β謨ｰ縺悟香蛻・ｰ代↑縺上ン繝･繝ｼ繝昴・繝亥・縺ｫ蜈ｨ縺ｦ縺ｮ繧ｻ繝ｫ縺悟庶縺ｾ縺｣縺ｦ縺・ｋ蝣ｴ蜷医・ <c>false</c>, 縺昴ｌ莉･螟悶・ <c>true</c> 縺ｫ縺ｪ繧翫∪縺・
+        /// アイテム数が十分少なくビューポート内に全てのセルが収まっている場合は <c>false</c>, それ以外は <c>true</c> になります.
         /// </remarks>
         protected virtual bool Scrollable => MaxScrollPosition > 0f;
 
         Scroller cachedScroller;
 
         /// <summary>
-        /// 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ菴咲ｽｮ繧貞宛蠕｡縺吶ｋ <see cref="FancyScrollView.Scroller"/> 縺ｮ繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ.
+        /// スクロール位置を制御する <see cref="Scroller"/> のインスタンス.
         /// </summary>
-        protected Scroller Scroller => cachedScroller != null ? cachedScroller : (cachedScroller = GetComponent<Scroller>());
-
-#if UNITY_EDITOR
-        bool previewScrollerStateStored;
-        bool previewScrollerDraggable;
-        bool previewScrollbarActive;
-        float previewScrollSensitivity;
-        float previewScrollbarSize;
-#endif
+        /// <remarks>
+        /// <see cref="Scroller"/> のスクロール位置を変更する際は必ず <see cref="ToScrollerPosition(float)"/> を使用して変換した位置を使用してください.
+        /// </remarks>
+        protected Scroller Scroller => cachedScroller ?? (cachedScroller = GetComponent<Scroller>());
 
         float ScrollLength => 1f / Mathf.Max(cellInterval, 1e-2f) - 1f;
 
@@ -82,11 +80,21 @@ namespace Lilja.FancyScrollView
             + reuseCellMarginCount * 2f
             + (paddingHead + paddingTail - spacing) / (CellSize + spacing);
 
+#if UNITY_EDITOR
+        bool previewScrollerStateStored;
+        bool previewScrollerDraggable;
+        bool previewScrollbarActive;
+        float previewScrollSensitivity;
+        float previewScrollbarSize;
+#endif
+
         /// <inheritdoc/>
-        protected sealed override void SetupContext(TContext context)
+        protected override void Initialize()
         {
-            context.ScrollDirection = Scroller.ScrollDirection;
-            context.CalculateScrollSize = () =>
+            base.Initialize();
+
+            Context.ScrollDirection = Scroller.ScrollDirection;
+            Context.CalculateScrollSize = () =>
             {
                 var interval = CellSize + spacing;
                 var reuseMargin = interval * reuseCellMarginCount;
@@ -94,72 +102,35 @@ namespace Lilja.FancyScrollView
                 return (scrollSize, reuseMargin);
             };
 
-            SetupScrollRectContext(context);
+            AdjustCellIntervalAndScrollOffset();
+            Scroller.OnValueChanged(OnScrollerValueChanged);
         }
 
         /// <summary>
-        /// ScrollRect 逕ｨ context 縺瑚ｨｭ螳壹＆繧後◆蠕後↓蜻ｼ縺ｳ蜃ｺ縺輔ｌ縺ｾ縺・
+        /// <see cref="Scroller"/> のスクロール位置が変更された際の処理.
         /// </summary>
-        /// <param name="context">蜈ｱ譛・context.</param>
-        protected virtual void SetupScrollRectContext(TContext context) { }
-
-        protected override void InitializeCore()
+        /// <param name="p"><see cref="Scroller"/> のスクロール位置.</param>
+        void OnScrollerValueChanged(float p)
         {
-            base.InitializeCore();
-
-            if (Scroller == null)
-            {
-                throw new MissingComponentException(string.Format(
-                    "{0} requires a Scroller component on the same GameObject.",
-                    GetType().Name));
-            }
-
-            Scroller.OnValueChanged(OnScrollerValueChanged);
-            Scroller.OnSelectionChanged(OnScrollerSelectionChanged);
-        }
-
-        void OnScrollerValueChanged(float position)
-        {
-            ApplyScrollerPosition(position);
-        }
-
-        private protected virtual void ApplyScrollerPosition(float position)
-        {
-            UpdateScrollPosition(position);
+            base.UpdatePosition(ToFancyScrollViewPosition(Scrollable ? p : 0f));
 
             if (Scroller.Scrollbar)
             {
-                if (position > ItemsSource.Count - 1)
+                if (p > ItemsSource.Count - 1)
                 {
-                    ShrinkScrollbar(position - (ItemsSource.Count - 1));
+                    ShrinkScrollbar(p - (ItemsSource.Count - 1));
                 }
-                else if (position < 0f)
+                else if (p < 0f)
                 {
-                    ShrinkScrollbar(-position);
+                    ShrinkScrollbar(-p);
                 }
             }
         }
 
-        void UpdateScrollPosition(float scrollerPosition)
-        {
-            var position = ToFancyScrollViewPosition(Scrollable ? scrollerPosition : 0f);
-            ApplyScrollRectPosition(position, false);
-        }
-
         /// <summary>
-        /// ScrollRect 螟画鋤貂医∩菴咲ｽｮ繧偵Ξ繧､繧｢繧ｦ繝医↓驕ｩ逕ｨ縺励∪縺・
+        /// スクロール範囲を超えてスクロールされた量に基づいて, スクロールバーのサイズを縮小します.
         /// </summary>
-        /// <param name="position">Scroll view position.</param>
-        /// <param name="forceRefresh">繧ｻ繝ｫ蜀・ｮｹ繧ょｼｷ蛻ｶ譖ｴ譁ｰ縺吶ｋ縺九←縺・°.</param>
-        protected void ApplyScrollRectPosition(float position, bool forceRefresh)
-        {
-            UpdatePositionInternal(position, forceRefresh);
-        }
-
-        /// <summary>
-        /// 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ遽・峇繧定ｶ・∴縺ｦ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ縺輔ｌ縺滄㍼縺ｫ蝓ｺ縺･縺・※, 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ繝舌・縺ｮ繧ｵ繧､繧ｺ繧堤ｸｮ蟆上＠縺ｾ縺・
-        /// </summary>
-        /// <param name="offset">繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ遽・峇繧定ｶ・∴縺ｦ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ縺輔ｌ縺滄㍼.</param>
+        /// <param name="offset">スクロール範囲を超えてスクロールされた量.</param>
         void ShrinkScrollbar(float offset)
         {
             var scale = 1f - ToFancyScrollViewPosition(offset) / (ViewportLength - PaddingHeadLength);
@@ -167,31 +138,29 @@ namespace Lilja.FancyScrollView
         }
 
         /// <inheritdoc/>
-        private protected override void OnItemsSourceChanged(IList<TCellData> items)
+        protected override void Refresh()
         {
             AdjustCellIntervalAndScrollOffset();
-            if (Scroller != null)
-            {
-                Scroller.SetTotalCount(Mathf.Max(0, ScrollerItemCount));
-            }
             RefreshScroller();
+            base.Refresh();
         }
 
         /// <inheritdoc/>
-        private protected override void OnBeforeRefresh()
+        protected override void Relayout()
         {
             AdjustCellIntervalAndScrollOffset();
             RefreshScroller();
+            base.Relayout();
         }
 
         /// <summary>
-        /// <see cref="Scroller"/> 縺ｮ蜷・ｨｮ迥ｶ諷九ｒ譖ｴ譁ｰ縺励∪縺・
+        /// <see cref="Scroller"/> の各種状態を更新します.
         /// </summary>
         protected void RefreshScroller()
         {
             Scroller.Draggable = Scrollable;
-            Scroller.ScrollSensitivity = ToRawScrollerPosition(ViewportLength - PaddingHeadLength);
-            Scroller.Position = ToRawScrollerPosition(currentPosition);
+            Scroller.ScrollSensitivity = ToScrollerPosition(ViewportLength - PaddingHeadLength);
+            Scroller.Position = ToScrollerPosition(currentPosition);
 
             if (Scroller.Scrollbar)
             {
@@ -200,29 +169,86 @@ namespace Lilja.FancyScrollView
             }
         }
 
+        /// <inheritdoc/>
+        protected override void UpdateContents(IList<TItemData> items)
+        {
+            AdjustCellIntervalAndScrollOffset();
+            base.UpdateContents(items);
+
+            Scroller.SetTotalCount(items.Count);
+            RefreshScroller();
+        }
+
         /// <summary>
-        /// 繝薙Η繝ｼ繝昴・繝医→繧ｳ繝ｳ繝・Φ繝・・髟ｷ縺輔↓蝓ｺ縺･縺・※繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ繝舌・縺ｮ繧ｵ繧､繧ｺ繧呈峩譁ｰ縺励∪縺・
+        /// スクロール位置を更新します.
         /// </summary>
-        /// <param name="viewportLength">繝薙Η繝ｼ繝昴・繝医・繧ｵ繧､繧ｺ.</param>
+        /// <param name="position">スクロール位置.</param>
+        protected new void UpdatePosition(float position)
+        {
+            Scroller.Position = ToScrollerPosition(position, 0.5f);
+        }
+
+        /// <summary>
+        /// 指定したアイテムの位置までジャンプします.
+        /// </summary>
+        /// <param name="itemIndex">アイテムのインデックス.</param>
+        /// <param name="alignment">ビューポート内におけるセル位置の基準. 0f(先頭) ~ 1f(末尾).</param>
+        protected virtual void JumpTo(int itemIndex, float alignment = 0.5f)
+        {
+            Scroller.Position = ToScrollerPosition(itemIndex, alignment);
+        }
+
+        /// <summary>
+        /// 指定したアイテムの位置まで移動します.
+        /// </summary>
+        /// <param name="index">アイテムのインデックス.</param>
+        /// <param name="duration">移動にかける秒数.</param>
+        /// <param name="alignment">ビューポート内におけるセル位置の基準. 0f(先頭) ~ 1f(末尾).</param>
+        /// <param name="onComplete">移動が完了した際に呼び出されるコールバック.</param>
+        protected virtual void ScrollTo(int index, float duration, float alignment = 0.5f, Action onComplete = null)
+        {
+            Scroller.ScrollTo(ToScrollerPosition(index, alignment), duration, onComplete);
+        }
+
+        /// <summary>
+        /// 指定したアイテムの位置まで移動します.
+        /// </summary>
+        /// <param name="index">アイテムのインデックス.</param>
+        /// <param name="duration">移動にかける秒数.</param>
+        /// <param name="easing">移動に使用するイージング.</param>
+        /// <param name="alignment">ビューポート内におけるセル位置の基準. 0f(先頭) ~ 1f(末尾).</param>
+        /// <param name="onComplete">移動が完了した際に呼び出されるコールバック.</param>
+        protected virtual void ScrollTo(int index, float duration, Ease easing, float alignment = 0.5f, Action onComplete = null)
+        {
+            Scroller.ScrollTo(ToScrollerPosition(index, alignment), duration, easing, onComplete);
+        }
+
+        /// <summary>
+        /// ビューポートとコンテンツの長さに基づいてスクロールバーのサイズを更新します.
+        /// </summary>
+        /// <param name="viewportLength">ビューポートのサイズ.</param>
         protected void UpdateScrollbarSize(float viewportLength)
         {
             var contentLength = Mathf.Max(ItemsSource.Count + (paddingHead + paddingTail - spacing) / (CellSize + spacing), 1);
             Scroller.Scrollbar.size = Scrollable ? Mathf.Clamp01(viewportLength / contentLength) : 1f;
         }
 
-        private protected override float ToFancyScrollViewPosition(float position)
+        /// <summary>
+        /// <see cref="Scroller"/> が扱うスクロール位置を <see cref="FancyScrollRect{TItemData, TContext}"/> が扱うスクロール位置に変換します.
+        /// </summary>
+        /// <param name="position"><see cref="Scroller"/> が扱うスクロール位置.</param>
+        /// <returns><see cref="FancyScrollRect{TItemData, TContext}"/> が扱うスクロール位置.</returns>
+        protected float ToFancyScrollViewPosition(float position)
         {
             return position / Mathf.Max(ItemsSource.Count - 1, 1) * MaxScrollPosition - PaddingHeadLength;
         }
 
-        private protected override float ToScrollerPosition(float position, float alignment = 0.5f)
-        {
-            var offset = alignment * (ScrollLength - (1f + reuseCellMarginCount * 2f))
-                + (1f - alignment - 0.5f) * spacing / (CellSize + spacing);
-            return ToRawScrollerPosition(Mathf.Clamp(position - offset, 0f, MaxScrollPosition));
-        }
-
-        float ToRawScrollerPosition(float position)
+        /// <summary>
+        /// <see cref="FancyScrollRect{TItemData, TContext}"/> が扱うスクロール位置を <see cref="Scroller"/> が扱うスクロール位置に変換します.
+        /// </summary>
+        /// <param name="position"><see cref="FancyScrollRect{TItemData, TContext}"/> が扱うスクロール位置.</param>
+        /// <returns><see cref="Scroller"/> が扱うスクロール位置.</returns>
+        protected float ToScrollerPosition(float position)
         {
             if (Mathf.Approximately(MaxScrollPosition, 0f))
             {
@@ -233,9 +259,22 @@ namespace Lilja.FancyScrollView
         }
 
         /// <summary>
-        /// 謖・ｮ壹＆繧後◆險ｭ螳壹ｒ螳溽樟縺吶ｋ縺溘ａ縺ｮ
-        /// <see cref="FancyScrollViewCore{TCellData,TContext}.cellInterval"/> 縺ｨ
-        /// <see cref="FancyScrollViewCore{TCellData,TContext}.scrollOffset"/> 繧定ｨ育ｮ励＠縺ｦ驕ｩ逕ｨ縺励∪縺・
+        /// <see cref="FancyScrollRect{TItemData, TContext}"/> が扱うスクロール位置を <see cref="Scroller"/> が扱う位置に変換します.
+        /// </summary>
+        /// <param name="position"><see cref="FancyScrollRect{TItemData, TContext}"/> が扱うスクロール位置.</param>
+        /// <param name="alignment">ビューポート内におけるセル位置の基準. 0f(先頭) ~ 1f(末尾).</param>
+        /// <returns><see cref="Scroller"/> が扱うスクロール位置.</returns>
+        protected float ToScrollerPosition(float position, float alignment = 0.5f)
+        {
+            var offset = alignment * (ScrollLength - (1f + reuseCellMarginCount * 2f))
+                + (1f - alignment - 0.5f) * spacing / (CellSize + spacing);
+            return ToScrollerPosition(Mathf.Clamp(position - offset, 0f, MaxScrollPosition));
+        }
+
+        /// <summary>
+        /// 指定された設定を実現するための
+        /// <see cref="FancyScrollView{TItemData,TContext}.cellInterval"/> と
+        /// <see cref="FancyScrollView{TItemData,TContext}.scrollOffset"/> を計算して適用します.
         /// </summary>
         protected void AdjustCellIntervalAndScrollOffset()
         {
@@ -244,59 +283,21 @@ namespace Lilja.FancyScrollView
             scrollOffset = cellInterval * (1f + reuseCellMarginCount);
         }
 
-        /// <summary>
-        /// 謖・ｮ壹＠縺溘い繧､繝・Β縺ｮ菴咲ｽｮ縺ｾ縺ｧ繧ｸ繝｣繝ｳ繝励＠縺ｾ縺・
-        /// </summary>
-        /// <param name="itemIndex">繧｢繧､繝・Β縺ｮ繧､繝ｳ繝・ャ繧ｯ繧ｹ.</param>
-        /// <param name="alignment">繝薙Η繝ｼ繝昴・繝亥・縺ｫ縺翫￠繧九そ繝ｫ菴咲ｽｮ縺ｮ蝓ｺ貅・ 0f(蜈磯ｭ) ~ 1f(譛ｫ蟆ｾ).</param>
-        public void JumpTo(int itemIndex, float alignment = 0.5f)
-        {
-            EnsureInitialized();
-            Scroller.Position = ToScrollerPosition(GetScrollPositionForItem(itemIndex), alignment);
-        }
-
-        /// <summary>
-        /// 謖・ｮ壹＠縺溘い繧､繝・Β縺ｮ菴咲ｽｮ縺ｾ縺ｧ遘ｻ蜍輔＠縺ｾ縺・
-        /// </summary>
-        /// <param name="itemIndex">繧｢繧､繝・Β縺ｮ繧､繝ｳ繝・ャ繧ｯ繧ｹ.</param>
-        /// <param name="duration">遘ｻ蜍輔↓縺九￠繧狗ｧ呈焚.</param>
-        /// <param name="alignment">繝薙Η繝ｼ繝昴・繝亥・縺ｫ縺翫￠繧九そ繝ｫ菴咲ｽｮ縺ｮ蝓ｺ貅・ 0f(蜈磯ｭ) ~ 1f(譛ｫ蟆ｾ).</param>
-        /// <param name="onComplete">遘ｻ蜍輔′螳御ｺ・＠縺滄圀縺ｫ蜻ｼ縺ｳ蜃ｺ縺輔ｌ繧九さ繝ｼ繝ｫ繝舌ャ繧ｯ.</param>
-        public void ScrollTo(int itemIndex, float duration, float alignment = 0.5f, Action onComplete = null)
-        {
-            EnsureInitialized();
-            Scroller.ScrollTo(ToScrollerPosition(GetScrollPositionForItem(itemIndex), alignment), duration, onComplete);
-        }
-
-        /// <summary>
-        /// 謖・ｮ壹＠縺溘い繧､繝・Β縺ｮ菴咲ｽｮ縺ｾ縺ｧ遘ｻ蜍輔＠縺ｾ縺・
-        /// </summary>
-        /// <param name="itemIndex">繧｢繧､繝・Β縺ｮ繧､繝ｳ繝・ャ繧ｯ繧ｹ.</param>
-        /// <param name="duration">遘ｻ蜍輔↓縺九￠繧狗ｧ呈焚.</param>
-        /// <param name="easing">遘ｻ蜍輔↓菴ｿ逕ｨ縺吶ｋ繧､繝ｼ繧ｸ繝ｳ繧ｰ.</param>
-        /// <param name="alignment">繝薙Η繝ｼ繝昴・繝亥・縺ｫ縺翫￠繧九そ繝ｫ菴咲ｽｮ縺ｮ蝓ｺ貅・ 0f(蜈磯ｭ) ~ 1f(譛ｫ蟆ｾ).</param>
-        /// <param name="onComplete">遘ｻ蜍輔′螳御ｺ・＠縺滄圀縺ｫ蜻ｼ縺ｳ蜃ｺ縺輔ｌ繧九さ繝ｼ繝ｫ繝舌ャ繧ｯ.</param>
-        public void ScrollTo(int itemIndex, float duration, Ease easing, float alignment = 0.5f, Action onComplete = null)
-        {
-            EnsureInitialized();
-            Scroller.ScrollTo(ToScrollerPosition(GetScrollPositionForItem(itemIndex), alignment), duration, easing, onComplete);
-        }
-
 #if UNITY_EDITOR
-        private protected override void ApplyEditorPreviewPosition(float position, bool forceRefresh)
+        protected override void ApplyEditorPreviewPosition(float position, bool forceRefresh)
         {
             var scrollerPosition = Scrollable ? ToScrollerPosition(position, 0.5f) : 0f;
             Scroller.Position = scrollerPosition;
 
             if (forceRefresh)
             {
-                ApplyScrollRectPosition(ToFancyScrollViewPosition(Scrollable ? scrollerPosition : 0f), true);
+                base.UpdatePosition(ToFancyScrollViewPosition(Scrollable ? scrollerPosition : 0f));
             }
         }
 
-        protected override void OnPreviewBegin()
+        protected override void OnEditorPreviewBegin()
         {
-            base.OnPreviewBegin();
+            base.OnEditorPreviewBegin();
 
             previewScrollerDraggable = Scroller.Draggable;
             previewScrollSensitivity = Scroller.ScrollSensitivity;
@@ -310,7 +311,7 @@ namespace Lilja.FancyScrollView
             previewScrollerStateStored = true;
         }
 
-        protected override void OnPreviewEnd()
+        protected override void OnEditorPreviewEnd()
         {
             if (previewScrollerStateStored)
             {
@@ -325,16 +326,7 @@ namespace Lilja.FancyScrollView
             }
 
             previewScrollerStateStored = false;
-            base.OnPreviewEnd();
-        }
-
-        internal override void EndEditorPreview()
-        {
-            base.EndEditorPreview();
-            if (Scroller != null)
-            {
-                Scroller.SetTotalCount(Mathf.Max(0, ScrollerItemCount));
-            }
+            base.OnEditorPreviewEnd();
         }
 #endif
 
@@ -366,55 +358,10 @@ namespace Lilja.FancyScrollView
     }
 
     /// <summary>
-    /// ScrollRect 繧ｹ繧ｿ繧､繝ｫ縺ｮ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ繝薙Η繝ｼ繧貞ｮ溯｣・☆繧九◆繧√・謚ｽ雎｡蝓ｺ蠎輔け繝ｩ繧ｹ.
-    /// 辟｡髯舌せ繧ｯ繝ｭ繝ｼ繝ｫ縺翫ｈ縺ｳ繧ｹ繝翫ャ繝励↓縺ｯ蟇ｾ蠢懊＠縺ｦ縺・∪縺帙ｓ.
-    /// <see cref="FancyScrollView{TItemData, TContext}.Context"/> 縺御ｸ崎ｦ√↑蝣ｴ蜷医・
-    /// 莉｣繧上ｊ縺ｫ <see cref="FancyScrollRect{TItemData}"/> 繧剃ｽｿ逕ｨ縺励∪縺・
+    /// ScrollRect スタイルのスクロールビューを実装するための抽象基底クラス.
+    /// 無限スクロールおよびスナップには対応していません.
     /// </summary>
-    /// <typeparam name="TItemData">繧｢繧､繝・Β縺ｮ繝・・繧ｿ蝙・</typeparam>
-    /// <typeparam name="TContext"><see cref="FancyScrollView{TItemData, TContext}.Context"/> 縺ｮ蝙・</typeparam>
-    public abstract class FancyScrollRect<TItemData, TContext> : FancyScrollRectCore<TItemData, TContext>
-        where TContext : class, IFancyScrollRectContext, new()
-    {
-        /// <summary>
-        /// Edit-mode preview item count.
-        /// </summary>
-        protected virtual int PreviewItemCount => EditorPreviewItemCount;
-
-        /// <summary>
-        /// 貂｡縺輔ｌ縺溘い繧､繝・Β荳隕ｧ縺ｫ蝓ｺ縺･縺・※陦ｨ遉ｺ蜀・ｮｹ繧呈峩譁ｰ縺励∪縺・
-        /// </summary>
-        /// <param name="items">繧｢繧､繝・Β荳隕ｧ.</param>
-        public void SetItems(IList<TItemData> items) => SetItemsCore(items);
-
-        /// <summary>
-        /// Edit-mode preview 逕ｨ縺ｮ item data 繧剃ｽ懈・縺励∪縺・
-        /// </summary>
-        /// <param name="context">Preview item context.</param>
-        /// <returns>Preview item data.</returns>
-        protected abstract TItemData CreatePreviewItem(FancyScrollPreviewItemContext context);
-
-#if UNITY_EDITOR
-        protected sealed override int GetEditorPreviewItemCount() => Mathf.Max(0, PreviewItemCount);
-
-        protected sealed override IList<TItemData> CreateEditorPreviewItems(int itemCount)
-        {
-            var items = new List<TItemData>(itemCount);
-            for (var i = 0; i < itemCount; i++)
-            {
-                items.Add(CreatePreviewItem(new FancyScrollPreviewItemContext(i, itemCount)));
-            }
-
-            return items;
-        }
-#endif
-    }
-
-    /// <summary>
-    /// ScrollRect 繧ｹ繧ｿ繧､繝ｫ縺ｮ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ繝薙Η繝ｼ繧貞ｮ溯｣・☆繧九◆繧√・謚ｽ雎｡蝓ｺ蠎輔け繝ｩ繧ｹ.
-    /// 辟｡髯舌せ繧ｯ繝ｭ繝ｼ繝ｫ縺翫ｈ縺ｳ繧ｹ繝翫ャ繝励↓縺ｯ蟇ｾ蠢懊＠縺ｦ縺・∪縺帙ｓ.
-    /// </summary>
-    /// <typeparam name="TItemData">繧｢繧､繝・Β縺ｮ繝・・繧ｿ蝙・</typeparam>
+    /// <typeparam name="TItemData">アイテムのデータ型.</typeparam>
     /// <seealso cref="FancyScrollRect{TItemData, TContext}"/>
     public abstract class FancyScrollRect<TItemData> : FancyScrollRect<TItemData, FancyScrollRectContext> { }
 }
