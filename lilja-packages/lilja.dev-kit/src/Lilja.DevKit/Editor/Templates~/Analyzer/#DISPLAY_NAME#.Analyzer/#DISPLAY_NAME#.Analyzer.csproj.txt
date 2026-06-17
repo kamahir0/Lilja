@@ -20,7 +20,7 @@
 
   <Target Name="CopyDLLToPackage" AfterTargets="Build">
     <PropertyGroup>
-      <UnityPluginsPath>$(ProjectDir)..\..\src\Plugins</UnityPluginsPath>
+      <UnityPluginsPath>$(ProjectDir)..\..\#DISPLAY_NAME#\Plugins</UnityPluginsPath>
     </PropertyGroup>
 
     <Message Text="Copying DLL to Unity Plugins folder...: $(UnityPluginsPath)" Importance="high" />
