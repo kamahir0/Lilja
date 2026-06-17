@@ -35,12 +35,37 @@ Package Creatorで生成されるパッケージは以下の命名規則に従�
 
 UPM経由でパッケージをインストールする際は、Package Manager の "Add package from git URL..." から以下のURLを入力してください。
 
-| パッケージ名 | UPM Git URL |
-|---|---|
-| Lilja.AssetManagement | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.asset-management/src/Lilja.AssetManagement |
-| Lilja.DebugUI | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.debug-ui/src/Lilja.DebugUI |
-| Lilja.DevKit | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.dev-kit/src/Lilja.DevKit |
-| Lilja.EditorEx | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.editor-ex/src/Lilja.EditorEx |
-| Lilja.FancyScrollView | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.fancy-scroll-view/src/Lilja.FancyScrollView |
-| Lilja.Repository | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.repository/src/Lilja.Repository |
-| Lilja.ScreenManagement | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.screen-management/src/Lilja.ScreenManagement |
+### [Lilja.AssetManagement](./lilja-packages/lilja.asset-management)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.asset-management/src/Lilja.AssetManagement
+```
+
+### [Lilja.DebugUI](./lilja-packages/lilja.debug-ui)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.debug-ui/src/Lilja.DebugUI
+```
+
+### [Lilja.DevKit](./lilja-packages/lilja.dev-kit)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.dev-kit/src/Lilja.DevKit
+```
+
+### [Lilja.EditorEx](./lilja-packages/lilja.editor-ex)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.editor-ex/src/Lilja.EditorEx
+```
+
+### [Lilja.FancyScrollView](./lilja-packages/lilja.fancy-scroll-view)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.fancy-scroll-view/src/Lilja.FancyScrollView
+```
+
+### [Lilja.Repository](./lilja-packages/lilja.repository)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.repository/src/Lilja.Repository
+```
+
+### [Lilja.ScreenManagement](./lilja-packages/lilja.screen-management)
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.screen-management/src/Lilja.ScreenManagement
+```
