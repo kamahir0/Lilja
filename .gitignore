@@ -13,8 +13,6 @@
 [Tt]extMesh Pro/
 *.log
 
-# Sandbox Projects
-sandbox/
 
 .idea/
 
