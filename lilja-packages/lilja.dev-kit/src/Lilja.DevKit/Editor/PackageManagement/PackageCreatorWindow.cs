@@ -340,8 +340,12 @@ namespace Lilja.DevKit.PackageManagement
                 // インポート設定が有効な場合はmanifest.jsonに追加
                 if (_settings.withImport)
                 {
-                    // パッケージルート直下にpackage.jsonがあるため、パッケージルートをインポート対象とする
-                    PackageImporter.Import(createdPath);
+                    string displayName = !string.IsNullOrEmpty(_settings.displayNameOverride)
+                        ? _settings.displayNameOverride
+                        : PackageCreator.GenerateDisplayName(_settings.packageBaseName);
+                    
+                    string unityPackagePath = Path.Combine(createdPath, "src", displayName);
+                    PackageImporter.Import(unityPackagePath);
                 }
 
                 EditorDialog.DisplayAlertDialog(
