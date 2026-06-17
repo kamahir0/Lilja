@@ -282,12 +282,10 @@ namespace Lilja.DevKit.PackageManagement
             string baseUrl = $"https://github.com/{parameters.OrganizationName}/Lilja/blob/main";
             string licenseUrl = $"{baseUrl}/LICENSE";
             string docUrl = $"{baseUrl}/{relativePath}/README.md";
-            string changelogUrl = $"{baseUrl}/{relativePath}/CHANGELOG.md";
 
             var fields = new List<string>
             {
                 $"    \"documentationUrl\": \"{docUrl}\"",
-                $"    \"changelogUrl\": \"{changelogUrl}\"",
                 $"    \"licensesUrl\": \"{licenseUrl}\""
             };
 
