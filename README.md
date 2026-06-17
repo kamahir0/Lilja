@@ -31,3 +31,16 @@ Package Creatorで生成されるパッケージは以下の命名規則に従�
 | DisplayName      | Lilja.{PackageName}                         | `Lilja.FooBar`                 |
 | パッケージ名     | com.{OrganizationName}.lilja.{package-name} | `com.kamahir0.lilja.foo-bar`   |
 | 出力ディレクトリ | lilja-packages/lilja.{package-name}         | `lilja-packages/lilja.foo-bar` |
+## Packages
+
+UPM経由でパッケージをインストールする際は、Package Manager の "Add package from git URL..." から以下のURLを入力してください。
+
+| パッケージ名 | UPM Git URL |
+|---|---|
+| Lilja.AssetManagement | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.asset-management/src/Lilja.AssetManagement |
+| Lilja.DebugUI | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.debug-ui/src/Lilja.DebugUI |
+| Lilja.DevKit | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.dev-kit/src/Lilja.DevKit |
+| Lilja.EditorEx | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.editor-ex/src/Lilja.EditorEx |
+| Lilja.FancyScrollView | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.fancy-scroll-view/src/Lilja.FancyScrollView |
+| Lilja.Repository | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.repository/src/Lilja.Repository |
+| Lilja.ScreenManagement | https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.screen-management/src/Lilja.ScreenManagement |
