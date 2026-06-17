@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="Lilja.Repository.Analyzer/Lilja.Repository.Analyzer.csproj" />
-  <Project Path="Lilja.Repository.Analyzer.Benchmarks/Lilja.Repository.Analyzer.Benchmarks.csproj" />
-  <Project Path="Lilja.Repository.Analyzer.Test/Lilja.Repository.Analyzer.Test.csproj" />
-</Solution>
