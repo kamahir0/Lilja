@@ -1,4 +1,4 @@
-﻿# Lilja.AssetManagement
+﻿# #DISPLAY_NAME#
 
 Included in the Lilja package series.
 
@@ -9,7 +9,7 @@ Included in the Lilja package series.
 3. Enter the following URL:
 
 ```text
-https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.asset-management/src/Lilja.AssetManagement
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/#DIRECTORY_NAME#/src/#DISPLAY_NAME#
 ```
 
 Alternatively, open "Packages/manifest.json" and add the following to the dependencies block:
@@ -17,8 +17,9 @@ Alternatively, open "Packages/manifest.json" and add the following to the depend
 ```json
 {
     "dependencies": {
-        "com.kamahir0.lilja.asset-management": "https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.asset-management/src/Lilja.AssetManagement"
+        "#PACKAGE_NAME#": "https://github.com/kamahir0/Lilja.git?path=lilja-packages/#DIRECTORY_NAME#/src/#DISPLAY_NAME#"
     }
 }
 ```
+
 

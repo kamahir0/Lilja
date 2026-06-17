@@ -1,6 +1,26 @@
-# Lilja.FancyScrollView
+﻿# Lilja.FancyScrollView
 
 Included in the Lilja package series.
+
+## Installation
+
+1. Open Package Manager from Window > Package Manager.
+2. Click the "+" button > Add package from git URL.
+3. Enter the following URL:
+
+```text
+https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.fancy-scroll-view/src/Lilja.FancyScrollView
+```
+
+Alternatively, open "Packages/manifest.json" and add the following to the dependencies block:
+
+```json
+{
+    "dependencies": {
+        "com.kamahir0.lilja.fancy-scroll-view": "https://github.com/kamahir0/Lilja.git?path=lilja-packages/lilja.fancy-scroll-view/src/Lilja.FancyScrollView"
+    }
+}
+```
 
 This package is a customized version of [setchi/FancyScrollView](https://github.com/setchi/FancyScrollView) licensed under the MIT License.
 
@@ -49,3 +69,4 @@ class MyScrollView : FancyScrollView<ItemData>
 ## License
 
 This package is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+

@@ -139,9 +139,10 @@ namespace Lilja.DevKit.PackageManagement
             // 1. 基本パッケージテンプレートの展開
             // DevKit自体の構造変更により Scripts/Templates~ に移動
             string packageTemplatePath = GetTemplatePath("Package");
+            string directoryName = Path.GetFileName(packageRoot);
             if (Directory.Exists(packageTemplatePath))
             {
-                CopyAndReplaceTemplate(packageTemplatePath, packageRoot, displayName);
+                CopyAndReplaceTemplate(packageTemplatePath, packageRoot, displayName, packageName, directoryName);
             }
             else
             {
@@ -152,7 +153,7 @@ namespace Lilja.DevKit.PackageManagement
             // 2. package.json のプレースホルダーを追加置換
             // CopyAndReplaceTemplateですでに #DISPLAY_NAME# は置換されているが、
             // #PACKAGE_NAME#, #UNITY_VERSION#, #AUTHOR_SECTION# は残っているためここで処理する
-            ProcessPackageJson(packageRoot, packageName, parameters);
+            ProcessPackageJson(packageRoot, displayName, packageName, parameters);
 
             // 3. アナライザ生成
             if (parameters.UseAnalyzer)
@@ -165,10 +166,11 @@ namespace Lilja.DevKit.PackageManagement
 
         private static void ProcessPackageJson(
             string packageRoot,
+            string displayName,
             string packageName,
             PackageCreatorParameters parameters)
         {
-            string packageJsonPath = Path.Combine(packageRoot, "package.json");
+            string packageJsonPath = Path.Combine(packageRoot, "src", displayName, "package.json");
             if (!File.Exists(packageJsonPath)) return;
 
             string content = File.ReadAllText(packageJsonPath);
@@ -314,7 +316,7 @@ namespace Lilja.DevKit.PackageManagement
         {
             string templatePath = GetTemplatePath("Analyzer");
 
-            string targetDir = Path.Combine(packageRoot, "Analyzer~");
+            string targetDir = Path.Combine(packageRoot, "src", $"{displayName}.Analyzer");
 
             // ディレクトリコピー & 置換
             if (Directory.Exists(templatePath))
@@ -327,7 +329,7 @@ namespace Lilja.DevKit.PackageManagement
             }
         }
 
-        private static void CopyAndReplaceTemplate(string sourceDir, string targetDir, string displayName)
+        private static void CopyAndReplaceTemplate(string sourceDir, string targetDir, string displayName, string packageName = "", string directoryName = "")
         {
             Directory.CreateDirectory(targetDir);
 
@@ -343,6 +345,10 @@ namespace Lilja.DevKit.PackageManagement
                 // 内容の読み込みと置換
                 string content = File.ReadAllText(file);
                 content = content.Replace("#DISPLAY_NAME#", displayName);
+                if (!string.IsNullOrEmpty(packageName))
+                    content = content.Replace("#PACKAGE_NAME#", packageName);
+                if (!string.IsNullOrEmpty(directoryName))
+                    content = content.Replace("#DIRECTORY_NAME#", directoryName);
 
                 File.WriteAllText(destFile, content);
             }
@@ -355,7 +361,7 @@ namespace Lilja.DevKit.PackageManagement
                 string newDirName = dirName.Replace("#DISPLAY_NAME#", displayName);
                 string destDir = Path.Combine(targetDir, newDirName);
 
-                CopyAndReplaceTemplate(directory, destDir, displayName);
+                CopyAndReplaceTemplate(directory, destDir, displayName, packageName, directoryName);
             }
         }
 

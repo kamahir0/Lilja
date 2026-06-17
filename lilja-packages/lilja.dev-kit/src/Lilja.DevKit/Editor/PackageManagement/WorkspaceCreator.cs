@@ -68,7 +68,7 @@ namespace Lilja.DevKit.PackageManagement
                 // 末尾のパス区切り文字（存在する場合）を削除してから親ディレクトリを取得する
                 string devKitPath =
                     packageInfo.resolvedPath.TrimEnd(Path.DirectorySeparatorChar,
-                        Path.AltDirectorySeparatorChar); // 例: .../lilja/lilja-packages/lilja.dev-kit
+                        Path.AltDirectorySeparatorChar); // 例: .../lilja/lilja-packages/lilja.dev-kit/src/Lilja.DevKit
 
                 // もしresolvedPathがpackage.jsonを指していた場合の対策
                 if (devKitPath.EndsWith("package.json"))
@@ -76,10 +76,8 @@ namespace Lilja.DevKit.PackageManagement
                     devKitPath = Path.GetDirectoryName(devKitPath);
                 }
 
-                string liljaPackagesPath = Path.GetDirectoryName(devKitPath);
-
-                // もし親ディレクトリではなく dev-kit 自身が返ってきてしまった場合のフェールセーフ
-                if (liljaPackagesPath != null && liljaPackagesPath.EndsWith("lilja.dev-kit"))
+                string liljaPackagesPath = devKitPath;
+                while (liljaPackagesPath != null && !liljaPackagesPath.EndsWith("lilja-packages"))
                 {
                     liljaPackagesPath = Path.GetDirectoryName(liljaPackagesPath);
                 }
