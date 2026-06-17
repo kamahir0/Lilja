@@ -340,6 +340,17 @@ namespace Lilja.DevKit.PackageManagement
 
                 // ファイル名の置換
                 string newFileName = fileName.Replace("#DISPLAY_NAME#", displayName);
+
+                // IDEの自動スキャンを回避するためにテンプレートに付与した .txt 拡張子を除去
+                if (newFileName.EndsWith(".slnx.txt"))
+                {
+                    newFileName = newFileName.Substring(0, newFileName.Length - 4);
+                }
+                else if (newFileName.EndsWith(".csproj.txt"))
+                {
+                    newFileName = newFileName.Substring(0, newFileName.Length - 4);
+                }
+
                 string destFile = Path.Combine(targetDir, newFileName);
 
                 // 内容の読み込みと置換
