@@ -9,6 +9,16 @@
 - Liljaパッケージを格納するディレクトリです。
 - 各パッケージは `lilja.package-name` という命名規則で配置されます
 
+## Moved Packages
+
+### MasterData
+
+MasterData は独立リポジトリへ移動しました。
+
+```text
+https://github.com/kamahir0/MasterData
+```
+
 ## Lilja.DevKit
 
 Lilja開発用のツールパッケージです。
