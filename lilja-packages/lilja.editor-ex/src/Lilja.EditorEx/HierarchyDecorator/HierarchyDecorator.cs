@@ -15,14 +15,31 @@ namespace Lilja.HierarchyDecorator
             drawers.Add(new ActiveToggleDrawer());
             drawers.Add(new MissingScriptPingButtonDrawer());
 
+#if UNITY_6000_0_4_OR_NEWER || UNITY_6000_4_OR_NEWER
             EditorApplication.hierarchyWindowItemByEntityIdOnGUI += OnHierarchyWindowItemGUI;
+#else
+            EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemGUI;
+#endif
         }
 
+#if UNITY_6000_0_4_OR_NEWER || UNITY_6000_4_OR_NEWER
         private static void OnHierarchyWindowItemGUI(EntityId entityId, Rect selectionRect)
         {
             var gameObject = EditorUtility.EntityIdToObject(entityId) as GameObject;
             if (gameObject == null) return;
+            DrawHierarchyItem(gameObject, selectionRect);
+        }
+#else
+        private static void OnHierarchyWindowItemGUI(int instanceID, Rect selectionRect)
+        {
+            var gameObject = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
+            if (gameObject == null) return;
+            DrawHierarchyItem(gameObject, selectionRect);
+        }
+#endif
 
+        private static void DrawHierarchyItem(GameObject gameObject, Rect selectionRect)
+        {
             // selectionRect.xMax is already offset from the window's right edge by Unity (leaving space for the scrollbar/prefab button).
             // Thus, we start drawing directly from selectionRect.xMax.
             float currentX = selectionRect.xMax;
