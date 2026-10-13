@@ -1,5 +1,25 @@
 # Lilja
 
+> [!IMPORTANT]
+> **Liljaの各パッケージは独立した個別リポジトリへ移行しました。**
+> 今後の開発・更新は各新リポジトリにて行われます。パッケージの導入も新しいGit URLをご利用ください。
+
+## 📦 独立リポジトリ一覧（移行先）
+
+| パッケージ | 新リポジトリ | UPM Package ID | インストールURL (Git URL) |
+|---|---|---|---|
+| **AssetManagement** | [kamahir0/AssetManagement](https://github.com/kamahir0/AssetManagement) |  |  |
+| **DebugUI** | [kamahir0/DebugUI](https://github.com/kamahir0/DebugUI) |  |  |
+| **DevKit** | [kamahir0/DevKit](https://github.com/kamahir0/DevKit) |  |  |
+| **EditorEx** | [kamahir0/EditorEx](https://github.com/kamahir0/EditorEx) |  |  |
+| **FancyScrollView** | [kamahir0/FancyScrollView](https://github.com/kamahir0/FancyScrollView) |  |  |
+| **Repository** | [kamahir0/Repository](https://github.com/kamahir0/Repository) |  |  |
+| **ScreenManagement** | [kamahir0/ScreenManagement](https://github.com/kamahir0/ScreenManagement) |  |  |
+
+---
+
+## （旧構成）ディレクトリ構成
+
 個人開発用のUnityパッケージ群をまとめたリポジトリです。
 
 ## ディレクトリ構成
