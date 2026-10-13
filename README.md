@@ -8,13 +8,13 @@
 
 | パッケージ | 新リポジトリ | UPM Package ID | インストールURL (Git URL) |
 |---|---|---|---|
-| **AssetManagement** | [kamahir0/AssetManagement](https://github.com/kamahir0/AssetManagement) |  |  |
-| **DebugUI** | [kamahir0/DebugUI](https://github.com/kamahir0/DebugUI) |  |  |
-| **DevKit** | [kamahir0/DevKit](https://github.com/kamahir0/DevKit) |  |  |
-| **EditorEx** | [kamahir0/EditorEx](https://github.com/kamahir0/EditorEx) |  |  |
-| **FancyScrollView** | [kamahir0/FancyScrollView](https://github.com/kamahir0/FancyScrollView) |  |  |
-| **Repository** | [kamahir0/Repository](https://github.com/kamahir0/Repository) |  |  |
-| **ScreenManagement** | [kamahir0/ScreenManagement](https://github.com/kamahir0/ScreenManagement) |  |  |
+| **AssetManagement** | [kamahir0/AssetManagement](https://github.com/kamahir0/AssetManagement) | `com.kamahir0.asset-management` | `https://github.com/kamahir0/AssetManagement.git?path=/Packages/com.kamahir0.asset-management` |
+| **DebugUI** | [kamahir0/DebugUI](https://github.com/kamahir0/DebugUI) | `com.kamahir0.debug-ui` | `https://github.com/kamahir0/DebugUI.git?path=/Packages/com.kamahir0.debug-ui` |
+| **DevKit** | [kamahir0/DevKit](https://github.com/kamahir0/DevKit) | `com.kamahir0.dev-kit` | `https://github.com/kamahir0/DevKit.git?path=/Packages/com.kamahir0.dev-kit` |
+| **EditorEx** | [kamahir0/EditorEx](https://github.com/kamahir0/EditorEx) | `com.kamahir0.editor-ex` | `https://github.com/kamahir0/EditorEx.git?path=/Packages/com.kamahir0.editor-ex` |
+| **FancyScrollView** | [kamahir0/FancyScrollView](https://github.com/kamahir0/FancyScrollView) | `com.kamahir0.fancy-scroll-view` | `https://github.com/kamahir0/FancyScrollView.git?path=/Packages/com.kamahir0.fancy-scroll-view` |
+| **Repository** | [kamahir0/Repository](https://github.com/kamahir0/Repository) | `com.kamahir0.repository` | `https://github.com/kamahir0/Repository.git?path=/Packages/com.kamahir0.repository` |
+| **ScreenManagement** | [kamahir0/ScreenManagement](https://github.com/kamahir0/ScreenManagement) | `com.kamahir0.screen-management` | `https://github.com/kamahir0/ScreenManagement.git?path=/Packages/com.kamahir0.screen-management` |
 
 ---
 
