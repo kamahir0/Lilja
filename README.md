@@ -8,13 +8,13 @@
 
 | パッケージ | 新リポジトリ | UPM Package ID | インストールURL (Git URL) |
 |---|---|---|---|
-| **AssetManagement** | [kamahir0/AssetManagement](https://github.com/kamahir0/AssetManagement) | `com.kamahir0.asset-management` | `https://github.com/kamahir0/AssetManagement.git?path=/Packages/com.kamahir0.asset-management` |
-| **DebugUI** | [kamahir0/DebugUI](https://github.com/kamahir0/DebugUI) | `com.kamahir0.debug-ui` | `https://github.com/kamahir0/DebugUI.git?path=/Packages/com.kamahir0.debug-ui` |
-| **DevKit** | [kamahir0/DevKit](https://github.com/kamahir0/DevKit) | `com.kamahir0.dev-kit` | `https://github.com/kamahir0/DevKit.git?path=/Packages/com.kamahir0.dev-kit` |
-| **EditorEx** | [kamahir0/EditorEx](https://github.com/kamahir0/EditorEx) | `com.kamahir0.editor-ex` | `https://github.com/kamahir0/EditorEx.git?path=/Packages/com.kamahir0.editor-ex` |
-| **FancyScrollView** | [kamahir0/FancyScrollView](https://github.com/kamahir0/FancyScrollView) | `com.kamahir0.fancy-scroll-view` | `https://github.com/kamahir0/FancyScrollView.git?path=/Packages/com.kamahir0.fancy-scroll-view` |
-| **Repository** | [kamahir0/Repository](https://github.com/kamahir0/Repository) | `com.kamahir0.repository` | `https://github.com/kamahir0/Repository.git?path=/Packages/com.kamahir0.repository` |
-| **ScreenManagement** | [kamahir0/ScreenManagement](https://github.com/kamahir0/ScreenManagement) | `com.kamahir0.screen-management` | `https://github.com/kamahir0/ScreenManagement.git?path=/Packages/com.kamahir0.screen-management` |
+| **AssetManagement** | [kamahir0-lilja/AssetManagement](https://github.com/kamahir0-lilja/AssetManagement) | `com.kamahir0.asset-management` | `https://github.com/kamahir0-lilja/AssetManagement.git?path=/Packages/com.kamahir0.asset-management` |
+| **DebugUI** | [kamahir0-lilja/DebugUI](https://github.com/kamahir0-lilja/DebugUI) | `com.kamahir0.debug-ui` | `https://github.com/kamahir0-lilja/DebugUI.git?path=/Packages/com.kamahir0.debug-ui` |
+| **DevKit** | [kamahir0-lilja/DevKit](https://github.com/kamahir0-lilja/DevKit) | `com.kamahir0.dev-kit` | `https://github.com/kamahir0-lilja/DevKit.git?path=/Packages/com.kamahir0.dev-kit` |
+| **EditorEx** | [kamahir0-lilja/EditorEx](https://github.com/kamahir0-lilja/EditorEx) | `com.kamahir0.editor-ex` | `https://github.com/kamahir0-lilja/EditorEx.git?path=/Packages/com.kamahir0.editor-ex` |
+| **FancyScrollView** | [kamahir0-lilja/FancyScrollView](https://github.com/kamahir0-lilja/FancyScrollView) | `com.kamahir0.fancy-scroll-view` | `https://github.com/kamahir0-lilja/FancyScrollView.git?path=/Packages/com.kamahir0.fancy-scroll-view` |
+| **Repository** | [kamahir0-lilja/Repository](https://github.com/kamahir0-lilja/Repository) | `com.kamahir0.repository` | `https://github.com/kamahir0-lilja/Repository.git?path=/Packages/com.kamahir0.repository` |
+| **ScreenManagement** | [kamahir0-lilja/ScreenManagement](https://github.com/kamahir0-lilja/ScreenManagement) | `com.kamahir0.screen-management` | `https://github.com/kamahir0-lilja/ScreenManagement.git?path=/Packages/com.kamahir0.screen-management` |
 
 ---
 
